@@ -1,0 +1,351 @@
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import useWebSocket from "react-use-websocket";
+
+const API_BASE = "http://localhost:8000";
+
+function LiveDashboard() {
+  const [messages, setMessages] = useState([]);
+
+  const { lastMessage, readyState } = useWebSocket("ws://localhost:8000/ws");
+
+  useEffect(() => {
+    if (lastMessage !== null) {
+      const data = JSON.parse(lastMessage.data);
+      setMessages((prev) => [...prev, data]);
+    }
+  }, [lastMessage]);
+
+  const connectionStatus = {
+    [WebSocket.CONNECTING]: 'Connecting',
+    [WebSocket.OPEN]: 'Open',
+    [WebSocket.CLOSING]: 'Closing',
+    [WebSocket.CLOSED]: 'Closed'
+  }[readyState];
+
+  return (
+    <div style={{ border: "1px solid #ccc", padding: 15, borderRadius: 8, marginTop: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <h3>Live Agent Data</h3>
+        <span style={{ 
+          padding: "4px 8px", 
+          borderRadius: 4, 
+          fontSize: 12,
+          backgroundColor: readyState === WebSocket.OPEN ? "#28a745" : "#dc3545",
+          color: "white"
+        }}>
+          WebSocket: {connectionStatus}
+        </span>
+      </div>
+      
+      {messages.length === 0 ? (
+        <p>No live messages yet. WebSocket connection will show real-time updates.</p>
+      ) : (
+        <div style={{ maxHeight: 300, overflow: "auto" }}>
+          {messages.map((msg, i) => (
+            <div key={i} style={{ 
+              padding: 8, 
+              marginBottom: 8, 
+              backgroundColor: "#f8f9fa", 
+              borderRadius: 4,
+              borderLeft: `4px solid ${
+                msg.type === 'agent_data_update' ? '#007bff' : 
+                msg.type === 'heartbeat' ? '#6c757d' : 
+                msg.type === 'connection_established' ? '#28a745' : 
+                '#ffc107'
+              }`
+            }}>
+              <div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>
+                <strong>Type:</strong> {msg.type} • {new Date(msg.timestamp || Date.now()).toLocaleTimeString()}
+              </div>
+              <div style={{ fontSize: 14 }}>
+                {msg.type === 'agent_data_update' && `New agent data from ${msg.data?.hostname || 'unknown'}`}
+                {msg.type === 'heartbeat' && `Heartbeat: ${msg.message}`}
+                {msg.type === 'connection_established' && `Connected: ${msg.message}`}
+                {msg.type === 'client_message' && msg.message}
+                {msg.type === 'initial_data' && `Initial data loaded: ${msg.total_agent_data} entries`}
+              </div>
+              {msg.data && msg.type === 'agent_data_update' && (
+                <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
+                  CPU: {msg.data.cpu_usage?.toFixed(1)}% • Memory: {msg.data.memory_usage?.toFixed(1)}% • Disk: {msg.data.disk_usage?.toFixed(1)}%
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function App() {
+  const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const [userInfo, setUserInfo] = useState(null);
+  const [agentData, setAgentData] = useState(null);
+  const [form, setForm] = useState({ username: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  // Auto-fetch user info when token exists
+  useEffect(() => {
+    if (token) {
+      fetchUserInfo(token);
+      fetchLatestAgentData();
+    }
+  }, [token]);
+
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+
+  const showMessage = (msg, isError = false) => {
+    setMessage(msg);
+    setTimeout(() => setMessage(""), 3000);
+  };
+
+  const login = async () => {
+    if (!form.username || !form.password) {
+      setError("Please enter both username and password");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.append("username", form.username);
+      params.append("password", form.password);
+
+      const resp = await axios.post(`${API_BASE}/token`, params, {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      });
+      const newToken = resp.data.access_token;
+      setToken(newToken);
+      localStorage.setItem("token", newToken);
+      setError("");
+      showMessage("Login successful!");
+      setForm({ username: "", password: "" }); // Clear form
+    } catch (err) {
+      const errorMsg = err.response?.data?.detail || "Login failed";
+      setError(errorMsg);
+      showMessage(errorMsg, true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserInfo = async (userToken = token) => {
+    try {
+      const resp = await axios.get(`${API_BASE}/users/me`, {
+        headers: { Authorization: `Bearer ${userToken}` },
+      });
+      setUserInfo(resp.data);
+    } catch {
+      setError("Failed to fetch user info");
+      setUserInfo(null);
+      // If token is invalid, logout
+      logout();
+    }
+  };
+
+  const logout = () => {
+    setToken("");
+    setUserInfo(null);
+    setAgentData(null);
+    localStorage.removeItem("token");
+    setError("");
+    showMessage("Logged out successfully");
+  };
+
+  const fetchLatestAgentData = async () => {
+    try {
+      const resp = await axios.get(`${API_BASE}/agent/data/latest`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setAgentData(resp.data.data);
+    } catch {
+      showMessage("Failed to fetch agent data", true);
+    }
+  };
+
+  const submitSampleAgentData = async () => {
+    try {
+      const sampleData = {
+        timestamp: new Date().toISOString(),
+        hostname: "sample-host",
+        cpu_usage: Math.random() * 100,
+        memory_usage: Math.random() * 100,
+        disk_usage: Math.random() * 100,
+        network_activity: {
+          bytes_sent: Math.floor(Math.random() * 1000000),
+          bytes_received: Math.floor(Math.random() * 1000000),
+        },
+        processes: [
+          { pid: 1, name: "systemd", cpu: 0.1, memory: 0.5 },
+          { pid: 2, name: "bash", cpu: 0.2, memory: 0.3 },
+        ]
+      };
+
+      await axios.post(`${API_BASE}/agent/data`, sampleData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      showMessage("Sample agent data submitted!");
+      // Refresh the latest data
+      setTimeout(fetchLatestAgentData, 500);
+    } catch {
+      showMessage("Failed to submit agent data", true);
+    }
+  };
+
+  const testSlackAlert = async () => {
+    try {
+      await axios.post(`${API_BASE}/slack/test`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      showMessage("Slack test alert sent!");
+    } catch {
+      showMessage("Failed to send Slack test alert", true);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      login();
+    }
+  };
+
+  return (
+    <div style={{ padding: 20, maxWidth: 800, margin: "0 auto" }}>
+      <h1>PurpleTeam Dashboard</h1>
+      
+      {/* Message Display */}
+      {message && (
+        <div style={{
+          padding: 10,
+          margin: "10px 0",
+          backgroundColor: message.includes("failed") ? "#ffebee" : "#e8f5e8",
+          border: `1px solid ${message.includes("failed") ? "#f44336" : "#4caf50"}`,
+          borderRadius: 4,
+          color: message.includes("failed") ? "#c62828" : "#2e7d32"
+        }}>
+          {message}
+        </div>
+      )}
+
+      {!token ? (
+        <div style={{ border: "1px solid #ccc", padding: 20, borderRadius: 8, maxWidth: 400, margin: "auto" }}>
+          <h2>Login</h2>
+          <div style={{ marginBottom: 10 }}>
+            <input 
+              name="username" 
+              placeholder="Username (admin)" 
+              value={form.username}
+              onChange={handleChange}
+              onKeyPress={handleKeyPress}
+              style={{ width: "100%", padding: 8, marginBottom: 10 }}
+            />
+            <input
+              name="password"
+              type="password"
+              placeholder="Password (adminpass)"
+              value={form.password}
+              onChange={handleChange}
+              onKeyPress={handleKeyPress}
+              style={{ width: "100%", padding: 8, marginBottom: 10 }}
+            />
+          </div>
+          <button 
+            onClick={login} 
+            disabled={loading}
+            style={{ 
+              width: "100%", 
+              padding: 10, 
+              backgroundColor: loading ? "#ccc" : "#007bff",
+              color: "white",
+              border: "none",
+              borderRadius: 4,
+              cursor: loading ? "not-allowed" : "pointer"
+            }}
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+          {error && <p style={{ color: "red", marginTop: 10 }}>{error}</p>}
+          <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
+            <strong>Demo credentials:</strong> admin / adminpass
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <h2>Welcome, {userInfo?.username}!</h2>
+            <button onClick={logout} style={{ padding: "5px 10px", backgroundColor: "#dc3545", color: "white", border: "none", borderRadius: 4 }}>
+              Logout
+            </button>
+          </div>
+
+          <div style={{ display: "grid", gap: 20, gridTemplateColumns: "1fr 1fr" }}>
+            {/* User Info Card */}
+            <div style={{ border: "1px solid #ccc", padding: 15, borderRadius: 8 }}>
+              <h3>User Information</h3>
+              {userInfo ? (
+                <pre style={{ background: "#f5f5f5", padding: 10, borderRadius: 4 }}>
+                  {JSON.stringify(userInfo, null, 2)}
+                </pre>
+              ) : (
+                <p>Loading user info...</p>
+              )}
+            </div>
+
+            {/* Agent Data Card */}
+            <div style={{ border: "1px solid #ccc", padding: 15, borderRadius: 8 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <h3>Latest Agent Data</h3>
+                <div>
+                  <button onClick={fetchLatestAgentData} style={{ marginRight: 10, padding: "5px 10px" }}>
+                    Refresh
+                  </button>
+                  <button onClick={submitSampleAgentData} style={{ padding: "5px 10px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: 4 }}>
+                    Submit Sample
+                  </button>
+                </div>
+              </div>
+              {agentData ? (
+                <pre style={{ background: "#f5f5f5", padding: 10, borderRadius: 4, maxHeight: 300, overflow: "auto" }}>
+                  {JSON.stringify(agentData, null, 2)}
+                </pre>
+              ) : agentData === null ? (
+                <p>No agent data available</p>
+              ) : (
+                <p>Loading agent data...</p>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div style={{ marginTop: 20, border: "1px solid #ccc", padding: 15, borderRadius: 8 }}>
+            <h3>Quick Actions</h3>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button onClick={() => fetchUserInfo()} style={{ padding: "8px 15px" }}>
+                Refresh User Info
+              </button>
+              <button onClick={fetchLatestAgentData} style={{ padding: "8px 15px" }}>
+                Refresh Agent Data
+              </button>
+              <button onClick={submitSampleAgentData} style={{ padding: "8px 15px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: 4 }}>
+                Submit Sample Agent Data
+              </button>
+              <button onClick={testSlackAlert} style={{ padding: "8px 15px", backgroundColor: "#6f42c1", color: "white", border: "none", borderRadius: 4 }}>
+                Test Slack Alert
+              </button>
+            </div>
+          </div>
+
+          {/* Live Dashboard */}
+          <LiveDashboard />
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;

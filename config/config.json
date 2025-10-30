@@ -1,8 +1,8 @@
 {
-    "server_url": "https://your-dashboard-api.example.com/api/agent",
-    "agent_id": "agent-001",
-    "auth_token": "replace_with_a_secure_token",
-    "scan_interval": 60,
-    "log_paths": ["/var/log/auth.log", "/var/log/syslog"],
-    "integrity_dirs": ["/etc", "/var/www", "/usr/bin"]
+  "server_url": "http://localhost:5000/api/agent",
+  "agent_id": "agent-001",
+  "auth_token": "testtoken123",
+  "scan_interval": 60,
+  "log_paths": ["/var/log/auth.log", "/var/log/syslog"],
+  "integrity_dirs": ["/etc", "/var/www", "/usr/bin"]
 }
