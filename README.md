@@ -1,24 +1,29 @@
-Purple Agent
-Python modular server monitoring agent for AI-powered threat detection and security analytics.
+🟣 Purple Agent
 
-Overview
-Purple Agent collects real-time system metrics, monitors critical logs, tracks network activity, and securely sends collected data to a centralized dashboard for threat detection and anomaly analysis. Designed with modular architecture for scalability and ease of maintenance.
+Python Modular Server Monitoring Agent for AI-Powered Threat Detection and Security Analytics
 
-Features
+🧩 Overview
+
+Purple Agent collects real-time system metrics, monitors critical logs, tracks network activity, and securely sends collected data to a centralized dashboard for threat detection and anomaly analysis.
+It’s built with a modular architecture for scalability and ease of maintenance.
+
+🚀 Features
+
 CPU, memory, disk usage, process listing, and uptime monitoring
 
 Real-time log file monitoring for failed/successful login detection
 
 Network connection tracking to identify suspicious activity
 
-Secure authenticated communication with JWT tokens
+Secure authenticated communication using JWT tokens
 
 Modularized codebase enabling easy extension
 
 Designed for deployment as a systemd service for persistence
 
-Getting Started
+🧰 Getting Started
 Prerequisites
+
 Python 3.8+
 
 Linux server (Ubuntu/Debian/CentOS recommended)
@@ -26,33 +31,37 @@ Linux server (Ubuntu/Debian/CentOS recommended)
 Access to install system packages and configure services
 
 Installation
-Clone the repository:
 
-bash
+1. Clone the repository
+
 git clone https://github.com/yourusername/purple-agent.git
 cd purple-agent
-Create and activate a Python virtual environment:
 
-bash
+
+2. Create and activate a virtual environment
+
 python3 -m venv venv
 source venv/bin/activate
-Install dependencies:
 
-bash
+
+3. Install dependencies
+
 pip install -r requirements.txt
-Configure agent settings:
 
+
+4. Configure the agent
 Edit config/config.json with your dashboard API URL, agent ID, authentication token, scan interval, and monitored log/file paths.
 
-Running the Agent
+▶️ Running the Agent
+
 Start the agent manually with:
 
-bash
 python -m agent.main
-Deployment as a systemd Service
-Create a purple-agent.service file in /etc/systemd/system/ with contents:
 
-text
+🧠 Deployment as a systemd Service
+
+Create a service file at /etc/systemd/system/purple-agent.service:
+
 [Unit]
 Description=Purple Agent Monitoring Service
 After=network.target
@@ -65,20 +74,23 @@ Restart=always
 
 [Install]
 WantedBy=multi-user.target
-Reload systemd and enable service:
 
-bash
+
+Then reload and enable the service:
+
 sudo systemctl daemon-reload
 sudo systemctl enable purple-agent
 sudo systemctl start purple-agent
-Check status:
 
-bash
+
+Check service status:
+
 sudo systemctl status purple-agent
-Configuration
+
+⚙️ Configuration
+
 Example config/config.json:
 
-json
 {
   "server_url": "https://your-dashboard-api.example.com/api/agent",
   "agent_id": "agent-001",
@@ -87,31 +99,42 @@ json
   "log_paths": ["/var/log/auth.log", "/var/log/syslog"],
   "integrity_dirs": ["/etc", "/var/www", "/usr/bin"]
 }
-server_url: URL of dashboard API endpoint.
 
-agent_id: Unique ID for this agent instance.
 
-auth_token: JWT secret token for agent authentication.
+Configuration Options
 
-scan_interval: Seconds between metric scans.
+server_url: URL of the dashboard API endpoint
 
-log_paths: List of log files to watch in real-time.
+agent_id: Unique ID for this agent instance
 
-integrity_dirs: Directories for file integrity monitoring.
+auth_token: JWT secret token for agent authentication
 
-Contribution
-Contributions are welcome! Please open issues or pull requests for bug fixes, features, or enhancements.
+scan_interval: Seconds between metric scans
 
-Troubleshooting
-Make sure dependencies are installed and python environment is activated.
+log_paths: List of log files to watch in real-time
+
+integrity_dirs: Directories for file integrity monitoring
+
+🧩 Contribution
+
+Contributions are welcome!
+Please open issues or pull requests for bug fixes, features, or enhancements.
+
+🩺 Troubleshooting
+
+Ensure dependencies are installed and the Python environment is activated.
 
 Confirm the agent has permission to read specified log files.
 
-Check systemd logs with journalctl -u purple-agent -f.
+Check systemd logs:
 
-Verify dashboard URL and tokens in config.
+journalctl -u purple-agent -f
 
-Enable debug logging by modifying the source if needed.
 
-License
+Verify dashboard URL and authentication tokens in the config.
+
+Enable debug logging in source for detailed output if needed.
+
+📜 License
+
 MIT License
