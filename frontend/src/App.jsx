@@ -23,51 +23,54 @@ const DARK_THEME = {
 // Colors for charts (adjusted for dark background)
 const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#00C49F"];
 
-// Dark theme styles - COMPLETELY UPDATED FOR CENTERING
+// PROPERLY CENTERED Dark theme styles
 const darkStyles = {
   container: {
     backgroundColor: DARK_THEME.background,
     color: DARK_THEME.text,
     minHeight: "100vh",
-    padding: "20px",
+    width: "100vw",
     display: "flex",
-    flexDirection: "column",
-    alignItems: "center"
+    justifyContent: "center",   // centers mainContent horizontally
+    alignItems: "center",       // centers mainContent vertically
+    padding: "20px",
+    boxSizing: "border-box"
   },
   mainContent: {
-    width: "100%",
-    maxWidth: "1200px",
+    maxWidth: "900px",
     display: "flex",
     flexDirection: "column",
-    alignItems: "center"
+    alignItems: "center",     // all children centered
+    gap: "20px"
   },
   loginContainer: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: "60vh",
-    width: "100%"
+    minHeight: "60vh"
   },
+  // Centered cards with constrained width
   card: {
     backgroundColor: DARK_THEME.cardBackground,
     border: `1px solid ${DARK_THEME.border}`,
     padding: "20px",
     borderRadius: "8px",
-    marginBottom: "20px",
     width: "100%",
+    maxWidth: "800px",
+    textAlign: "center",
     boxSizing: "border-box"
   },
-  centeredCard: {
+  // For grid items that need to fill their container
+  gridCard: {
     backgroundColor: DARK_THEME.cardBackground,
     border: `1px solid ${DARK_THEME.border}`,
     padding: "20px",
     borderRadius: "8px",
-    marginBottom: "20px",
     width: "100%",
-    maxWidth: "800px",
+    textAlign: "center",
     boxSizing: "border-box",
-    textAlign: "center"
+    height: "100%"
   },
   input: {
     width: "100%",
@@ -93,15 +96,7 @@ const darkStyles = {
     display: "grid",
     gap: "20px",
     gridTemplateColumns: "1fr 1fr",
-    width: "100%",
-    maxWidth: "1000px"
-  },
-  gridFullWidth: {
-    display: "grid",
-    gap: "20px",
-    gridTemplateColumns: "1fr",
-    width: "100%",
-    maxWidth: "1000px"
+    width: "100%"
   },
   table: {
     width: "100%",
@@ -134,7 +129,6 @@ const darkStyles = {
   },
   message: {
     padding: "12px",
-    margin: "10px 0",
     borderRadius: "4px",
     textAlign: "center",
     width: "100%",
@@ -146,12 +140,6 @@ const darkStyles = {
     gap: "10px",
     flexWrap: "wrap",
     justifyContent: "center",
-    width: "100%"
-  },
-  centeredContent: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
     width: "100%"
   }
 };
@@ -165,7 +153,7 @@ function MetricsChart({ cpu, memory, disk }) {
   ];
 
   return (
-    <div style={darkStyles.card}>
+    <div style={darkStyles.gridCard}>
       <h4 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", textAlign: "center" }}>System Usage</h4>
       <div style={{ display: "flex", justifyContent: "center" }}>
         <PieChart width={280} height={250}>
@@ -202,7 +190,7 @@ function NetworkChart({ networkData }) {
   ];
 
   return (
-    <div style={darkStyles.card}>
+    <div style={darkStyles.gridCard}>
       <h4 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", textAlign: "center" }}>Network Activity</h4>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data}>
@@ -251,7 +239,7 @@ function ProcessList({ processes }) {
   };
 
   return (
-    <div style={darkStyles.card}>
+    <div style={darkStyles.gridCard}>
       <h4 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", textAlign: "center" }}>Running Processes</h4>
       <input
         type="text"
@@ -320,7 +308,7 @@ function AlertBanner({ alerts }) {
   if (!alerts || alerts.length === 0) return null;
 
   return (
-    <div style={{ marginBottom: "20px", width: "100%", maxWidth: "1000px" }}>
+    <div style={{ width: "100%" }}>
       {alerts.map((alert, i) =>
         hiddenAlerts.includes(i) ? null : (
           <div
@@ -407,7 +395,7 @@ function LiveDashboard() {
   }[readyState];
 
   return (
-    <div style={{...darkStyles.card, maxWidth: "1000px"}}>
+    <div style={darkStyles.card}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
         <h3 style={{ color: DARK_THEME.text, margin: 0 }}>Live Dashboard</h3>
         <span style={{ 
@@ -608,7 +596,7 @@ function App() {
   return (
     <div style={darkStyles.container}>
       <div style={darkStyles.mainContent}>
-        <h1 style={{ color: DARK_THEME.text, marginBottom: "30px", textAlign: "center", width: "100%" }}>PurpleTeam Dashboard</h1>
+        <h1 style={{ color: DARK_THEME.text, marginBottom: "10px", textAlign: "center", width: "100%" }}>PurpleTeam Dashboard</h1>
         
         {message && (
           <div style={{
@@ -623,7 +611,7 @@ function App() {
 
         {!token ? (
           <div style={darkStyles.loginContainer}>
-            <div style={{ ...darkStyles.centeredCard, maxWidth: "400px" }}>
+            <div style={{ ...darkStyles.card, maxWidth: "400px" }}>
               <h2 style={{ color: DARK_THEME.text, marginBottom: "20px", textAlign: "center" }}>Login</h2>
               <div style={{ marginBottom: "15px" }}>
                 <input 
@@ -664,9 +652,9 @@ function App() {
             </div>
           </div>
         ) : (
-          <div style={darkStyles.centeredContent}>
+          <>
             {/* Header */}
-            <div style={darkStyles.centeredCard}>
+            <div style={darkStyles.card}>
               <h2 style={{ color: DARK_THEME.text, margin: "0 0 10px 0" }}>Welcome, {userInfo?.username}!</h2>
               <button onClick={logout} style={{ ...darkStyles.button, backgroundColor: DARK_THEME.danger }}>
                 Logout
@@ -674,8 +662,8 @@ function App() {
             </div>
 
             {/* Quick Actions */}
-            <div style={darkStyles.centeredCard}>
-              <h3 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", textAlign: "center" }}>Quick Actions</h3>
+            <div style={darkStyles.card}>
+              <h3 style={{ color: DARK_THEME.text, margin: "0 0 15px 0" }}>Quick Actions</h3>
               <div style={darkStyles.quickActions}>
                 <button onClick={() => fetchUserInfo()} style={darkStyles.button}>
                   Refresh User Info
@@ -694,12 +682,12 @@ function App() {
 
             {/* Dashboard Content */}
             {dashboardLoading ? (
-              <div style={darkStyles.centeredCard}>
+              <div style={{ ...darkStyles.card, textAlign: "center", padding: "40px" }}>
                 <TailSpin height={40} width={40} />
                 <p style={{ color: DARK_THEME.text, marginTop: "15px" }}>Loading agent data...</p>
               </div>
             ) : agentData ? (
-              <div style={darkStyles.centeredContent}>
+              <>
                 {/* Charts Row */}
                 <div style={darkStyles.gridContainer}>
                   <MetricsChart 
@@ -712,7 +700,7 @@ function App() {
 
                 {/* Data Row */}
                 <div style={darkStyles.gridContainer}>
-                  <div style={darkStyles.card}>
+                  <div style={darkStyles.gridCard}>
                     <h3 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", textAlign: "center" }}>User Information</h3>
                     {userInfo ? (
                       <pre style={darkStyles.pre}>
@@ -726,7 +714,7 @@ function App() {
                 </div>
 
                 {/* Raw Data */}
-                <div style={{...darkStyles.card, maxWidth: "1000px"}}>
+                <div style={darkStyles.card}>
                   <h3 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", textAlign: "center" }}>Raw Agent Data</h3>
                   <textarea
                     value={JSON.stringify(agentData, null, 2)}
@@ -745,16 +733,16 @@ function App() {
                     }}
                   />
                 </div>
-              </div>
+              </>
             ) : (
-              <div style={darkStyles.centeredCard}>
+              <div style={{ ...darkStyles.card, textAlign: "center", padding: "40px" }}>
                 <p style={{ color: DARK_THEME.textMuted }}>No agent data available. Submit sample data to get started.</p>
               </div>
             )}
 
             {/* Live Dashboard */}
             <LiveDashboard />
-          </div>
+          </>
         )}
       </div>
     </div>

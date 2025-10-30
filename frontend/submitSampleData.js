@@ -1,33 +1,44 @@
+// Save as criticalIncidentSubmit.js
 import axios from "axios";
 
 const API_BASE = "http://localhost:8000";
-const token =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTc2MTgxOTA5NH0.dhQGDG994skpHijTt_I_cvM-Xt686swtjq4yF7M7R_Y";
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImV4cCI6MTc2MTgyNzg0MH0.Qi28ibtK4kZb6PxT4E-w0W4UnSsusjVQKbSkABGcOUM";
 
-const sampleData = {
-  timestamp: new Date().toISOString(),
-  hostname: "sample-host",
-  cpu_usage: 23.0,
-  memory_usage: 14.0,
-  disk_usage: 66.5,
+const criticalIncident = {
+  timestamp: "2025-10-30T12:57:42.963Z",
+  hostname: "critical-prod-db1",
+  cpu_usage: 98.7,
+  memory_usage: 97.4,
+  disk_usage: 96.3,
   network_activity: {
-    bytes_sent: 986059,
-    bytes_received: 576264,
+    bytes_sent: 1459802347,
+    bytes_received: 2782048370
   },
   processes: [
+    { pid: 7730, name: "unknown_malware", cpu: 75.3, memory: 83.1 },
     { pid: 1, name: "systemd", cpu: 0.1, memory: 0.5 },
-    { pid: 2, name: "bash", cpu: 0.2, memory: 0.3 },
+    { pid: 7502, name: "encryptor_ransom", cpu: 10.5, memory: 10.1 }
   ],
+  suspicious_activity: [
+    {
+      type: "file_encryption",
+      files_affected: 25431,
+      locations: ["/etc/", "/var/lib/", "/home/"]
+    },
+    {
+      type: "network_scanning",
+      target_ips: ["10.0.10.1", "10.0.10.2", "10.0.10.3"]
+    }
+  ]
 };
 
-axios
-  .post(`${API_BASE}/agent/data`, sampleData, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  })
-  .then((response) => console.log("Data submitted:", response.data))
-  .catch((error) =>
-    console.error("Error submitting data:", error.response?.data || error.message)
-  );
+axios.post(`${API_BASE}/agent/data`, criticalIncident, {
+  headers: {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json"
+  }
+}).then(response => {
+  console.log("Critical incident submitted!", response.data);
+}).catch(error => {
+  console.error("Submission failed:", error.response?.data || error.message);
+});
