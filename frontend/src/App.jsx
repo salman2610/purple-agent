@@ -17,7 +17,8 @@ const DARK_THEME = {
   success: "#28a745",
   danger: "#dc3545",
   warning: "#ffc107",
-  info: "#6f42c1"
+  info: "#6f42c1",
+  secondary: "#6c757d"
 };
 
 // Colors for charts (adjusted for dark background)
@@ -31,16 +32,16 @@ const darkStyles = {
     minHeight: "100vh",
     width: "100vw",
     display: "flex",
-    justifyContent: "center",   // centers mainContent horizontally
-    alignItems: "center",       // centers mainContent vertically
+    justifyContent: "center",
+    alignItems: "center",
     padding: "20px",
     boxSizing: "border-box"
   },
   mainContent: {
-    maxWidth: "900px",
+    maxWidth: "1000px",
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",     // all children centered
+    alignItems: "center",
     gap: "20px"
   },
   loginContainer: {
@@ -50,7 +51,6 @@ const darkStyles = {
     justifyContent: "center",
     minHeight: "60vh"
   },
-  // Centered cards with constrained width
   card: {
     backgroundColor: DARK_THEME.cardBackground,
     border: `1px solid ${DARK_THEME.border}`,
@@ -61,7 +61,6 @@ const darkStyles = {
     textAlign: "center",
     boxSizing: "border-box"
   },
-  // For grid items that need to fill their container
   gridCard: {
     backgroundColor: DARK_THEME.cardBackground,
     border: `1px solid ${DARK_THEME.border}`,
@@ -83,6 +82,17 @@ const darkStyles = {
     fontSize: "14px",
     boxSizing: "border-box"
   },
+  select: {
+    width: "100%",
+    padding: "10px",
+    marginBottom: "15px",
+    backgroundColor: "#333",
+    color: DARK_THEME.text,
+    border: `1px solid ${DARK_THEME.border}`,
+    borderRadius: "4px",
+    fontSize: "14px",
+    boxSizing: "border-box"
+  },
   button: {
     padding: "10px 20px",
     border: "none",
@@ -90,7 +100,8 @@ const darkStyles = {
     cursor: "pointer",
     color: "white",
     fontSize: "14px",
-    fontWeight: "500"
+    fontWeight: "500",
+    margin: "5px"
   },
   gridContainer: {
     display: "grid",
@@ -141,343 +152,729 @@ const darkStyles = {
     flexWrap: "wrap",
     justifyContent: "center",
     width: "100%"
+  },
+  tabContainer: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "20px",
+    justifyContent: "center"
+  },
+  tab: {
+    padding: "10px 20px",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "500"
   }
 };
 
-// Metrics Chart Component
+// Create axios instance with auth interceptor
+const createApiClient = (token) => {
+  const client = axios.create({
+    baseURL: API_BASE,
+  });
+
+  if (token) {
+    client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  }
+
+  return client;
+};
+
+// MetricsChart Component
 function MetricsChart({ cpu, memory, disk }) {
   const data = [
-    { name: "CPU Usage", value: cpu || 0 },
-    { name: "Memory Usage", value: memory || 0 },
-    { name: "Disk Usage", value: disk || 0 },
+    { name: 'CPU', value: cpu, color: COLORS[0] },
+    { name: 'Memory', value: memory, color: COLORS[1] },
+    { name: 'Disk', value: disk, color: COLORS[2] }
   ];
-
+  
   return (
     <div style={darkStyles.gridCard}>
-      <h4 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", textAlign: "center" }}>System Usage</h4>
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <PieChart width={280} height={250}>
+      <h3 style={{ color: DARK_THEME.text, marginBottom: "15px" }}>System Metrics</h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
           <Pie
             data={data}
+            dataKey="value"
+            nameKey="name"
             cx="50%"
             cy="50%"
-            outerRadius={80}
-            dataKey="value"
-            label={(entry) => `${entry.name}: ${entry.value.toFixed(1)}%`}
+            outerRadius={100}
+            label={({ name, value }) => `${name}: ${value.toFixed(1)}%`}
           >
-            {data.map((entry, idx) => (
-              <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>
           <Tooltip 
-            formatter={(value) => `${value.toFixed(2)}%`}
-            contentStyle={{ backgroundColor: DARK_THEME.cardBackground, border: `1px solid ${DARK_THEME.border}`, color: DARK_THEME.text }}
+            formatter={(value) => [`${value.toFixed(1)}%`, 'Usage']}
+            contentStyle={{ backgroundColor: DARK_THEME.cardBackground, border: `1px solid ${DARK_THEME.border}` }}
           />
           <Legend />
         </PieChart>
+      </ResponsiveContainer>
+      <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-around" }}>
+        <span style={{ color: COLORS[0] }}>CPU: {cpu?.toFixed(1)}%</span>
+        <span style={{ color: COLORS[1] }}>Memory: {memory?.toFixed(1)}%</span>
+        <span style={{ color: COLORS[2] }}>Disk: {disk?.toFixed(1)}%</span>
       </div>
     </div>
   );
 }
 
-// Network Activity Chart
+// NetworkChart Component
 function NetworkChart({ networkData }) {
-  if (!networkData) return null;
-
   const data = [
-    { name: "Bytes Sent", value: networkData.bytes_sent || 0 },
-    { name: "Bytes Received", value: networkData.bytes_received || 0 },
+    { 
+      name: 'Bytes Sent', 
+      value: networkData?.bytes_sent || 0,
+      readable: formatBytes(networkData?.bytes_sent || 0)
+    },
+    { 
+      name: 'Bytes Received', 
+      value: networkData?.bytes_received || 0,
+      readable: formatBytes(networkData?.bytes_received || 0)
+    }
   ];
 
+  function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+  
   return (
     <div style={darkStyles.gridCard}>
-      <h4 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", textAlign: "center" }}>Network Activity</h4>
-      <ResponsiveContainer width="100%" height={200}>
+      <h3 style={{ color: DARK_THEME.text, marginBottom: "15px" }}>Network Activity</h3>
+      <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke={DARK_THEME.border} />
-          <XAxis dataKey="name" stroke={DARK_THEME.text} fontSize={12} />
-          <YAxis stroke={DARK_THEME.text} fontSize={12} />
-          <Tooltip 
-            formatter={(value) => `${(value / 1024 / 1024).toFixed(2)} MB`}
-            contentStyle={{ backgroundColor: DARK_THEME.cardBackground, border: `1px solid ${DARK_THEME.border}`, color: DARK_THEME.text }}
+          <XAxis 
+            dataKey="name" 
+            stroke={DARK_THEME.text}
+            fontSize={12}
           />
-          <Bar dataKey="value" fill="#8884d8" />
+          <YAxis 
+            stroke={DARK_THEME.text}
+            fontSize={12}
+          />
+          <Tooltip 
+            formatter={(value) => [formatBytes(value), 'Network Traffic']}
+            contentStyle={{ backgroundColor: DARK_THEME.cardBackground, border: `1px solid ${DARK_THEME.border}` }}
+          />
+          <Bar 
+            dataKey="value" 
+            fill={COLORS[3]}
+            radius={[4, 4, 0, 0]}
+          />
         </BarChart>
       </ResponsiveContainer>
+      <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-around", fontSize: "12px" }}>
+        <span>Sent: {data[0].readable}</span>
+        <span>Received: {data[1].readable}</span>
+      </div>
     </div>
   );
 }
 
-// Process List Component
+// ProcessList Component
 function ProcessList({ processes }) {
-  const [search, setSearch] = useState("");
-  const [sortKey, setSortKey] = useState("pid");
-  const [sortAsc, setSortAsc] = useState(true);
-
-  if (!processes || processes.length === 0) {
-    return <p style={{ color: DARK_THEME.textMuted, textAlign: "center" }}>No processes data available</p>;
-  }
-
-  const filtered = processes
-    .filter(
-      (p) =>
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.pid.toString().includes(search)
-    )
-    .sort((a, b) => {
-      if (a[sortKey] < b[sortKey]) return sortAsc ? -1 : 1;
-      if (a[sortKey] > b[sortKey]) return sortAsc ? 1 : -1;
-      return 0;
-    });
-
-  const toggleSort = (key) => {
-    if (sortKey === key) setSortAsc(!sortAsc);
-    else {
-      setSortKey(key);
-      setSortAsc(true);
-    }
-  };
-
   return (
     <div style={darkStyles.gridCard}>
-      <h4 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", textAlign: "center" }}>Running Processes</h4>
-      <input
-        type="text"
-        placeholder="Search processes..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={darkStyles.input}
-      />
-      <div style={{ maxHeight: "300px", overflow: "auto" }}>
-        <table style={darkStyles.table}>
-          <thead>
-            <tr>
-              <th 
-                onClick={() => toggleSort("pid")}
-                style={darkStyles.tableHeader}
-              >
-                PID {sortKey === "pid" && (sortAsc ? "↑" : "↓")}
-              </th>
-              <th 
-                onClick={() => toggleSort("name")}
-                style={darkStyles.tableHeader}
-              >
-                Name {sortKey === "name" && (sortAsc ? "↑" : "↓")}
-              </th>
-              <th 
-                onClick={() => toggleSort("cpu")}
-                style={darkStyles.tableHeader}
-              >
-                CPU (%) {sortKey === "cpu" && (sortAsc ? "↑" : "↓")}
-              </th>
-              <th 
-                onClick={() => toggleSort("memory")}
-                style={darkStyles.tableHeader}
-              >
-                Memory (%) {sortKey === "memory" && (sortAsc ? "↑" : "↓")}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((proc) => (
-              <tr key={proc.pid}>
-                <td style={{ ...darkStyles.tableCell, color: DARK_THEME.text }}>{proc.pid}</td>
-                <td style={{ ...darkStyles.tableCell, color: DARK_THEME.text }}>{proc.name}</td>
-                <td style={{ ...darkStyles.tableCell, color: DARK_THEME.text }}>{proc.cpu}</td>
-                <td style={{ ...darkStyles.tableCell, color: DARK_THEME.text }}>{proc.memory}</td>
+      <h3 style={{ color: DARK_THEME.text, marginBottom: "15px" }}>Running Processes ({processes?.length || 0})</h3>
+      <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+        {processes && processes.length > 0 ? (
+          <table style={darkStyles.table}>
+            <thead>
+              <tr>
+                <th style={darkStyles.tableHeader}>PID</th>
+                <th style={darkStyles.tableHeader}>Process Name</th>
+                <th style={darkStyles.tableHeader}>CPU %</th>
+                <th style={darkStyles.tableHeader}>Memory %</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div style={{ fontSize: "12px", color: DARK_THEME.textMuted, marginTop: "8px", textAlign: "center" }}>
-        Showing {filtered.length} of {processes.length} processes
+            </thead>
+            <tbody>
+              {processes.map((process, index) => (
+                <tr key={index} style={{ 
+                  backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.05)'
+                }}>
+                  <td style={{ ...darkStyles.tableCell, fontFamily: 'monospace' }}>{process.pid}</td>
+                  <td style={{ ...darkStyles.tableCell, color: DARK_THEME.primary }}>{process.name}</td>
+                  <td style={{ 
+                    ...darkStyles.tableCell, 
+                    color: process.cpu > 50 ? DARK_THEME.danger : DARK_THEME.text,
+                    fontWeight: process.cpu > 50 ? 'bold' : 'normal'
+                  }}>
+                    {process.cpu?.toFixed(1)}%
+                  </td>
+                  <td style={{ 
+                    ...darkStyles.tableCell, 
+                    color: process.memory > 50 ? DARK_THEME.warning : DARK_THEME.text,
+                    fontWeight: process.memory > 50 ? 'bold' : 'normal'
+                  }}>
+                    {process.memory?.toFixed(1)}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p style={{ color: DARK_THEME.textMuted, textAlign: "center", padding: "20px" }}>
+            No processes data available
+          </p>
+        )}
       </div>
     </div>
   );
 }
 
-// Alert Banner Component
-function AlertBanner({ alerts }) {
-  const [hiddenAlerts, setHiddenAlerts] = useState([]);
-
-  const acknowledge = (index) => {
-    setHiddenAlerts((prev) => [...prev, index]);
-  };
-
-  if (!alerts || alerts.length === 0) return null;
-
+// AlertBanner Component
+function AlertBanner({ message, type = 'info' }) {
+  const bgColor = type === 'error' ? '#2d1a1a' : type === 'warning' ? '#2d2a1a' : '#1a2d1a';
+  const borderColor = type === 'error' ? DARK_THEME.danger : type === 'warning' ? DARK_THEME.warning : DARK_THEME.success;
+  const textColor = type === 'error' ? '#ff6b6b' : type === 'warning' ? '#ffd700' : '#6bff6b';
+  
   return (
-    <div style={{ width: "100%" }}>
-      {alerts.map((alert, i) =>
-        hiddenAlerts.includes(i) ? null : (
-          <div
-            key={i}
-            style={{
-              border: "1px solid #dc3545",
-              padding: "15px",
-              marginBottom: "8px",
-              backgroundColor: "#2d1a1a",
-              position: "relative",
-              borderRadius: "4px",
-              color: DARK_THEME.text,
-              textAlign: "center",
-              width: "100%"
-            }}
-          >
-            <strong>🚨 Alert: </strong> {alert.message || JSON.stringify(alert)}
-            <button
-              onClick={() => acknowledge(i)}
-              style={{ 
-                position: "absolute", 
-                right: "10px", 
-                top: "10px", 
-                background: "none", 
-                border: "none", 
-                cursor: "pointer",
-                fontSize: "18px",
-                color: DARK_THEME.text
-              }}
-            >
-              ×
-            </button>
-          </div>
-        )
-      )}
+    <div style={{
+      ...darkStyles.message,
+      backgroundColor: bgColor,
+      border: `1px solid ${borderColor}`,
+      color: textColor,
+      marginBottom: "15px"
+    }}>
+      {message}
     </div>
   );
 }
 
-// Live Dashboard Component
-function LiveDashboard() {
+// LiveDashboard Component
+function LiveDashboard({ token }) {
   const [messages, setMessages] = useState([]);
-  const [alerts, setAlerts] = useState([]);
-
-  const { lastMessage, readyState } = useWebSocket("ws://localhost:8000/ws");
+  
+  const { lastMessage, readyState } = useWebSocket(
+    `ws://localhost:8000/ws`,
+    {
+      shouldReconnect: () => true,
+      retryOnError: true,
+      reconnectAttempts: 10,
+      reconnectInterval: 3000
+    }
+  );
 
   useEffect(() => {
-    if (lastMessage !== null) {
+    if (lastMessage) {
       const data = JSON.parse(lastMessage.data);
-      setMessages((prev) => [...prev.slice(-49), data]);
-      
-      if (data.type === 'agent_data_update' && data.data) {
-        const cpu = data.data.cpu_usage || 0;
-        const memory = data.data.memory_usage || 0;
-        const disk = data.data.disk_usage || 0;
-        
-        if (cpu > 90) {
-          setAlerts(prev => [...prev, {
-            message: `High CPU Usage: ${cpu.toFixed(1)}% on ${data.data.hostname}`,
-            timestamp: new Date().toISOString()
-          }]);
-        }
-        if (memory > 90) {
-          setAlerts(prev => [...prev, {
-            message: `High Memory Usage: ${memory.toFixed(1)}% on ${data.data.hostname}`,
-            timestamp: new Date().toISOString()
-          }]);
-        }
-        if (disk > 90) {
-          setAlerts(prev => [...prev, {
-            message: `High Disk Usage: ${disk.toFixed(1)}% on ${data.data.hostname}`,
-            timestamp: new Date().toISOString()
-          }]);
-        }
-      }
+      setMessages(prev => [data, ...prev.slice(0, 9)]); // Keep last 10 messages
     }
   }, [lastMessage]);
 
   const connectionStatus = {
-    [WebSocket.CONNECTING]: 'Connecting',
-    [WebSocket.OPEN]: 'Open',
-    [WebSocket.CLOSING]: 'Closing',
-    [WebSocket.CLOSED]: 'Closed'
+    0: 'Connecting...',
+    1: 'Connected ✅',
+    2: 'Closing',
+    3: 'Closed'
   }[readyState];
 
   return (
     <div style={darkStyles.card}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-        <h3 style={{ color: DARK_THEME.text, margin: 0 }}>Live Dashboard</h3>
+      <h3 style={{ color: DARK_THEME.text, marginBottom: "15px" }}>Live Dashboard</h3>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '15px',
+        padding: '10px',
+        backgroundColor: readyState === 1 ? '#1a2d1a' : '#2d1a1a',
+        border: `1px solid ${readyState === 1 ? DARK_THEME.success : DARK_THEME.danger}`,
+        borderRadius: '4px'
+      }}>
+        <span style={{ color: DARK_THEME.text }}>
+          WebSocket Status: <strong>{connectionStatus}</strong>
+        </span>
         <span style={{ 
-          padding: "4px 8px", 
-          borderRadius: "4px", 
-          fontSize: "12px",
-          backgroundColor: readyState === WebSocket.OPEN ? DARK_THEME.success : DARK_THEME.danger,
-          color: "white"
+          color: readyState === 1 ? DARK_THEME.success : DARK_THEME.danger,
+          fontSize: '12px'
         }}>
-          WebSocket: {connectionStatus}
+          {messages.length} messages
         </span>
       </div>
       
-      <AlertBanner alerts={alerts} />
-      
-      {messages.length === 0 ? (
-        <p style={{ color: DARK_THEME.textMuted, textAlign: "center" }}>No live messages yet. WebSocket connection will show real-time updates.</p>
-      ) : (
-        <div style={{ maxHeight: "300px", overflow: "auto" }}>
-          {messages.map((msg, i) => (
-            <div key={i} style={{ 
-              padding: "8px", 
-              marginBottom: "8px", 
-              backgroundColor: "#333", 
-              borderRadius: "4px",
-              borderLeft: `4px solid ${
-                msg.type === 'agent_data_update' ? DARK_THEME.primary : 
-                msg.type === 'heartbeat' ? DARK_THEME.textMuted : 
-                msg.type === 'connection_established' ? DARK_THEME.success : 
-                DARK_THEME.warning
-              }`
-            }}>
-              <div style={{ fontSize: "12px", color: DARK_THEME.textMuted, marginBottom: "4px" }}>
-                <strong>Type:</strong> {msg.type} • {new Date(msg.timestamp || Date.now()).toLocaleTimeString()}
+      <div style={{ 
+        maxHeight: '300px', 
+        overflow: 'auto',
+        border: `1px solid ${DARK_THEME.border}`,
+        borderRadius: '4px',
+        padding: '10px'
+      }}>
+        {messages.length > 0 ? (
+          messages.map((msg, index) => (
+            <div 
+              key={index} 
+              style={{ 
+                padding: '8px', 
+                borderBottom: index < messages.length - 1 ? `1px solid ${DARK_THEME.border}` : 'none',
+                fontSize: '12px',
+                color: DARK_THEME.textMuted,
+                backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.05)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ 
+                  color: msg.type === 'agent_data_update' ? DARK_THEME.success : 
+                         msg.type === 'heartbeat' ? DARK_THEME.info : DARK_THEME.primary,
+                  fontWeight: 'bold'
+                }}>
+                  {msg.type}
+                </span>
+                <span style={{ fontSize: '11px' }}>
+                  {new Date(msg.timestamp).toLocaleTimeString()}
+                </span>
               </div>
-              <div style={{ fontSize: "14px", color: DARK_THEME.text }}>
-                {msg.type === 'agent_data_update' && `New agent data from ${msg.data?.hostname || 'unknown'}`}
-                {msg.type === 'heartbeat' && `Heartbeat: ${msg.message}`}
-                {msg.type === 'connection_established' && `Connected: ${msg.message}`}
-                {msg.type === 'client_message' && msg.message}
-                {msg.type === 'initial_data' && `Initial data loaded: ${msg.total_agent_data} entries`}
+              <div style={{ marginTop: '4px' }}>
+                {msg.message || (msg.data ? 'Data updated' : 'Heartbeat')}
               </div>
-              {msg.data && msg.type === 'agent_data_update' && (
-                <div style={{ fontSize: "12px", color: DARK_THEME.textMuted, marginTop: "4px" }}>
-                  CPU: {msg.data.cpu_usage?.toFixed(1)}% • Memory: {msg.data.memory_usage?.toFixed(1)}% • Disk: {msg.data.disk_usage?.toFixed(1)}%
-                </div>
-              )}
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        ) : (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '20px', 
+            color: DARK_THEME.textMuted,
+            fontStyle: 'italic'
+          }}>
+            No messages yet. WebSocket events will appear here.
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-// Main App Component
-function App() {
-  const [token, setToken] = useState(localStorage.getItem("token") || "");
-  const [userInfo, setUserInfo] = useState(null);
-  const [agentData, setAgentData] = useState(null);
-  const [form, setForm] = useState({ username: "", password: "" });
+// User Management Component
+function UserManagement({ apiClient, currentUser }) {
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [dashboardLoading, setDashboardLoading] = useState(false);
-
-  useEffect(() => {
-    if (token) {
-      fetchUserInfo(token);
-      fetchLatestAgentData();
-    }
-  }, [token]);
-
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
 
   const showMessage = (msg, isError = false) => {
     setMessage(msg);
     setTimeout(() => setMessage(""), 5000);
   };
 
-  const login = async () => {
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const resp = await apiClient.get("/admin/users");
+      setUsers(resp.data);
+    } catch (error) {
+      showMessage("Failed to fetch users", true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateUserRole = async (userId, newRole) => {
+    try {
+      await apiClient.put(`/admin/users/${userId}/role`, { role: newRole });
+      showMessage("User role updated successfully");
+      fetchUsers(); // Refresh the list
+    } catch (error) {
+      showMessage("Failed to update user role", true);
+    }
+  };
+
+  const toggleUserStatus = async (userId, currentStatus) => {
+    try {
+      if (currentStatus) {
+        await apiClient.put(`/admin/users/${userId}/enable`);
+        showMessage("User enabled successfully");
+      } else {
+        await apiClient.put(`/admin/users/${userId}/disable`);
+        showMessage("User disabled successfully");
+      }
+      fetchUsers(); // Refresh the list
+    } catch (error) {
+      showMessage("Failed to update user status", true);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser?.role === 'admin') {
+      fetchUsers();
+    }
+  }, [currentUser]);
+
+  if (currentUser?.role !== 'admin') {
+    return (
+      <div style={darkStyles.card}>
+        <h3 style={{ color: DARK_THEME.text }}>User Management</h3>
+        <p style={{ color: DARK_THEME.textMuted }}>Admin access required to manage users.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={darkStyles.card}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <h3 style={{ color: DARK_THEME.text, margin: 0 }}>User Management</h3>
+        <button 
+          onClick={fetchUsers} 
+          style={{ ...darkStyles.button, backgroundColor: DARK_THEME.secondary }}
+        >
+          Refresh Users
+        </button>
+      </div>
+
+      {message && (
+        <AlertBanner 
+          message={message} 
+          type={message.includes("Failed") ? "error" : "success"} 
+        />
+      )}
+
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "20px" }}>
+          <TailSpin height={30} width={30} />
+          <p style={{ color: DARK_THEME.textMuted, marginTop: "10px" }}>Loading users...</p>
+        </div>
+      ) : (
+        <div style={{ maxHeight: "400px", overflow: "auto" }}>
+          <table style={darkStyles.table}>
+            <thead>
+              <tr>
+                <th style={darkStyles.tableHeader}>Username</th>
+                <th style={darkStyles.tableHeader}>Email</th>
+                <th style={darkStyles.tableHeader}>Role</th>
+                <th style={darkStyles.tableHeader}>Status</th>
+                <th style={darkStyles.tableHeader}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id} style={{
+                  backgroundColor: user.id === currentUser.id ? 'rgba(0, 123, 255, 0.1)' : 'transparent'
+                }}>
+                  <td style={{ ...darkStyles.tableCell, color: DARK_THEME.text }}>
+                    {user.username} {user.id === currentUser.id && "(You)"}
+                  </td>
+                  <td style={{ ...darkStyles.tableCell, color: DARK_THEME.text }}>{user.email}</td>
+                  <td style={{ ...darkStyles.tableCell, color: DARK_THEME.text }}>
+                    <select
+                      value={user.role}
+                      onChange={(e) => updateUserRole(user.id, e.target.value)}
+                      style={darkStyles.select}
+                      disabled={user.id === currentUser.id}
+                    >
+                      <option value="guest">Guest</option>
+                      <option value="agent">Agent</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </td>
+                  <td style={{ ...darkStyles.tableCell, color: DARK_THEME.text }}>
+                    <span style={{ 
+                      color: user.disabled ? DARK_THEME.danger : DARK_THEME.success,
+                      fontWeight: "bold"
+                    }}>
+                      {user.disabled ? "Disabled" : "Active"}
+                    </span>
+                  </td>
+                  <td style={darkStyles.tableCell}>
+                    <button
+                      onClick={() => toggleUserStatus(user.id, user.disabled)}
+                      style={{
+                        ...darkStyles.button,
+                        backgroundColor: user.disabled ? DARK_THEME.success : DARK_THEME.warning,
+                        padding: "5px 10px",
+                        fontSize: "12px"
+                      }}
+                      disabled={user.id === currentUser.id}
+                    >
+                      {user.disabled ? "Enable" : "Disable"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Password Change Component
+function PasswordChange({ apiClient }) {
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const showMessage = (msg, isError = false) => {
+    setMessage(msg);
+    setTimeout(() => setMessage(""), 5000);
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      showMessage("New passwords don't match", true);
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      showMessage("Password must be at least 6 characters", true);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await apiClient.put("/users/me/password", {
+        current_password: passwordForm.currentPassword,
+        new_password: passwordForm.newPassword
+      });
+      showMessage("Password changed successfully");
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+    } catch (error) {
+      showMessage(error.response?.data?.detail || "Failed to change password", true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setPasswordForm({
+      ...passwordForm,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  return (
+    <div style={darkStyles.card}>
+      <h3 style={{ color: DARK_THEME.text, marginBottom: "20px" }}>Change Password</h3>
+      
+      {message && (
+        <AlertBanner 
+          message={message} 
+          type={message.includes("Failed") ? "error" : "success"} 
+        />
+      )}
+
+      <form onSubmit={handlePasswordChange}>
+        <input
+          type="password"
+          name="currentPassword"
+          placeholder="Current Password"
+          value={passwordForm.currentPassword}
+          onChange={handleInputChange}
+          style={darkStyles.input}
+          required
+        />
+        <input
+          type="password"
+          name="newPassword"
+          placeholder="New Password"
+          value={passwordForm.newPassword}
+          onChange={handleInputChange}
+          style={darkStyles.input}
+          required
+        />
+        <input
+          type="password"
+          name="confirmPassword"
+          placeholder="Confirm New Password"
+          value={passwordForm.confirmPassword}
+          onChange={handleInputChange}
+          style={darkStyles.input}
+          required
+        />
+        <button 
+          type="submit" 
+          disabled={loading}
+          style={{ 
+            ...darkStyles.button, 
+            backgroundColor: loading ? DARK_THEME.border : DARK_THEME.primary,
+            width: "100%"
+          }}
+        >
+          {loading ? <TailSpin height={20} width={20} color="white" /> : "Change Password"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// Registration Component
+function Registration({ onSwitchToLogin }) {
+  const [registerForm, setRegisterForm] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "guest"
+  });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const showMessage = (msg, isError = false) => {
+    setMessage(msg);
+    setTimeout(() => setMessage(""), 5000);
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    
+    if (registerForm.password !== registerForm.confirmPassword) {
+      showMessage("Passwords don't match", true);
+      return;
+    }
+
+    if (registerForm.password.length < 6) {
+      showMessage("Password must be at least 6 characters", true);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.post(`${API_BASE}/register`, {
+        username: registerForm.username,
+        email: registerForm.email,
+        password: registerForm.password,
+        role: registerForm.role
+      });
+      showMessage("Registration successful! Please login.");
+      setRegisterForm({
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        role: "guest"
+      });
+      setTimeout(() => onSwitchToLogin(), 2000);
+    } catch (error) {
+      showMessage(error.response?.data?.detail || "Registration failed", true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setRegisterForm({
+      ...registerForm,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  return (
+    <div style={{ ...darkStyles.card, maxWidth: "400px" }}>
+      <h2 style={{ color: DARK_THEME.text, marginBottom: "20px", textAlign: "center" }}>Register</h2>
+      
+      {message && (
+        <AlertBanner 
+          message={message} 
+          type={message.includes("failed") ? "error" : "success"} 
+        />
+      )}
+
+      <form onSubmit={handleRegister}>
+        <input
+          name="username"
+          placeholder="Username"
+          value={registerForm.username}
+          onChange={handleInputChange}
+          style={darkStyles.input}
+          required
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={registerForm.email}
+          onChange={handleInputChange}
+          style={darkStyles.input}
+          required
+        />
+        <select
+          name="role"
+          value={registerForm.role}
+          onChange={handleInputChange}
+          style={darkStyles.select}
+        >
+          <option value="guest">Guest (Read-only)</option>
+          <option value="agent">Agent (Can submit data)</option>
+        </select>
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={registerForm.password}
+          onChange={handleInputChange}
+          style={darkStyles.input}
+          required
+        />
+        <input
+          type="password"
+          name="confirmPassword"
+          placeholder="Confirm Password"
+          value={registerForm.confirmPassword}
+          onChange={handleInputChange}
+          style={darkStyles.input}
+          required
+        />
+        <button 
+          type="submit" 
+          disabled={loading}
+          style={{ 
+            ...darkStyles.button,
+            width: "100%", 
+            padding: "12px", 
+            backgroundColor: loading ? DARK_THEME.border : DARK_THEME.primary,
+            cursor: loading ? "not-allowed" : "pointer"
+          }}
+        >
+          {loading ? <TailSpin height={20} width={20} color="white" /> : "Register"}
+        </button>
+      </form>
+      
+      <div style={{ marginTop: "15px", textAlign: "center" }}>
+        <button 
+          onClick={onSwitchToLogin}
+          style={{ 
+            ...darkStyles.button, 
+            backgroundColor: "transparent", 
+            color: DARK_THEME.primary,
+            textDecoration: "underline"
+          }}
+        >
+          Already have an account? Login
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Login Component
+function Login({ onLogin, onSwitchToRegister }) {
+  const [form, setForm] = useState({ username: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+
+  const login = async (e) => {
+    e.preventDefault();
     if (!form.username || !form.password) {
       setError("Please enter both username and password");
       return;
@@ -492,55 +889,138 @@ function App() {
       const resp = await axios.post(`${API_BASE}/token`, params, {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
       });
-      const newToken = resp.data.access_token;
-      setToken(newToken);
-      localStorage.setItem("token", newToken);
+      
+      onLogin(resp.data.access_token, resp.data.user);
       setError("");
-      showMessage("Login successful!");
       setForm({ username: "", password: "" });
     } catch (err) {
       const errorMsg = err.response?.data?.detail || "Login failed";
       setError(errorMsg);
-      showMessage(errorMsg, true);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchUserInfo = async (userToken = token) => {
-    try {
-      const resp = await axios.get(`${API_BASE}/users/me`, {
-        headers: { Authorization: `Bearer ${userToken}` },
-      });
-      setUserInfo(resp.data);
-    } catch {
-      setError("Failed to fetch user info");
-      setUserInfo(null);
-      logout();
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      login(e);
     }
   };
 
-  const logout = () => {
-    setToken("");
-    setUserInfo(null);
-    setAgentData(null);
-    localStorage.removeItem("token");
-    setError("");
-    showMessage("Logged out successfully");
+  return (
+    <div style={{ ...darkStyles.card, maxWidth: "400px" }}>
+      <h2 style={{ color: DARK_THEME.text, marginBottom: "20px", textAlign: "center" }}>Login</h2>
+      <form onSubmit={login}>
+        <div style={{ marginBottom: "15px" }}>
+          <input 
+            name="username" 
+            placeholder="Username or Email" 
+            value={form.username}
+            onChange={handleChange}
+            onKeyPress={handleKeyPress}
+            style={darkStyles.input}
+          />
+          <input
+            name="password"
+            type="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            onKeyPress={handleKeyPress}
+            style={darkStyles.input}
+          />
+        </div>
+        <button 
+          onClick={login} 
+          disabled={loading}
+          style={{ 
+            ...darkStyles.button,
+            width: "100%", 
+            padding: "12px", 
+            backgroundColor: loading ? DARK_THEME.border : DARK_THEME.primary,
+            cursor: loading ? "not-allowed" : "pointer"
+          }}
+        >
+          {loading ? <TailSpin height={20} width={20} color="white" /> : "Login"}
+        </button>
+        {error && <AlertBanner message={error} type="error" />}
+      </form>
+      
+      <div style={{ marginTop: "15px", textAlign: "center" }}>
+        <button 
+          onClick={onSwitchToRegister}
+          style={{ 
+            ...darkStyles.button, 
+            backgroundColor: "transparent", 
+            color: DARK_THEME.primary,
+            textDecoration: "underline"
+          }}
+        >
+          Don't have an account? Register
+        </button>
+      </div>
+      
+      <div style={{ marginTop: "15px", fontSize: "12px", color: DARK_THEME.textMuted, textAlign: "center" }}>
+        <strong>Demo admin:</strong> admin / adminpass
+      </div>
+    </div>
+  );
+}
+
+// Main App Component
+function App() {
+  const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const [currentUser, setCurrentUser] = useState(null);
+  const [agentData, setAgentData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [authMode, setAuthMode] = useState("login"); // "login" or "register"
+
+  // Create API client with current token
+  const apiClient = createApiClient(token);
+
+  useEffect(() => {
+    if (token) {
+      fetchUserInfo();
+      fetchLatestAgentData();
+    }
+  }, [token]);
+
+  const fetchUserInfo = async () => {
+    try {
+      const resp = await apiClient.get("/users/me");
+      setCurrentUser(resp.data);
+    } catch {
+      logout();
+    }
   };
 
   const fetchLatestAgentData = async () => {
     setDashboardLoading(true);
     try {
-      const resp = await axios.get(`${API_BASE}/agent/data/latest`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const resp = await apiClient.get("/agent/data/latest");
       setAgentData(resp.data.data);
     } catch {
-      showMessage("Failed to fetch agent data", true);
+      // Handle error silently
     } finally {
       setDashboardLoading(false);
     }
+  };
+
+  const handleLogin = (newToken, user) => {
+    setToken(newToken);
+    setCurrentUser(user);
+    localStorage.setItem("token", newToken);
+  };
+
+  const logout = () => {
+    setToken("");
+    setCurrentUser(null);
+    setAgentData(null);
+    localStorage.removeItem("token");
+    setActiveTab("dashboard");
+    setAuthMode("login");
   };
 
   const submitSampleAgentData = async () => {
@@ -564,185 +1044,212 @@ function App() {
         ]
       };
 
-      await axios.post(`${API_BASE}/agent/data`, sampleData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      showMessage("Sample agent data submitted!");
+      await apiClient.post("/agent/data", sampleData);
       setTimeout(fetchLatestAgentData, 500);
     } catch {
-      showMessage("Failed to submit agent data", true);
+      // Handle error silently
+    } finally {
       setDashboardLoading(false);
     }
   };
 
   const testSlackAlert = async () => {
     try {
-      await axios.post(`${API_BASE}/slack/test`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      showMessage("Slack test alert sent!");
+      await apiClient.post("/slack/test", {});
     } catch {
-      showMessage("Failed to send Slack test alert", true);
+      // Handle error silently
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      login();
+  // Render dashboard content
+  const renderDashboardContent = () => {
+    if (dashboardLoading) {
+      return (
+        <div style={{ ...darkStyles.card, textAlign: "center", padding: "40px" }}>
+          <TailSpin height={40} width={40} />
+          <p style={{ color: DARK_THEME.text, marginTop: "15px" }}>Loading agent data...</p>
+        </div>
+      );
     }
+
+    if (agentData) {
+      return (
+        <>
+          {/* Charts Row */}
+          <div style={darkStyles.gridContainer}>
+            <MetricsChart 
+              cpu={agentData.cpu_usage}
+              memory={agentData.memory_usage}
+              disk={agentData.disk_usage}
+            />
+            <NetworkChart networkData={agentData.network_activity} />
+          </div>
+
+          {/* Data Row */}
+          <div style={darkStyles.gridContainer}>
+            <div style={darkStyles.gridCard}>
+              <h3 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", textAlign: "center" }}>User Information</h3>
+              {currentUser ? (
+                <pre style={darkStyles.pre}>
+                  {JSON.stringify(currentUser, null, 2)}
+                </pre>
+              ) : (
+                <p style={{ color: DARK_THEME.textMuted, textAlign: "center" }}>Loading user info...</p>
+              )}
+            </div>
+            <ProcessList processes={agentData.processes} />
+          </div>
+
+          {/* Raw Data */}
+          <div style={darkStyles.card}>
+            <h3 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", textAlign: "center" }}>Raw Agent Data</h3>
+            <textarea
+              value={JSON.stringify(agentData, null, 2)}
+              readOnly
+              style={{
+                width: "100%",
+                height: "200px",
+                background: "#333",
+                color: "#fff",
+                fontFamily: "monospace",
+                padding: "15px",
+                borderRadius: "4px",
+                border: `1px solid ${DARK_THEME.border}`,
+                resize: "none",
+                fontSize: "12px"
+              }}
+            />
+          </div>
+        </>
+      );
+    }
+
+    return (
+      <div style={{ ...darkStyles.card, textAlign: "center", padding: "40px" }}>
+        <p style={{ color: DARK_THEME.textMuted }}>No agent data available. Submit sample data to get started.</p>
+      </div>
+    );
   };
+
+  // Render based on authentication status
+  if (!token) {
+    return (
+      <div style={darkStyles.container}>
+        <div style={darkStyles.mainContent}>
+          <h1 style={{ color: DARK_THEME.text, marginBottom: "10px", textAlign: "center", width: "100%" }}>PurpleTeam Dashboard</h1>
+          
+          {authMode === "login" ? (
+            <Login 
+              onLogin={handleLogin}
+              onSwitchToRegister={() => setAuthMode("register")}
+            />
+          ) : (
+            <Registration 
+              onSwitchToLogin={() => setAuthMode("login")}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={darkStyles.container}>
       <div style={darkStyles.mainContent}>
         <h1 style={{ color: DARK_THEME.text, marginBottom: "10px", textAlign: "center", width: "100%" }}>PurpleTeam Dashboard</h1>
-        
-        {message && (
-          <div style={{
-            ...darkStyles.message,
-            backgroundColor: message.includes("failed") ? "#2d1a1a" : "#1a2d1a",
-            border: `1px solid ${message.includes("failed") ? DARK_THEME.danger : DARK_THEME.success}`,
-            color: message.includes("failed") ? "#ff6b6b" : "#6bff6b"
-          }}>
-            {message}
-          </div>
-        )}
 
-        {!token ? (
-          <div style={darkStyles.loginContainer}>
-            <div style={{ ...darkStyles.card, maxWidth: "400px" }}>
-              <h2 style={{ color: DARK_THEME.text, marginBottom: "20px", textAlign: "center" }}>Login</h2>
-              <div style={{ marginBottom: "15px" }}>
-                <input 
-                  name="username" 
-                  placeholder="Username (admin)" 
-                  value={form.username}
-                  onChange={handleChange}
-                  onKeyPress={handleKeyPress}
-                  style={darkStyles.input}
-                />
-                <input
-                  name="password"
-                  type="password"
-                  placeholder="Password (adminpass)"
-                  value={form.password}
-                  onChange={handleChange}
-                  onKeyPress={handleKeyPress}
-                  style={darkStyles.input}
-                />
-              </div>
-              <button 
-                onClick={login} 
-                disabled={loading}
-                style={{ 
-                  ...darkStyles.button,
-                  width: "100%", 
-                  padding: "12px", 
-                  backgroundColor: loading ? DARK_THEME.border : DARK_THEME.primary,
-                  cursor: loading ? "not-allowed" : "pointer"
-                }}
-              >
-                {loading ? <TailSpin height={20} width={20} color="white" /> : "Login"}
-              </button>
-              {error && <p style={{ color: DARK_THEME.danger, marginTop: "15px", textAlign: "center" }}>{error}</p>}
-              <div style={{ marginTop: "15px", fontSize: "12px", color: DARK_THEME.textMuted, textAlign: "center" }}>
-                <strong>Demo credentials:</strong> admin / adminpass
-              </div>
+        {/* Header */}
+        <div style={darkStyles.card}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <h2 style={{ color: DARK_THEME.text, margin: "0 0 5px 0" }}>Welcome, {currentUser?.username}!</h2>
+              <p style={{ color: DARK_THEME.textMuted, margin: 0 }}>
+                Role: <span style={{ 
+                  color: currentUser?.role === 'admin' ? DARK_THEME.success : 
+                         currentUser?.role === 'agent' ? DARK_THEME.primary : DARK_THEME.textMuted,
+                  fontWeight: 'bold'
+                }}>{currentUser?.role}</span> | Email: {currentUser?.email}
+              </p>
             </div>
+            <button onClick={logout} style={{ ...darkStyles.button, backgroundColor: DARK_THEME.danger }}>
+              Logout
+            </button>
           </div>
-        ) : (
+        </div>
+
+        {/* Navigation Tabs */}
+        <div style={darkStyles.tabContainer}>
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            style={{
+              ...darkStyles.tab,
+              backgroundColor: activeTab === "dashboard" ? DARK_THEME.primary : DARK_THEME.secondary
+            }}
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => setActiveTab("account")}
+            style={{
+              ...darkStyles.tab,
+              backgroundColor: activeTab === "account" ? DARK_THEME.primary : DARK_THEME.secondary
+            }}
+          >
+            Account Settings
+          </button>
+          {currentUser?.role === 'admin' && (
+            <button
+              onClick={() => setActiveTab("users")}
+              style={{
+                ...darkStyles.tab,
+                backgroundColor: activeTab === "users" ? DARK_THEME.primary : DARK_THEME.secondary
+              }}
+            >
+              User Management
+            </button>
+          )}
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === "dashboard" && (
           <>
-            {/* Header */}
-            <div style={darkStyles.card}>
-              <h2 style={{ color: DARK_THEME.text, margin: "0 0 10px 0" }}>Welcome, {userInfo?.username}!</h2>
-              <button onClick={logout} style={{ ...darkStyles.button, backgroundColor: DARK_THEME.danger }}>
-                Logout
-              </button>
-            </div>
-
             {/* Quick Actions */}
             <div style={darkStyles.card}>
               <h3 style={{ color: DARK_THEME.text, margin: "0 0 15px 0" }}>Quick Actions</h3>
               <div style={darkStyles.quickActions}>
-                <button onClick={() => fetchUserInfo()} style={darkStyles.button}>
+                <button onClick={fetchUserInfo} style={darkStyles.button}>
                   Refresh User Info
                 </button>
                 <button onClick={fetchLatestAgentData} disabled={dashboardLoading} style={darkStyles.button}>
                   {dashboardLoading ? <TailSpin height={20} width={20} /> : "Refresh Agent Data"}
                 </button>
-                <button onClick={submitSampleAgentData} disabled={dashboardLoading} style={{ ...darkStyles.button, backgroundColor: DARK_THEME.success }}>
-                  {dashboardLoading ? <TailSpin height={20} width={20} /> : "Submit Sample Data"}
-                </button>
-                <button onClick={testSlackAlert} style={{ ...darkStyles.button, backgroundColor: DARK_THEME.info }}>
-                  Test Slack Alert
-                </button>
+                {(currentUser?.role === 'agent' || currentUser?.role === 'admin') && (
+                  <>
+                    <button onClick={submitSampleAgentData} disabled={dashboardLoading} style={{ ...darkStyles.button, backgroundColor: DARK_THEME.success }}>
+                      {dashboardLoading ? <TailSpin height={20} width={20} /> : "Submit Sample Data"}
+                    </button>
+                    <button onClick={testSlackAlert} style={{ ...darkStyles.button, backgroundColor: DARK_THEME.info }}>
+                      Test Slack Alert
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
             {/* Dashboard Content */}
-            {dashboardLoading ? (
-              <div style={{ ...darkStyles.card, textAlign: "center", padding: "40px" }}>
-                <TailSpin height={40} width={40} />
-                <p style={{ color: DARK_THEME.text, marginTop: "15px" }}>Loading agent data...</p>
-              </div>
-            ) : agentData ? (
-              <>
-                {/* Charts Row */}
-                <div style={darkStyles.gridContainer}>
-                  <MetricsChart 
-                    cpu={agentData.cpu_usage}
-                    memory={agentData.memory_usage}
-                    disk={agentData.disk_usage}
-                  />
-                  <NetworkChart networkData={agentData.network_activity} />
-                </div>
-
-                {/* Data Row */}
-                <div style={darkStyles.gridContainer}>
-                  <div style={darkStyles.gridCard}>
-                    <h3 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", textAlign: "center" }}>User Information</h3>
-                    {userInfo ? (
-                      <pre style={darkStyles.pre}>
-                        {JSON.stringify(userInfo, null, 2)}
-                      </pre>
-                    ) : (
-                      <p style={{ color: DARK_THEME.textMuted, textAlign: "center" }}>Loading user info...</p>
-                    )}
-                  </div>
-                  <ProcessList processes={agentData.processes} />
-                </div>
-
-                {/* Raw Data */}
-                <div style={darkStyles.card}>
-                  <h3 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", textAlign: "center" }}>Raw Agent Data</h3>
-                  <textarea
-                    value={JSON.stringify(agentData, null, 2)}
-                    readOnly
-                    style={{
-                      width: "100%",
-                      height: "200px",
-                      background: "#333",
-                      color: "#fff",
-                      fontFamily: "monospace",
-                      padding: "15px",
-                      borderRadius: "4px",
-                      border: `1px solid ${DARK_THEME.border}`,
-                      resize: "none",
-                      fontSize: "12px"
-                    }}
-                  />
-                </div>
-              </>
-            ) : (
-              <div style={{ ...darkStyles.card, textAlign: "center", padding: "40px" }}>
-                <p style={{ color: DARK_THEME.textMuted }}>No agent data available. Submit sample data to get started.</p>
-              </div>
-            )}
+            {renderDashboardContent()}
 
             {/* Live Dashboard */}
-            <LiveDashboard />
+            <LiveDashboard token={token} />
           </>
+        )}
+
+        {activeTab === "account" && (
+          <PasswordChange apiClient={apiClient} />
+        )}
+
+        {activeTab === "users" && (
+          <UserManagement apiClient={apiClient} currentUser={currentUser} />
         )}
       </div>
     </div>
