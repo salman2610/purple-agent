@@ -1,32 +1,56 @@
-from sqlalchemy import Table, Column, Integer, String, Boolean, Float, TIMESTAMP, JSON, text
-from database import metadata
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional, Dict, Any
 
-users = Table(
-    "users", metadata,
-    Column("id", Integer, primary_key=True),
-    Column("username", String(50), unique=True, nullable=False),
-    Column("hashed_password", String(255), nullable=False),
-    Column("disabled", Boolean, default=False),
-)
+# Alerting Models
+class AlertRuleBase(BaseModel):
+    metric: str
+    threshold_value: float
+    comparison_operator: str
+    severity: str = "medium"
+    active: bool = True
+    description: Optional[str] = None
 
-agent_data = Table(
-    "agent_data", metadata,
-    Column("id", Integer, primary_key=True),
-    Column("timestamp", TIMESTAMP(timezone=True), nullable=False),
-    Column("hostname", String(255), nullable=False),
-    Column("cpu_usage", Float),
-    Column("memory_usage", Float),
-    Column("disk_usage", Float),
-    Column("network_bytes_sent", Integer),
-    Column("network_bytes_received", Integer),
-    Column("processes", JSON),
-    Column("suspicious_activity", JSON)
-)
+class AlertRuleCreate(AlertRuleBase):
+    pass
 
-alerts = Table(
-    "alerts", metadata,
-    Column("id", Integer, primary_key=True),
-    Column("timestamp", TIMESTAMP(timezone=True), server_default=text("now()")),
-    Column("message", String, nullable=False),
-    Column("acknowledged", Boolean, default=False)
-)
+class AlertRule(AlertRuleBase):
+    id: int
+    created_by: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class IncidentBase(BaseModel):
+    alert_rule_id: Optional[int] = None
+    agent_data_id: Optional[int] = None
+    incident_type: str
+    message: str
+    severity: str = "medium"
+    metadata: Optional[Dict[str, Any]] = None
+
+class IncidentCreate(IncidentBase):
+    pass
+
+class Incident(IncidentBase):
+    id: int
+    status: str = "new"
+    created_at: datetime
+    acknowledged_by: Optional[int] = None
+    acknowledged_at: Optional[datetime] = None
+    resolved_by: Optional[int] = None
+    resolved_at: Optional[datetime] = None
+    resolved_notes: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class IncidentUpdate(BaseModel):
+    status: Optional[str] = None
+    resolved_notes: Optional[str] = None
+
+class IncidentStats(BaseModel):
+    status: str
+    count: int

@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import asyncio
 from slack_sdk import WebClient
 
@@ -16,8 +16,14 @@ from crud import (
     create_agent_data, get_latest_agent_data, get_all_agent_data,
     create_user, get_user_by_username, get_user_by_email, get_user_by_id,
     update_user_last_login, update_user_role, disable_user, enable_user,
-    get_all_users, update_user_password
+    get_all_users, update_user_password,
+    create_alert_rule, get_alert_rules, get_alert_rule, update_alert_rule, 
+    delete_alert_rule, toggle_alert_rule, create_incident, get_incidents,
+    get_incident, update_incident_status, get_incident_stats, get_incidents_count
 )
+
+# Import the AlertEvaluator
+from alerts import AlertEvaluator
 
 app = FastAPI(title="PurpleTeam Dashboard Backend")
 
@@ -55,6 +61,9 @@ async def startup():
     await database.connect()
     create_tables()
     
+    # Initialize alerting schema
+    await init_alerting_schema()
+    
     # Create default admin user if it doesn't exist
     admin_user = await get_user_by_username("admin")
     if not admin_user:
@@ -83,10 +92,11 @@ client = WebClient(token=slack_token)
 
 def send_slack_alert(message: str):
     try:
-        client.chat_postMessage(channel="#alerts", text=message)
-        print(f"Slack alert sent: {message}")
+        # Temporarily disable Slack alerts to avoid errors
+        print(f"📢 SECURITY ALERT: {message}")
+        # client.chat_postMessage(channel="#alerts", text=message)
     except Exception as e:
-        print(f"Failed to send Slack alert: {e}")
+        print(f"Alert logging: {e}")
 
 # Using Argon2 for modern password hashing
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
@@ -158,6 +168,60 @@ class Token(BaseModel):
 class PasswordChange(BaseModel):
     current_password: str
     new_password: str
+
+# Alerting Models - FIXED with optional datetimes
+class AlertRuleBase(BaseModel):
+    metric: str
+    threshold_value: float
+    comparison_operator: str
+    severity: str = "medium"
+    active: bool = True
+    description: Optional[str] = None
+
+class AlertRuleCreate(AlertRuleBase):
+    pass
+
+class AlertRule(AlertRuleBase):
+    id: int
+    created_by: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+# FIXED Incident Models with proper optional fields
+class IncidentBase(BaseModel):
+    alert_rule_id: Optional[int] = None
+    agent_data_id: Optional[int] = None
+    incident_type: str
+    message: str
+    severity: str = "medium"
+    metadata: Optional[Dict[str, Any]] = None
+
+class IncidentCreate(IncidentBase):
+    pass
+
+class Incident(IncidentBase):
+    id: int
+    status: Optional[str] = "new"  # Made optional with default
+    created_at: Optional[datetime] = None
+    acknowledged_by: Optional[int] = None
+    acknowledged_at: Optional[datetime] = None
+    resolved_by: Optional[int] = None
+    resolved_at: Optional[datetime] = None
+    resolved_notes: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class IncidentUpdate(BaseModel):
+    status: Optional[str] = None
+    resolved_notes: Optional[str] = None
+
+class IncidentStats(BaseModel):
+    status: Optional[str] = None  # Made optional
+    count: int
 
 # Authentication functions
 def verify_password(plain_password, hashed_password):
@@ -242,6 +306,72 @@ def require_any_role(required_roles: List[str]):
 get_admin_user = require_role("admin")
 get_agent_user = require_any_role(["agent", "admin"])
 get_guest_user = require_any_role(["guest", "agent", "admin"])
+
+# Alerting Schema Initialization - FIXED VERSION
+async def init_alerting_schema():
+    """Initialize the alerting schema with default rules - SQLite compatible"""
+    try:
+        # Insert default alert rules if they don't exist
+        default_rules = [
+            {
+                "metric": "cpu_usage",
+                "threshold_value": 90.0,
+                "comparison_operator": ">",
+                "severity": "high",
+                "description": "CPU usage exceeds 90%"
+            },
+            {
+                "metric": "memory_usage", 
+                "threshold_value": 85.0,
+                "comparison_operator": ">",
+                "severity": "high",
+                "description": "Memory usage exceeds 85%"
+            },
+            {
+                "metric": "disk_usage",
+                "threshold_value": 90.0,
+                "comparison_operator": ">", 
+                "severity": "critical",
+                "description": "Disk usage exceeds 90%"
+            },
+            {
+                "metric": "cpu_usage",
+                "threshold_value": 80.0,
+                "comparison_operator": ">",
+                "severity": "medium", 
+                "description": "CPU usage exceeds 80%"
+            },
+            {
+                "metric": "memory_usage",
+                "threshold_value": 75.0,
+                "comparison_operator": ">",
+                "severity": "medium",
+                "description": "Memory usage exceeds 75%"
+            }
+        ]
+        
+        for rule in default_rules:
+            # Check if rule already exists using proper parameter binding
+            existing = await database.fetch_one(
+                "SELECT id FROM alert_rules WHERE metric = :metric AND threshold_value = :threshold_value AND comparison_operator = :comparison_operator",
+                {
+                    "metric": rule["metric"],
+                    "threshold_value": rule["threshold_value"],
+                    "comparison_operator": rule["comparison_operator"]
+                }
+            )
+            if not existing:
+                # Use CURRENT_TIMESTAMP for SQLite
+                await database.execute("""
+                    INSERT INTO alert_rules (metric, threshold_value, comparison_operator, severity, description, created_at, updated_at)
+                    VALUES (:metric, :threshold_value, :comparison_operator, :severity, :description, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                """, rule)
+                print(f"✅ Created default alert rule: {rule['metric']} {rule['comparison_operator']} {rule['threshold_value']}")
+        
+        print("✅ Alerting schema initialized successfully!")
+        
+    except Exception as e:
+        print(f"⚠️ Alerting schema initialization error: {e}")
 
 # Authentication routes
 @app.post("/register", response_model=User)
@@ -378,7 +508,178 @@ async def enable_user_admin(user_id: int, current_user: User = Depends(get_admin
     await enable_user(user_id)
     return {"message": "User enabled"}
 
-# Agent data routes with role-based access
+# Alert Rules Management - FIXED VERSION
+@app.get("/alerts/rules", response_model=List[AlertRule])
+async def get_alert_rules_endpoint(
+    active_only: bool = True,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get all alert rules"""
+    rules = await get_alert_rules(active_only=active_only)
+    alert_rules = []
+    for rule in rules:
+        rule_dict = dict(rule)
+        # Ensure datetime fields are properly handled
+        if not rule_dict.get('created_at'):
+            rule_dict['created_at'] = datetime.utcnow()
+        if not rule_dict.get('updated_at'):
+            rule_dict['updated_at'] = datetime.utcnow()
+        alert_rules.append(AlertRule(**rule_dict))
+    return alert_rules
+
+@app.post("/alerts/rules", response_model=AlertRule)
+async def create_alert_rule_endpoint(
+    alert_rule: AlertRuleCreate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Create a new alert rule"""
+    rule = await create_alert_rule(alert_rule.dict(), current_user.id)
+    if not rule:
+        raise HTTPException(status_code=500, detail="Failed to create alert rule")
+    
+    rule_dict = dict(rule)
+    # Ensure datetime fields are properly handled
+    if not rule_dict.get('created_at'):
+        rule_dict['created_at'] = datetime.utcnow()
+    if not rule_dict.get('updated_at'):
+        rule_dict['updated_at'] = datetime.utcnow()
+    
+    return AlertRule(**rule_dict)
+
+@app.put("/alerts/rules/{rule_id}", response_model=AlertRule)
+async def update_alert_rule_endpoint(
+    rule_id: int,
+    alert_rule: AlertRuleCreate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Update an alert rule"""
+    rule = await update_alert_rule(rule_id, alert_rule.dict())
+    if not rule:
+        raise HTTPException(status_code=404, detail="Alert rule not found")
+    
+    rule_dict = dict(rule)
+    # Ensure datetime fields are properly handled
+    if not rule_dict.get('updated_at'):
+        rule_dict['updated_at'] = datetime.utcnow()
+    
+    return AlertRule(**rule_dict)
+
+@app.delete("/alerts/rules/{rule_id}")
+async def delete_alert_rule_endpoint(
+    rule_id: int,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Delete an alert rule"""
+    await delete_alert_rule(rule_id)
+    return {"message": "Alert rule deleted successfully"}
+
+@app.patch("/alerts/rules/{rule_id}/toggle")
+async def toggle_alert_rule_endpoint(
+    rule_id: int,
+    active: bool,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Toggle alert rule active status"""
+    rule = await toggle_alert_rule(rule_id, active)
+    if not rule:
+        raise HTTPException(status_code=404, detail="Alert rule not found")
+    
+    rule_dict = dict(rule)
+    # Ensure datetime fields are properly handled
+    if not rule_dict.get('updated_at'):
+        rule_dict['updated_at'] = datetime.utcnow()
+    
+    return AlertRule(**rule_dict)
+
+# Incidents Management - FIXED VERSION
+@app.get("/incidents", response_model=List[Incident])
+async def get_incidents_endpoint(
+    status: str = None,
+    severity: str = None,
+    limit: int = 100,
+    offset: int = 0,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get incidents with optional filtering"""
+    incidents = await get_incidents(status=status, severity=severity, limit=limit, offset=offset)
+    incident_list = []
+    for incident in incidents:
+        incident_dict = dict(incident)
+        # Ensure required fields are properly handled
+        if not incident_dict.get('status'):
+            incident_dict['status'] = 'new'
+        if not incident_dict.get('created_at'):
+            incident_dict['created_at'] = datetime.utcnow()
+        incident_list.append(Incident(**incident_dict))
+    return incident_list
+
+@app.get("/incidents/stats", response_model=List[IncidentStats])
+async def get_incident_stats_endpoint(current_user: User = Depends(get_current_active_user)):
+    """Get incident statistics"""
+    stats = await get_incident_stats()
+    stats_list = []
+    for stat in stats:
+        stat_dict = dict(stat)
+        # Ensure status field is properly handled
+        if not stat_dict.get('status'):
+            stat_dict['status'] = 'unknown'
+        stats_list.append(IncidentStats(**stat_dict))
+    return stats_list
+
+@app.get("/incidents/{incident_id}", response_model=Incident)
+async def get_incident_endpoint(
+    incident_id: int,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get a specific incident"""
+    incident = await get_incident(incident_id)
+    if not incident:
+        raise HTTPException(status_code=404, detail="Incident not found")
+    
+    incident_dict = dict(incident)
+    # Ensure required fields are properly handled
+    if not incident_dict.get('status'):
+        incident_dict['status'] = 'new'
+    if not incident_dict.get('created_at'):
+        incident_dict['created_at'] = datetime.utcnow()
+    
+    return Incident(**incident_dict)
+
+@app.patch("/incidents/{incident_id}/status")
+async def update_incident_status_endpoint(
+    incident_id: int,
+    status_update: IncidentUpdate,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Update incident status"""
+    incident = await update_incident_status(
+        incident_id, 
+        status_update.status, 
+        current_user.id,
+        status_update.resolved_notes
+    )
+    if not incident:
+        raise HTTPException(status_code=404, detail="Incident not found")
+    
+    incident_dict = dict(incident)
+    # Ensure required fields are properly handled
+    if not incident_dict.get('status'):
+        incident_dict['status'] = 'new'
+    if not incident_dict.get('created_at'):
+        incident_dict['created_at'] = datetime.utcnow()
+    
+    return Incident(**incident_dict)
+
+@app.get("/incidents/count")
+async def get_incident_count_endpoint(
+    status: str = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get incident count"""
+    count = await get_incidents_count(status=status)
+    return {"count": count}
+
+# Agent data routes with role-based access - FIXED VERSION
 @app.post("/agent/data", status_code=201)
 async def receive_agent_data(
     data: dict = Body(...), 
@@ -387,13 +688,36 @@ async def receive_agent_data(
     """
     Receive periodic data from agent (Agent/Admin only)
     """
+    print(f"📥 Received agent data from {current_user.username}")
+    
+    # Ensure timestamp is properly formatted
     if 'timestamp' not in data:
         data['timestamp'] = datetime.utcnow().isoformat() + 'Z'
+    else:
+        # Ensure timestamp ends with Z for UTC
+        if not data['timestamp'].endswith('Z'):
+            data['timestamp'] = data['timestamp'] + 'Z'
     
+    # Store agent data first
     data_id = await create_agent_data(data)
+    if not data_id:
+        raise HTTPException(status_code=500, detail="Failed to store agent data")
     
-    check_critical_conditions(data)
+    print(f"✅ Agent data stored with ID: {data_id}")
     
+    # Check for alerts
+    triggered_alerts = await AlertEvaluator.check_agent_data_for_alerts(data, data_id)
+    
+    # Check for suspicious processes
+    if data.get('processes'):
+        suspicious_processes = await AlertEvaluator.evaluate_suspicious_processes(
+            data['processes'], 
+            data_id, 
+            data.get('hostname', 'unknown')
+        )
+        triggered_alerts.extend(suspicious_processes)
+    
+    # Broadcast updates
     await manager.broadcast({
         "type": "agent_data_update",
         "data": data,
@@ -401,32 +725,19 @@ async def receive_agent_data(
         "timestamp": datetime.utcnow().isoformat() + 'Z'
     })
     
-    return {"message": "Agent data received", "data_id": data_id}
-
-def check_critical_conditions(data: dict):
-    """Check agent data for critical conditions and send Slack alerts"""
-    cpu_usage = data.get('cpu_usage', 0)
-    if cpu_usage > 90:
-        send_slack_alert(f"🚨 High CPU Usage Alert: {cpu_usage:.1f}% on {data.get('hostname', 'unknown')}")
+    # Broadcast new incidents
+    for alert in triggered_alerts:
+        await manager.broadcast({
+            "type": "new_incident",
+            "incident": alert["incident"],
+            "timestamp": datetime.utcnow().isoformat() + 'Z'
+        })
     
-    memory_usage = data.get('memory_usage', 0)
-    if memory_usage > 90:
-        send_slack_alert(f"🚨 High Memory Usage Alert: {memory_usage:.1f}% on {data.get('hostname', 'unknown')}")
-    
-    disk_usage = data.get('disk_usage', 0)
-    if disk_usage > 90:
-        send_slack_alert(f"🚨 High Disk Usage Alert: {disk_usage:.1f}% on {data.get('hostname', 'unknown')}")
-    
-    processes = data.get('processes', [])
-    suspicious_processes = [p for p in processes if is_suspicious_process(p.get('name', ''))]
-    if suspicious_processes:
-        process_names = [p.get('name') for p in suspicious_processes]
-        send_slack_alert(f"⚠️ Suspicious processes detected: {', '.join(process_names)} on {data.get('hostname', 'unknown')}")
-
-def is_suspicious_process(process_name: str) -> bool:
-    """Check if a process name is suspicious"""
-    suspicious_keywords = ['miner', 'backdoor', 'malware', 'ransomware', 'keylogger', 'rootkit', 'trojan']
-    return any(keyword in process_name.lower() for keyword in suspicious_keywords)
+    return {
+        "message": "Agent data received", 
+        "data_id": data_id,
+        "triggered_alerts": len(triggered_alerts)
+    }
 
 @app.get("/agent/data/latest")
 async def get_latest_agent_data_endpoint(current_user: User = Depends(get_guest_user)):

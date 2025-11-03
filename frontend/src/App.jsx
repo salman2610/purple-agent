@@ -715,6 +715,459 @@ function PasswordChange({ apiClient }) {
   );
 }
 
+// Alerts Management Component
+function AlertsManagement({ apiClient, currentUser }) {
+  const [alertRules, setAlertRules] = useState([]);
+  const [incidents, setIncidents] = useState([]);
+  const [incidentStats, setIncidentStats] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('rules');
+  const [showCreateRule, setShowCreateRule] = useState(false);
+  
+  const [newRule, setNewRule] = useState({
+    metric: 'cpu_usage',
+    threshold_value: 80.0,
+    comparison_operator: '>',
+    severity: 'medium',
+    description: ''
+  });
+
+  const fetchAlertRules = async () => {
+    setLoading(true);
+    try {
+      const response = await apiClient.get('/alerts/rules');
+      setAlertRules(response.data);
+    } catch (error) {
+      console.error('Failed to fetch alert rules:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchIncidents = async () => {
+    try {
+      const response = await apiClient.get('/incidents?limit=50');
+      setIncidents(response.data);
+    } catch (error) {
+      console.error('Failed to fetch incidents:', error);
+    }
+  };
+
+  const fetchIncidentStats = async () => {
+    try {
+      const response = await apiClient.get('/incidents/stats');
+      setIncidentStats(response.data);
+    } catch (error) {
+      console.error('Failed to fetch incident stats:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'rules') {
+      fetchAlertRules();
+    } else if (activeTab === 'incidents') {
+      fetchIncidents();
+      fetchIncidentStats();
+    }
+  }, [activeTab]);
+
+  const createAlertRule = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await apiClient.post('/alerts/rules', newRule);
+      setShowCreateRule(false);
+      setNewRule({
+        metric: 'cpu_usage',
+        threshold_value: 80.0,
+        comparison_operator: '>',
+        severity: 'medium',
+        description: ''
+      });
+      fetchAlertRules();
+    } catch (error) {
+      console.error('Failed to create alert rule:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleRule = async (ruleId, active) => {
+    try {
+      await apiClient.patch(`/alerts/rules/${ruleId}/toggle?active=${!active}`);
+      fetchAlertRules();
+    } catch (error) {
+      console.error('Failed to toggle rule:', error);
+    }
+  };
+
+  const deleteRule = async (ruleId) => {
+    if (window.confirm('Are you sure you want to delete this alert rule?')) {
+      try {
+        await apiClient.delete(`/alerts/rules/${ruleId}`);
+        fetchAlertRules();
+      } catch (error) {
+        console.error('Failed to delete rule:', error);
+      }
+    }
+  };
+
+  const updateIncidentStatus = async (incidentId, status) => {
+    try {
+      await apiClient.patch(`/incidents/${incidentId}/status`, { status });
+      fetchIncidents();
+    } catch (error) {
+      console.error('Failed to update incident status:', error);
+    }
+  };
+
+  const getSeverityColor = (severity) => {
+    const colors = {
+      low: '#28a745',
+      medium: '#ffc107',
+      high: '#fd7e14',
+      critical: '#dc3545'
+    };
+    return colors[severity] || '#6c757d';
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      new: '#dc3545',
+      acknowledged: '#fd7e14',
+      resolved: '#28a745',
+      closed: '#6c757d'
+    };
+    return colors[status] || '#6c757d';
+  };
+
+  if (currentUser?.role !== 'admin') {
+    return (
+      <div style={darkStyles.card}>
+        <h3 style={{ color: DARK_THEME.text }}>Alerts & Incidents Management</h3>
+        <p style={{ color: DARK_THEME.textMuted }}>Admin access required to manage alerts and incidents.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={darkStyles.card}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ color: DARK_THEME.text, margin: 0 }}>Alerts & Incidents Management</h3>
+        <div style={darkStyles.tabContainer}>
+          <button
+            onClick={() => setActiveTab('rules')}
+            style={{
+              ...darkStyles.tab,
+              backgroundColor: activeTab === 'rules' ? DARK_THEME.primary : DARK_THEME.secondary
+            }}
+          >
+            Alert Rules
+          </button>
+          <button
+            onClick={() => setActiveTab('incidents')}
+            style={{
+              ...darkStyles.tab,
+              backgroundColor: activeTab === 'incidents' ? DARK_THEME.primary : DARK_THEME.secondary
+            }}
+          >
+            Incidents
+          </button>
+        </div>
+      </div>
+
+      {activeTab === 'rules' && (
+        <>
+          <div style={{ marginBottom: '20px' }}>
+            <button
+              onClick={() => setShowCreateRule(!showCreateRule)}
+              style={{ ...darkStyles.button, backgroundColor: DARK_THEME.success }}
+            >
+              {showCreateRule ? 'Cancel' : 'Create New Rule'}
+            </button>
+          </div>
+
+          {showCreateRule && (
+            <div style={{ ...darkStyles.card, backgroundColor: '#2a2a2a', marginBottom: '20px' }}>
+              <h4 style={{ color: DARK_THEME.text, marginBottom: '15px' }}>Create Alert Rule</h4>
+              <form onSubmit={createAlertRule}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' }}>
+                  <div>
+                    <label style={{ color: DARK_THEME.text, display: 'block', marginBottom: '5px' }}>Metric</label>
+                    <select
+                      value={newRule.metric}
+                      onChange={(e) => setNewRule({ ...newRule, metric: e.target.value })}
+                      style={darkStyles.select}
+                    >
+                      <option value="cpu_usage">CPU Usage</option>
+                      <option value="memory_usage">Memory Usage</option>
+                      <option value="disk_usage">Disk Usage</option>
+                      <option value="bytes_sent">Bytes Sent</option>
+                      <option value="bytes_received">Bytes Received</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ color: DARK_THEME.text, display: 'block', marginBottom: '5px' }}>Operator</label>
+                    <select
+                      value={newRule.comparison_operator}
+                      onChange={(e) => setNewRule({ ...newRule, comparison_operator: e.target.value })}
+                      style={darkStyles.select}
+                    >
+                      <option value=">">&gt; (Greater Than)</option>
+                      <option value=">=">&gt;= (Greater Than or Equal)</option>
+                      <option value="<">&lt; (Less Than)</option>
+                      <option value="<=">&lt;= (Less Than or Equal)</option>
+                      <option value="==">== (Equal)</option>
+                      <option value="!=">!= (Not Equal)</option>
+                    </select>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' }}>
+                  <div>
+                    <label style={{ color: DARK_THEME.text, display: 'block', marginBottom: '5px' }}>Threshold</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={newRule.threshold_value}
+                      onChange={(e) => setNewRule({ ...newRule, threshold_value: parseFloat(e.target.value) })}
+                      style={darkStyles.input}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label style={{ color: DARK_THEME.text, display: 'block', marginBottom: '5px' }}>Severity</label>
+                    <select
+                      value={newRule.severity}
+                      onChange={(e) => setNewRule({ ...newRule, severity: e.target.value })}
+                      style={darkStyles.select}
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="critical">Critical</option>
+                    </select>
+                  </div>
+                </div>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ color: DARK_THEME.text, display: 'block', marginBottom: '5px' }}>Description</label>
+                  <input
+                    type="text"
+                    value={newRule.description}
+                    onChange={(e) => setNewRule({ ...newRule, description: e.target.value })}
+                    style={darkStyles.input}
+                    placeholder="Optional description"
+                  />
+                </div>
+                <button type="submit" disabled={loading} style={{ ...darkStyles.button, backgroundColor: DARK_THEME.primary }}>
+                  {loading ? <TailSpin height={20} width={20} /> : 'Create Rule'}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+              <TailSpin height={30} width={30} />
+              <p style={{ color: DARK_THEME.textMuted }}>Loading alert rules...</p>
+            </div>
+          ) : (
+            <div style={{ maxHeight: '500px', overflow: 'auto' }}>
+              <table style={darkStyles.table}>
+                <thead>
+                  <tr>
+                    <th style={darkStyles.tableHeader}>Metric</th>
+                    <th style={darkStyles.tableHeader}>Condition</th>
+                    <th style={darkStyles.tableHeader}>Severity</th>
+                    <th style={darkStyles.tableHeader}>Status</th>
+                    <th style={darkStyles.tableHeader}>Description</th>
+                    <th style={darkStyles.tableHeader}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {alertRules.map((rule) => (
+                    <tr key={rule.id}>
+                      <td style={{ ...darkStyles.tableCell, textTransform: 'capitalize' }}>
+                        {rule.metric.replace('_', ' ')}
+                      </td>
+                      <td style={darkStyles.tableCell}>
+                        {rule.comparison_operator} {rule.threshold_value}
+                      </td>
+                      <td style={{ ...darkStyles.tableCell }}>
+                        <span style={{ 
+                          color: getSeverityColor(rule.severity),
+                          fontWeight: 'bold'
+                        }}>
+                          {rule.severity.toUpperCase()}
+                        </span>
+                      </td>
+                      <td style={darkStyles.tableCell}>
+                        <span style={{ 
+                          color: rule.active ? DARK_THEME.success : DARK_THEME.danger,
+                          fontWeight: 'bold'
+                        }}>
+                          {rule.active ? 'ACTIVE' : 'INACTIVE'}
+                        </span>
+                      </td>
+                      <td style={{ ...darkStyles.tableCell, color: DARK_THEME.textMuted }}>
+                        {rule.description || 'No description'}
+                      </td>
+                      <td style={darkStyles.tableCell}>
+                        <button
+                          onClick={() => toggleRule(rule.id, rule.active)}
+                          style={{
+                            ...darkStyles.button,
+                            backgroundColor: rule.active ? DARK_THEME.warning : DARK_THEME.success,
+                            padding: '5px 10px',
+                            fontSize: '12px',
+                            marginRight: '5px'
+                          }}
+                        >
+                          {rule.active ? 'Disable' : 'Enable'}
+                        </button>
+                        <button
+                          onClick={() => deleteRule(rule.id)}
+                          style={{
+                            ...darkStyles.button,
+                            backgroundColor: DARK_THEME.danger,
+                            padding: '5px 10px',
+                            fontSize: '12px'
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+
+      {activeTab === 'incidents' && (
+        <>
+          {/* Incident Statistics */}
+          {incidentStats.length > 0 && (
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+              {incidentStats.map((stat) => (
+                <div
+                  key={stat.status}
+                  style={{
+                    flex: 1,
+                    minWidth: '120px',
+                    padding: '15px',
+                    backgroundColor: DARK_THEME.cardBackground,
+                    border: `1px solid ${getStatusColor(stat.status)}`,
+                    borderRadius: '4px',
+                    textAlign: 'center'
+                  }}
+                >
+                  <div style={{ color: getStatusColor(stat.status), fontSize: '24px', fontWeight: 'bold' }}>
+                    {stat.count}
+                  </div>
+                  <div style={{ color: DARK_THEME.text, textTransform: 'capitalize' }}>
+                    {stat.status}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Incidents List */}
+          <div style={{ maxHeight: '600px', overflow: 'auto' }}>
+            {incidents.length > 0 ? (
+              incidents.map((incident) => (
+                <div
+                  key={incident.id}
+                  style={{
+                    ...darkStyles.card,
+                    backgroundColor: '#2a2a2a',
+                    marginBottom: '10px',
+                    borderLeft: `4px solid ${getSeverityColor(incident.severity)}`
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                    <div>
+                      <h4 style={{ color: DARK_THEME.text, margin: '0 0 5px 0' }}>
+                        {incident.incident_type.replace('_', ' ').toUpperCase()}
+                      </h4>
+                      <p style={{ color: DARK_THEME.textMuted, margin: 0, fontSize: '14px' }}>
+                        {incident.message}
+                      </p>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span
+                        style={{
+                          color: getSeverityColor(incident.severity),
+                          fontWeight: 'bold',
+                          fontSize: '12px',
+                          display: 'block',
+                          marginBottom: '5px'
+                        }}
+                      >
+                        {incident.severity.toUpperCase()}
+                      </span>
+                      <span
+                        style={{
+                          color: getStatusColor(incident.status),
+                          fontWeight: 'bold',
+                          fontSize: '12px'
+                        }}
+                      >
+                        {incident.status.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                    <span style={{ color: DARK_THEME.textMuted }}>
+                      {new Date(incident.created_at).toLocaleString()}
+                    </span>
+                    <div>
+                      {incident.status === 'new' && (
+                        <button
+                          onClick={() => updateIncidentStatus(incident.id, 'acknowledged')}
+                          style={{
+                            ...darkStyles.button,
+                            backgroundColor: DARK_THEME.warning,
+                            padding: '5px 10px',
+                            fontSize: '12px',
+                            marginRight: '5px'
+                          }}
+                        >
+                          Acknowledge
+                        </button>
+                      )}
+                      {incident.status === 'acknowledged' && (
+                        <button
+                          onClick={() => updateIncidentStatus(incident.id, 'resolved')}
+                          style={{
+                            ...darkStyles.button,
+                            backgroundColor: DARK_THEME.success,
+                            padding: '5px 10px',
+                            fontSize: '12px'
+                          }}
+                        >
+                          Resolve
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', padding: '40px', color: DARK_THEME.textMuted }}>
+                No incidents found
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // Registration Component
 function Registration({ onSwitchToLogin }) {
   const [registerForm, setRegisterForm] = useState({
@@ -996,17 +1449,22 @@ function App() {
     }
   };
 
-  const fetchLatestAgentData = async () => {
-    setDashboardLoading(true);
-    try {
-      const resp = await apiClient.get("/agent/data/latest");
-      setAgentData(resp.data.data);
-    } catch {
-      // Handle error silently
-    } finally {
-      setDashboardLoading(false);
+const fetchLatestAgentData = async () => {
+  setDashboardLoading(true);
+  try {
+    const resp = await apiClient.get("/agent/data/latest");
+    // Fix: Get the nested data object
+    if (resp.data.data && resp.data.data.data) {
+      setAgentData(resp.data.data.data);  // ← Get the nested data
+    } else {
+      setAgentData(resp.data.data);  // Fallback
     }
-  };
+  } catch {
+    // Handle error silently
+  } finally {
+    setDashboardLoading(false);
+  }
+};
 
   const handleLogin = (newToken, user) => {
     setToken(newToken);
@@ -1198,15 +1656,26 @@ function App() {
             Account Settings
           </button>
           {currentUser?.role === 'admin' && (
-            <button
-              onClick={() => setActiveTab("users")}
-              style={{
-                ...darkStyles.tab,
-                backgroundColor: activeTab === "users" ? DARK_THEME.primary : DARK_THEME.secondary
-              }}
-            >
-              User Management
-            </button>
+            <>
+              <button
+                onClick={() => setActiveTab("users")}
+                style={{
+                  ...darkStyles.tab,
+                  backgroundColor: activeTab === "users" ? DARK_THEME.primary : DARK_THEME.secondary
+                }}
+              >
+                User Management
+              </button>
+              <button
+                onClick={() => setActiveTab("alerts")}
+                style={{
+                  ...darkStyles.tab,
+                  backgroundColor: activeTab === "alerts" ? DARK_THEME.primary : DARK_THEME.secondary
+                }}
+              >
+                Alerts & Incidents
+              </button>
+            </>
           )}
         </div>
 
@@ -1250,6 +1719,10 @@ function App() {
 
         {activeTab === "users" && (
           <UserManagement apiClient={apiClient} currentUser={currentUser} />
+        )}
+
+        {activeTab === "alerts" && (
+          <AlertsManagement apiClient={apiClient} currentUser={currentUser} />
         )}
       </div>
     </div>
