@@ -1594,7 +1594,7 @@ const fetchLatestAgentData = async () => {
     return (
       <div style={darkStyles.container}>
         <div style={darkStyles.mainContent}>
-          <h1 style={{ color: DARK_THEME.text, marginBottom: "10px", textAlign: "center", width: "100%" }}>PurpleTeam Dashboard</h1>
+          <h1 style={{ color: DARK_THEME.text, marginBottom: "10px", textAlign: "center", width: "100%" }}>Server Monitoring Dashboard</h1>
           
           {authMode === "login" ? (
             <Login 
@@ -1614,7 +1614,7 @@ const fetchLatestAgentData = async () => {
   return (
     <div style={darkStyles.container}>
       <div style={darkStyles.mainContent}>
-        <h1 style={{ color: DARK_THEME.text, marginBottom: "10px", textAlign: "center", width: "100%" }}>PurpleTeam Dashboard</h1>
+        <h1 style={{ color: DARK_THEME.text, marginBottom: "10px", textAlign: "center", width: "100%" }}>Server Monitoring Dashboard</h1>
 
         {/* Header */}
         <div style={darkStyles.card}>

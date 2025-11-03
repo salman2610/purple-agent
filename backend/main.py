@@ -69,7 +69,7 @@ async def startup():
     if not admin_user:
         await create_user(
             username="admin",
-            email="admin@purpleteam.com",
+            email="security@sesametechnologies.in",
             password="adminpass",
             role="admin"
         )
