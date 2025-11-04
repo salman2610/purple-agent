@@ -77,6 +77,19 @@ incidents = Table(
     Column("resolved_notes", Text, nullable=True)
 )
 
+user_dashboard_layouts = Table(
+    "user_dashboard_layouts",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("user_id", Integer, sqlalchemy.ForeignKey('users.id')),
+    Column("name", String(100), default="Default Layout"),
+    Column("layout", JSON),  # Store the grid layout
+    Column("widgets", JSON), # Store widget configurations
+    Column("filters", JSON), # Store saved filter presets
+    Column("created_at", DateTime, default=func.now()),
+    Column("updated_at", DateTime, default=func.now())
+)
+
 def create_tables():
     """Create all tables that don't exist"""
     metadata.create_all(engine)

@@ -389,3 +389,112 @@ async def get_recent_incidents(hours: int = 24):
         parsed_results.append(result_dict)
     
     return parsed_results
+
+# Dashboard Layouts CRUD operations
+async def create_dashboard_layout(user_id: int, name: str, layout: dict, widgets: dict, filters: dict = None):
+    query = """
+    INSERT INTO user_dashboard_layouts (user_id, name, layout, widgets, filters, created_at, updated_at)
+    VALUES (:user_id, :name, :layout, :widgets, :filters, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    RETURNING *
+    """
+    values = {
+        "user_id": user_id,
+        "name": name,
+        "layout": json.dumps(layout),
+        "widgets": json.dumps(widgets),
+        "filters": json.dumps(filters) if filters else None
+    }
+    result = await database.fetch_one(query, values)
+    return dict(result) if result else None
+
+async def get_user_dashboard_layouts(user_id: int):
+    query = "SELECT * FROM user_dashboard_layouts WHERE user_id = :user_id ORDER BY updated_at DESC"
+    results = await database.fetch_all(query, {"user_id": user_id})
+    
+    layouts = []
+    for result in results:
+        layout_dict = dict(result)
+        # Parse JSON fields
+        for field in ['layout', 'widgets', 'filters']:
+            if layout_dict.get(field) and isinstance(layout_dict[field], str):
+                try:
+                    layout_dict[field] = json.loads(layout_dict[field])
+                except json.JSONDecodeError:
+                    layout_dict[field] = {}
+        layouts.append(layout_dict)
+    
+    return layouts
+
+async def get_dashboard_layout(layout_id: int, user_id: int):
+    query = "SELECT * FROM user_dashboard_layouts WHERE id = :id AND user_id = :user_id"
+    result = await database.fetch_one(query, {"id": layout_id, "user_id": user_id})
+    
+    if result:
+        layout_dict = dict(result)
+        # Parse JSON fields
+        for field in ['layout', 'widgets', 'filters']:
+            if layout_dict.get(field) and isinstance(layout_dict[field], str):
+                try:
+                    layout_dict[field] = json.loads(layout_dict[field])
+                except json.JSONDecodeError:
+                    layout_dict[field] = {}
+        return layout_dict
+    
+    return None
+
+async def update_dashboard_layout(layout_id: int, user_id: int, name: str = None, layout: dict = None, widgets: dict = None, filters: dict = None):
+    query = """
+    UPDATE user_dashboard_layouts 
+    SET updated_at = CURRENT_TIMESTAMP
+    """
+    values = {"id": layout_id, "user_id": user_id}
+    
+    if name is not None:
+        query += ", name = :name"
+        values["name"] = name
+        
+    if layout is not None:
+        query += ", layout = :layout"
+        values["layout"] = json.dumps(layout)
+        
+    if widgets is not None:
+        query += ", widgets = :widgets"
+        values["widgets"] = json.dumps(widgets)
+        
+    if filters is not None:
+        query += ", filters = :filters"
+        values["filters"] = json.dumps(filters)
+        
+    query += " WHERE id = :id AND user_id = :user_id RETURNING *"
+    
+    result = await database.fetch_one(query, values)
+    return dict(result) if result else None
+
+async def delete_dashboard_layout(layout_id: int, user_id: int):
+    query = "DELETE FROM user_dashboard_layouts WHERE id = :id AND user_id = :user_id"
+    await database.execute(query, {"id": layout_id, "user_id": user_id})
+    return True
+
+async def set_default_layout(layout_id: int, user_id: int):
+    """Set a layout as default for user"""
+    try:
+        # First, unset any existing default for this user
+        await database.execute(
+            "UPDATE user_dashboard_layouts SET is_default = FALSE WHERE user_id = :user_id",
+            {"user_id": user_id}
+        )
+        
+        # Then set the new default
+        await database.execute(
+            "UPDATE user_dashboard_layouts SET is_default = TRUE WHERE id = :layout_id AND user_id = :user_id",
+            {"layout_id": layout_id, "user_id": user_id}
+        )
+        return True
+    except Exception as e:
+        print(f"Error setting default layout: {e}")
+        return False
+
+async def get_default_layout(user_id: int):
+    """Get user's default dashboard layout"""
+    query = "SELECT * FROM user_dashboard_layouts WHERE user_id = :user_id AND is_default = TRUE"
+    return await database.fetch_one(query, {"user_id": user_id})

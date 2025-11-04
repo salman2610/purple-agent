@@ -1,13 +1,17 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Body, WebSocket, WebSocketDisconnect, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 import asyncio
+import json
+import csv
+import io
+import pandas as pd
 from slack_sdk import WebClient
 
 # Database imports
@@ -19,7 +23,11 @@ from crud import (
     get_all_users, update_user_password,
     create_alert_rule, get_alert_rules, get_alert_rule, update_alert_rule, 
     delete_alert_rule, toggle_alert_rule, create_incident, get_incidents,
-    get_incident, update_incident_status, get_incident_stats, get_incidents_count
+    get_incident, update_incident_status, get_incident_stats, get_incidents_count,
+    # Dashboard layouts CRUD functions
+    get_user_dashboard_layouts, get_dashboard_layout,
+    create_dashboard_layout, update_dashboard_layout, delete_dashboard_layout,
+    set_default_layout, get_default_layout
 )
 
 # Import the AlertEvaluator
@@ -27,31 +35,31 @@ from alerts import AlertEvaluator
 
 app = FastAPI(title="PurpleTeam Dashboard Backend")
 
-# CORS configuration
+# ✅ FIXED CORS configuration - Added PATCH method and specific origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],  # Added PATCH
     allow_headers=["*"],
 )
 
-# Manual CORS headers as backup
+# ✅ FIXED Manual CORS headers as backup - Added PATCH method
 @app.middleware("http")
 async def add_cors_headers(request: Request, call_next):
     response = await call_next(request)
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Origin"] = "http://localhost:5173"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"  # Added PATCH
     response.headers["Access-Control-Allow-Headers"] = "*"
     response.headers["Access-Control-Allow-Credentials"] = "true"
     return response
 
-# Handle OPTIONS requests for CORS preflight
+# ✅ FIXED Handle OPTIONS requests for CORS preflight - Added PATCH
 @app.options("/{rest_of_path:path}")
 async def preflight_handler(request: Request, rest_of_path: str):
     response = JSONResponse(content={"message": "CORS preflight"})
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Origin"] = "http://localhost:5173"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"  # Added PATCH
     response.headers["Access-Control-Allow-Headers"] = "*"
     return response
 
@@ -777,6 +785,515 @@ async def get_agent_data_count(current_user: User = Depends(get_guest_user)):
     """
     data = await get_all_agent_data()
     return {"count": len(data)}
+
+# Enhanced Agent Data with filtering
+@app.get("/agent/data/filtered")
+async def get_filtered_agent_data(
+    start_date: str = None,
+    end_date: str = None,
+    hostname: str = None,
+    min_cpu: float = None,
+    max_cpu: float = None,
+    min_memory: float = None,
+    max_memory: float = None,
+    current_user: User = Depends(get_guest_user)
+):
+    """Get filtered agent data with various filters"""
+    try:
+        # Build query dynamically based on filters
+        query = "SELECT * FROM agent_data WHERE 1=1"
+        params = {}
+        
+        if start_date:
+            query += " AND timestamp >= :start_date"
+            params["start_date"] = start_date
+            
+        if end_date:
+            query += " AND timestamp <= :end_date" 
+            params["end_date"] = end_date
+            
+        if hostname:
+            query += " AND data->>'hostname' LIKE :hostname"
+            params["hostname"] = f"%{hostname}%"
+            
+        query += " ORDER BY created_at DESC"
+        
+        results = await database.fetch_all(query, params)
+        
+        # Parse and filter JSON data
+        filtered_data = []
+        for result in results:
+            result_dict = dict(result)
+            if 'data' in result_dict and isinstance(result_dict['data'], str):
+                try:
+                    data_obj = json.loads(result_dict['data'])
+                    
+                    # Apply CPU filters
+                    if min_cpu is not None and data_obj.get('cpu_usage', 0) < min_cpu:
+                        continue
+                    if max_cpu is not None and data_obj.get('cpu_usage', 0) > max_cpu:
+                        continue
+                        
+                    # Apply Memory filters  
+                    if min_memory is not None and data_obj.get('memory_usage', 0) < min_memory:
+                        continue
+                    if max_memory is not None and data_obj.get('memory_usage', 0) > max_memory:
+                        continue
+                    
+                    result_dict['data'] = data_obj
+                    filtered_data.append(result_dict)
+                    
+                except json.JSONDecodeError:
+                    continue
+        
+        return {"data": filtered_data, "total": len(filtered_data)}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Filter error: {str(e)}")
+
+# Enhanced Incidents with filtering
+@app.get("/incidents/filtered")
+async def get_filtered_incidents(
+    status: str = None,
+    severity: str = None,
+    incident_type: str = None,
+    start_date: str = None,
+    end_date: str = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get filtered incidents"""
+    query = "SELECT * FROM incidents WHERE 1=1"
+    params = {}
+    
+    if status:
+        query += " AND status = :status"
+        params["status"] = status
+        
+    if severity:
+        query += " AND severity = :severity"
+        params["severity"] = severity
+        
+    if incident_type:
+        query += " AND incident_type = :incident_type"
+        params["incident_type"] = incident_type
+        
+    if start_date:
+        query += " AND created_at >= :start_date"
+        params["start_date"] = start_date
+        
+    if end_date:
+        query += " AND created_at <= :end_date"
+        params["end_date"] = end_date
+        
+    query += " ORDER BY created_at DESC"
+    
+    results = await database.fetch_all(query, params)
+    
+    # Parse metadata
+    parsed_results = []
+    for result in results:
+        result_dict = dict(result)
+        if 'metadata' in result_dict and result_dict['metadata'] and isinstance(result_dict['metadata'], str):
+            try:
+                result_dict['metadata'] = json.loads(result_dict['metadata'])
+            except json.JSONDecodeError:
+                result_dict['metadata'] = {}
+        parsed_results.append(result_dict)
+    
+    return parsed_results
+
+# Drill-down endpoint for specific metric details
+@app.get("/agent/data/metric-details")
+async def get_metric_details(
+    metric: str,
+    value_range: str = None,  # e.g., "80-100"
+    hostname: str = None,
+    current_user: User = Depends(get_guest_user)
+):
+    """Get detailed data for a specific metric (drill-down)"""
+    try:
+        query = "SELECT * FROM agent_data WHERE 1=1"
+        params = {}
+        
+        if hostname:
+            query += " AND data->>'hostname' LIKE :hostname"
+            params["hostname"] = f"%{hostname}%"
+            
+        results = await database.fetch_all(query, params)
+        
+        detailed_data = []
+        for result in results:
+            result_dict = dict(result)
+            if 'data' in result_dict and isinstance(result_dict['data'], str):
+                try:
+                    data_obj = json.loads(result_dict['data'])
+                    metric_value = data_obj.get(metric)
+                    
+                    if metric_value is not None:
+                        # Apply value range filter if specified
+                        if value_range:
+                            min_val, max_val = map(float, value_range.split('-'))
+                            if not (min_val <= metric_value <= max_val):
+                                continue
+                        
+                        detailed_data.append({
+                            "id": result_dict["id"],
+                            "timestamp": result_dict.get("timestamp"),
+                            "hostname": data_obj.get("hostname"),
+                            "metric_value": metric_value,
+                            "full_data": data_obj
+                        })
+                        
+                except json.JSONDecodeError:
+                    continue
+        
+        return {"metric": metric, "data": detailed_data}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Metric details error: {str(e)}")
+
+# EXPORT ENDPOINTS - PROPERLY DEFINED
+@app.get("/export/agent-data/csv")
+async def export_agent_data_csv(
+    start_date: str = None,
+    end_date: str = None,
+    hostname: str = None,
+    min_cpu: float = None,
+    max_cpu: float = None,
+    min_memory: float = None,
+    max_memory: float = None,
+    current_user: User = Depends(get_guest_user)
+):
+    """Export filtered agent data as CSV"""
+    try:
+        # Build query (same as filtered endpoint)
+        query = "SELECT * FROM agent_data WHERE 1=1"
+        params = {}
+        
+        if start_date:
+            query += " AND timestamp >= :start_date"
+            params["start_date"] = start_date
+            
+        if end_date:
+            query += " AND timestamp <= :end_date" 
+            params["end_date"] = end_date
+            
+        if hostname:
+            query += " AND data->>'hostname' LIKE :hostname"
+            params["hostname"] = f"%{hostname}%"
+            
+        results = await database.fetch_all(query, params)
+        
+        # Prepare CSV data
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow([
+            'ID', 'Timestamp', 'Hostname', 'CPU Usage (%)', 
+            'Memory Usage (%)', 'Disk Usage (%)', 
+            'Bytes Sent', 'Bytes Received', 'Process Count'
+        ])
+        
+        # Write data rows
+        for result in results:
+            result_dict = dict(result)
+            if 'data' in result_dict and isinstance(result_dict['data'], str):
+                try:
+                    data_obj = json.loads(result_dict['data'])
+                    
+                    # Apply filters
+                    if min_cpu is not None and data_obj.get('cpu_usage', 0) < min_cpu:
+                        continue
+                    if max_cpu is not None and data_obj.get('cpu_usage', 0) > max_cpu:
+                        continue
+                    if min_memory is not None and data_obj.get('memory_usage', 0) < min_memory:
+                        continue
+                    if max_memory is not None and data_obj.get('memory_usage', 0) > max_memory:
+                        continue
+                    
+                    writer.writerow([
+                        result_dict['id'],
+                        result_dict.get('timestamp', ''),
+                        data_obj.get('hostname', ''),
+                        data_obj.get('cpu_usage', ''),
+                        data_obj.get('memory_usage', ''),
+                        data_obj.get('disk_usage', ''),
+                        data_obj.get('network_activity', {}).get('bytes_sent', ''),
+                        data_obj.get('network_activity', {}).get('bytes_received', ''),
+                        len(data_obj.get('processes', []))
+                    ])
+                    
+                except json.JSONDecodeError:
+                    continue
+        
+        # Create response
+        output.seek(0)
+        filename = f"agent_data_export_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+        
+        return StreamingResponse(
+            io.BytesIO(output.getvalue().encode('utf-8')),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Export error: {str(e)}")
+
+@app.get("/export/incidents/csv")
+async def export_incidents_csv(
+    status: str = None,
+    severity: str = None,
+    incident_type: str = None,
+    start_date: str = None,
+    end_date: str = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Export filtered incidents as CSV"""
+    try:
+        # Get filtered incidents
+        incidents = await get_filtered_incidents(
+            status=status, 
+            severity=severity, 
+            incident_type=incident_type,
+            start_date=start_date, 
+            end_date=end_date
+        )
+        
+        # Prepare CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow([
+            'ID', 'Type', 'Message', 'Severity', 'Status',
+            'Created At', 'Hostname', 'Metric Value', 'Threshold'
+        ])
+        
+        # Write data
+        for incident in incidents:
+            metadata = incident.get('metadata', {})
+            writer.writerow([
+                incident['id'],
+                incident['incident_type'],
+                incident['message'],
+                incident['severity'],
+                incident['status'],
+                incident['created_at'],
+                metadata.get('hostname', ''),
+                metadata.get('metric_value', ''),
+                metadata.get('threshold', '')
+            ])
+        
+        output.seek(0)
+        filename = f"incidents_export_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+        
+        return StreamingResponse(
+            io.BytesIO(output.getvalue().encode('utf-8')),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Incidents export error: {str(e)}")
+
+@app.get("/export/dashboard-report")
+async def export_dashboard_report(
+    start_date: str = None,
+    end_date: str = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Export comprehensive dashboard report"""
+    try:
+        # Get data for report
+        agent_data_response = await get_filtered_agent_data(start_date=start_date, end_date=end_date)
+        incidents = await get_filtered_incidents(start_date=start_date, end_date=end_date)
+        incident_stats = await get_incident_stats()
+        
+        # Create comprehensive report
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Report header
+        writer.writerow(['PURPLETEAM DASHBOARD REPORT'])
+        writer.writerow([f'Generated: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")}'])
+        writer.writerow([f'Period: {start_date or "Start"} to {end_date or "End"}'])
+        writer.writerow([])
+        
+        # Summary section
+        writer.writerow(['SUMMARY'])
+        writer.writerow(['Total Data Entries:', agent_data_response.get('total', 0)])
+        writer.writerow(['Total Incidents:', len(incidents)])
+        writer.writerow([])
+        
+        # Incident statistics
+        writer.writerow(['INCIDENT STATISTICS'])
+        writer.writerow(['Status', 'Count'])
+        for stat in incident_stats:
+            writer.writerow([stat['status'], stat['count']])
+        writer.writerow([])
+        
+        # Recent incidents
+        writer.writerow(['RECENT INCIDENTS (Last 10)'])
+        writer.writerow(['ID', 'Type', 'Severity', 'Status', 'Message', 'Created'])
+        for incident in incidents[:10]:
+            writer.writerow([
+                incident['id'],
+                incident['incident_type'],
+                incident['severity'],
+                incident['status'],
+                incident['message'][:50] + '...' if len(incident['message']) > 50 else incident['message'],
+                incident['created_at']
+            ])
+        
+        output.seek(0)
+        filename = f"dashboard_report_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+        
+        return StreamingResponse(
+            io.BytesIO(output.getvalue().encode('utf-8')),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Report export error: {str(e)}")
+
+# Dashboard Layouts endpoints
+@app.get("/dashboard/layouts", response_model=List[dict])
+async def get_user_dashboard_layouts_endpoint(current_user: User = Depends(get_current_active_user)):
+    """Get all dashboard layouts for current user"""
+    layouts = await get_user_dashboard_layouts(current_user.id)
+    
+    # Parse JSON fields
+    parsed_layouts = []
+    for layout in layouts:
+        layout_dict = dict(layout)
+        # Parse JSON strings to objects
+        for field in ['layout', 'widgets', 'filters']:
+            if layout_dict.get(field) and isinstance(layout_dict[field], str):
+                try:
+                    layout_dict[field] = json.loads(layout_dict[field])
+                except json.JSONDecodeError:
+                    layout_dict[field] = {}
+        parsed_layouts.append(layout_dict)
+    
+    return parsed_layouts
+
+@app.get("/dashboard/layouts/default", response_model=dict)
+async def get_default_dashboard_layout_endpoint(current_user: User = Depends(get_current_active_user)):
+    """Get user's default dashboard layout"""
+    layout = await get_default_layout(current_user.id)
+    if not layout:
+        # Return empty layout structure if no default exists
+        return {
+            "id": None,
+            "name": "Default Layout",
+            "layout": {},
+            "widgets": {},
+            "filters": {},
+            "is_default": True
+        }
+    
+    layout_dict = dict(layout)
+    # Parse JSON strings to objects
+    for field in ['layout', 'widgets', 'filters']:
+        if layout_dict.get(field) and isinstance(layout_dict[field], str):
+            try:
+                layout_dict[field] = json.loads(layout_dict[field])
+            except json.JSONDecodeError:
+                layout_dict[field] = {}
+    
+    return layout_dict
+
+@app.get("/dashboard/layouts/{layout_id}", response_model=dict)
+async def get_dashboard_layout_endpoint(layout_id: int, current_user: User = Depends(get_current_active_user)):
+    """Get specific dashboard layout"""
+    layout = await get_dashboard_layout(layout_id, current_user.id)
+    if not layout:
+        raise HTTPException(status_code=404, detail="Layout not found")
+    
+    layout_dict = dict(layout)
+    # Parse JSON strings to objects
+    for field in ['layout', 'widgets', 'filters']:
+        if layout_dict.get(field) and isinstance(layout_dict[field], str):
+            try:
+                layout_dict[field] = json.loads(layout_dict[field])
+            except json.JSONDecodeError:
+                layout_dict[field] = {}
+    
+    return layout_dict
+
+@app.post("/dashboard/layouts", response_model=dict)
+async def create_dashboard_layout_endpoint(
+    layout_data: dict = Body(...),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Create new dashboard layout"""
+    layout = await create_dashboard_layout(
+        user_id=current_user.id,
+        name=layout_data.get("name", "New Layout"),
+        layout=layout_data.get("layout", {}),
+        widgets=layout_data.get("widgets", {}),
+        filters=layout_data.get("filters", {})
+    )
+    if not layout:
+        raise HTTPException(status_code=500, detail="Failed to create layout")
+    
+    layout_dict = dict(layout)
+    # Parse JSON strings to objects
+    for field in ['layout', 'widgets', 'filters']:
+        if layout_dict.get(field) and isinstance(layout_dict[field], str):
+            try:
+                layout_dict[field] = json.loads(layout_dict[field])
+            except json.JSONDecodeError:
+                layout_dict[field] = {}
+    
+    return layout_dict
+
+@app.put("/dashboard/layouts/{layout_id}", response_model=dict)
+async def update_dashboard_layout_endpoint(
+    layout_id: int,
+    layout_data: dict = Body(...),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Update dashboard layout"""
+    layout = await update_dashboard_layout(
+        layout_id=layout_id,
+        user_id=current_user.id,
+        name=layout_data.get("name"),
+        layout=layout_data.get("layout"),
+        widgets=layout_data.get("widgets"),
+        filters=layout_data.get("filters")
+    )
+    if not layout:
+        raise HTTPException(status_code=404, detail="Layout not found")
+    
+    layout_dict = dict(layout)
+    # Parse JSON strings to objects
+    for field in ['layout', 'widgets', 'filters']:
+        if layout_dict.get(field) and isinstance(layout_dict[field], str):
+            try:
+                layout_dict[field] = json.loads(layout_dict[field])
+            except json.JSONDecodeError:
+                layout_dict[field] = {}
+    
+    return layout_dict
+
+@app.delete("/dashboard/layouts/{layout_id}")
+async def delete_dashboard_layout_endpoint(layout_id: int, current_user: User = Depends(get_current_active_user)):
+    """Delete dashboard layout"""
+    success = await delete_dashboard_layout(layout_id, current_user.id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Layout not found")
+    return {"message": "Layout deleted successfully"}
+
+@app.patch("/dashboard/layouts/{layout_id}/set-default")
+async def set_default_dashboard_layout_endpoint(layout_id: int, current_user: User = Depends(get_current_active_user)):
+    """Set a dashboard layout as default"""
+    success = await set_default_layout(layout_id, current_user.id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Layout not found")
+    return {"message": "Layout set as default"}
 
 @app.post("/slack/test")
 async def test_slack_alert(current_user: User = Depends(get_agent_user)):
