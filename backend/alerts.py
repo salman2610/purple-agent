@@ -1,10 +1,14 @@
-from crud import get_alert_rules, create_incident
-from typing import List, Dict, Any
+# alerts.py - Updated alert evaluator with server support
+from crud import create_incident, get_alert_rules
+from datetime import datetime
+from typing import List, Dict, Any, Optional
 import logging
 
 logger = logging.getLogger(__name__)
 
 class AlertEvaluator:
+    """Evaluates agent data against alert rules and creates incidents"""
+    
     @staticmethod
     def evaluate_metric(value: float, operator: str, threshold: float) -> bool:
         """Evaluate if a metric triggers an alert based on the rule"""
@@ -28,7 +32,7 @@ class AlertEvaluator:
             return False
     
     @staticmethod
-    async def check_agent_data_for_alerts(agent_data: dict, agent_data_id: int) -> List[Dict[str, Any]]:
+    async def check_agent_data_for_alerts(agent_data: dict, agent_data_id: int, server_id: Optional[int] = None) -> List[Dict[str, Any]]:
         """Check incoming agent data against all active alert rules"""
         try:
             active_rules = await get_alert_rules(active_only=True)
@@ -36,6 +40,11 @@ class AlertEvaluator:
             
             for rule in active_rules:
                 rule_dict = dict(rule)
+                
+                # Skip rules that don't apply to this server
+                if rule_dict.get('server_id') and rule_dict['server_id'] != server_id:
+                    continue
+                
                 metric_value = None
                 
                 # Map metric names to agent data fields
@@ -53,6 +62,7 @@ class AlertEvaluator:
                     if AlertEvaluator.evaluate_metric(metric_value, rule_dict['comparison_operator'], rule_dict['threshold_value']):
                         # Create incident using dictionary for database insertion
                         incident_data = {
+                            "server_id": server_id,
                             "alert_rule_id": rule_dict['id'],
                             "agent_data_id": agent_data_id,
                             "incident_type": f"{rule_dict['metric']}_alert",
@@ -78,6 +88,10 @@ class AlertEvaluator:
                             
                             logger.info(f"Alert triggered: {rule_dict['metric']} = {metric_value:.2f} {rule_dict['comparison_operator']} {rule_dict['threshold_value']}")
             
+            # Check for custom alert conditions
+            custom_alerts = await AlertEvaluator._check_custom_alerts(agent_data, agent_data_id, server_id)
+            triggered_incidents.extend(custom_alerts)
+            
             return triggered_incidents
             
         except Exception as e:
@@ -85,29 +99,155 @@ class AlertEvaluator:
             return []
     
     @staticmethod
-    async def evaluate_suspicious_processes(processes: List[Dict], agent_data_id: int, hostname: str = "unknown") -> List[Dict[str, Any]]:
+    async def _check_custom_alerts(data: dict, data_id: int, server_id: Optional[int] = None) -> List[Dict]:
+        """Check for custom alert conditions beyond simple thresholds"""
+        custom_alerts = []
+        
+        try:
+            # High process count alert
+            processes = data.get('processes', [])
+            if len(processes) > 200:  # Arbitrary threshold for high process count
+                incident_data = {
+                    "server_id": server_id,
+                    "alert_rule_id": None,
+                    "agent_data_id": data_id,
+                    "incident_type": "high_process_count",
+                    "message": f"High process count detected: {len(processes)} processes",
+                    "severity": "medium",
+                    "metadata": {
+                        "process_count": len(processes),
+                        "hostname": data.get('hostname', 'unknown'),
+                        "threshold": 200
+                    }
+                }
+                incident = await create_incident(incident_data)
+                if incident:
+                    custom_alerts.append({
+                        "rule": {"metric": "process_count", "description": "High process count"},
+                        "incident": incident
+                    })
+            
+            # Network traffic spike detection
+            network_data = data.get('network_activity', {})
+            bytes_sent = network_data.get('bytes_sent', 0)
+            bytes_received = network_data.get('bytes_received', 0)
+            
+            # High network traffic alerts
+            if bytes_sent > 1000000000:  # 1GB
+                incident_data = {
+                    "server_id": server_id,
+                    "alert_rule_id": None,
+                    "agent_data_id": data_id,
+                    "incident_type": "high_network_traffic",
+                    "message": f"High network traffic detected: {bytes_sent:,} bytes sent",
+                    "severity": "medium",
+                    "metadata": {
+                        "bytes_sent": bytes_sent,
+                        "bytes_received": bytes_received,
+                        "hostname": data.get('hostname', 'unknown'),
+                        "threshold": 1000000000
+                    }
+                }
+                incident = await create_incident(incident_data)
+                if incident:
+                    custom_alerts.append({
+                        "rule": {"metric": "network_traffic", "description": "High network traffic"},
+                        "incident": incident
+                    })
+            
+            # Disk usage critical alert
+            disk_usage = data.get('disk_usage')
+            if disk_usage and disk_usage > 90:  # Critical disk usage
+                incident_data = {
+                    "server_id": server_id,
+                    "alert_rule_id": None,
+                    "agent_data_id": data_id,
+                    "incident_type": "critical_disk_usage",
+                    "message": f"Critical disk usage: {disk_usage:.1f}%",
+                    "severity": "high",
+                    "metadata": {
+                        "disk_usage": disk_usage,
+                        "hostname": data.get('hostname', 'unknown'),
+                        "threshold": 90
+                    }
+                }
+                incident = await create_incident(incident_data)
+                if incident:
+                    custom_alerts.append({
+                        "rule": {"metric": "disk_usage", "description": "Critical disk usage"},
+                        "incident": incident
+                    })
+                    
+        except Exception as e:
+            logger.error(f"Error in custom alerts: {e}")
+        
+        return custom_alerts
+    
+    @staticmethod
+    async def evaluate_suspicious_processes(
+        processes: List[Dict], 
+        agent_data_id: int, 
+        hostname: str = "unknown",
+        server_id: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
         """Evaluate processes for suspicious activity"""
-        suspicious_keywords = ['miner', 'backdoor', 'malware', 'ransomware', 'keylogger', 'rootkit', 'trojan']
+        suspicious_keywords = [
+            'miner', 'crypto', 'backdoor', 'rootkit', 'keylogger',
+            'malware', 'trojan', 'virus', 'worm', 'spyware',
+            'exploit', 'injector', 'botnet', 'rat', 'stealer',
+            'ransomware', 'coinminer', 'bitcoin', 'monero'
+        ]
         triggered_incidents = []
         
         try:
+            high_cpu_processes = []
+            high_memory_processes = []
+            suspicious_named_processes = []
+            
             for process in processes:
                 process_name = process.get('name', '').lower()
+                cpu_usage = process.get('cpu', 0)
+                memory_usage = process.get('memory', 0)
+                process_pid = process.get('pid')
+                
+                # Check for high resource usage
+                if cpu_usage > 80:  # 80% CPU
+                    high_cpu_processes.append({
+                        "name": process.get('name'),
+                        "pid": process_pid,
+                        "cpu": cpu_usage
+                    })
+                
+                if memory_usage > 50:  # 50% memory
+                    high_memory_processes.append({
+                        "name": process.get('name'),
+                        "pid": process_pid,
+                        "memory": memory_usage
+                    })
+                
+                # Check for suspicious keywords in process names
                 for keyword in suspicious_keywords:
                     if keyword in process_name:
-                        # Create security incident using dictionary for database insertion
+                        suspicious_named_processes.append({
+                            "name": process.get('name'),
+                            "pid": process_pid,
+                            "keyword": keyword
+                        })
+                        
+                        # Create immediate incident for each suspicious process
                         incident_data = {
-                            "alert_rule_id": None,  # Explicitly set to None for security incidents
+                            "server_id": server_id,
+                            "alert_rule_id": None,
                             "agent_data_id": agent_data_id,
                             "incident_type": "suspicious_process",
-                            "message": f"Suspicious process detected: {process.get('name')}",
+                            "message": f"Suspicious process detected: {process.get('name')} (keyword: {keyword})",
                             "severity": "critical",
                             "metadata": {
                                 "hostname": hostname,
                                 "process_name": process.get('name'),
-                                "process_pid": process.get('pid'),
-                                "cpu_usage": process.get('cpu'),
-                                "memory_usage": process.get('memory'),
+                                "process_pid": process_pid,
+                                "cpu_usage": cpu_usage,
+                                "memory_usage": memory_usage,
                                 "suspicious_keyword": keyword
                             }
                         }
@@ -120,11 +260,113 @@ class AlertEvaluator:
                                 "process": process
                             })
                             
-                            logger.warning(f"Suspicious process detected: {process.get('name')} (PID: {process.get('pid')})")
+                            logger.warning(f"Suspicious process detected: {process.get('name')} (PID: {process_pid})")
                         break
             
-            return triggered_incidents
+            # Create summary incidents for high resource usage
+            if high_cpu_processes and len(high_cpu_processes) > 2:
+                top_processes = high_cpu_processes[:5]
+                incident_data = {
+                    "server_id": server_id,
+                    "alert_rule_id": None,
+                    "agent_data_id": agent_data_id,
+                    "incident_type": "high_cpu_processes",
+                    "message": f"Multiple high CPU processes detected: {len(high_cpu_processes)} processes exceeding 80% CPU",
+                    "severity": "medium",
+                    "metadata": {
+                        "hostname": hostname,
+                        "process_count": len(high_cpu_processes),
+                        "top_processes": top_processes,
+                        "threshold": 80
+                    }
+                }
+                incident = await create_incident(incident_data)
+                if incident:
+                    triggered_incidents.append({
+                        "incident": incident,
+                        "processes": high_cpu_processes
+                    })
+            
+            if suspicious_named_processes and len(suspicious_named_processes) > 0:
+                # Already created individual incidents above, just log summary
+                logger.warning(f"Found {len(suspicious_named_processes)} processes with suspicious names")
             
         except Exception as e:
             logger.error(f"Error evaluating suspicious processes: {e}")
-            return []
+        
+        return triggered_incidents
+
+    @staticmethod
+    async def evaluate_system_health(
+        agent_data: dict,
+        agent_data_id: int,
+        server_id: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
+        """Evaluate overall system health and create incidents for critical conditions"""
+        health_incidents = []
+        
+        try:
+            # Check for system overload
+            cpu_usage = agent_data.get('cpu_usage')
+            memory_usage = agent_data.get('memory_usage')
+            
+            if cpu_usage and memory_usage:
+                # System overload: both CPU and memory are critically high
+                if cpu_usage > 90 and memory_usage > 90:
+                    incident_data = {
+                        "server_id": server_id,
+                        "alert_rule_id": None,
+                        "agent_data_id": agent_data_id,
+                        "incident_type": "system_overload",
+                        "message": f"System overload: CPU {cpu_usage:.1f}%, Memory {memory_usage:.1f}%",
+                        "severity": "critical",
+                        "metadata": {
+                            "hostname": agent_data.get('hostname', 'unknown'),
+                            "cpu_usage": cpu_usage,
+                            "memory_usage": memory_usage,
+                            "condition": "both_cpu_memory_high"
+                        }
+                    }
+                    incident = await create_incident(incident_data)
+                    if incident:
+                        health_incidents.append({
+                            "incident": incident,
+                            "type": "system_overload"
+                        })
+            
+            # Check for service disruptions (simplified)
+            processes = agent_data.get('processes', [])
+            critical_services = ['ssh', 'nginx', 'apache', 'mysql', 'postgres', 'redis']
+            missing_services = []
+            
+            process_names = [p.get('name', '').lower() for p in processes]
+            
+            for service in critical_services:
+                if not any(service in name for name in process_names):
+                    missing_services.append(service)
+            
+            if missing_services:
+                incident_data = {
+                    "server_id": server_id,
+                    "alert_rule_id": None,
+                    "agent_data_id": agent_data_id,
+                    "incident_type": "critical_service_down",
+                    "message": f"Critical services not running: {', '.join(missing_services)}",
+                    "severity": "high",
+                    "metadata": {
+                        "hostname": agent_data.get('hostname', 'unknown'),
+                        "missing_services": missing_services,
+                        "expected_services": critical_services
+                    }
+                }
+                incident = await create_incident(incident_data)
+                if incident:
+                    health_incidents.append({
+                        "incident": incident,
+                        "type": "service_disruption"
+                    })
+                    
+        except Exception as e:
+            logger.error(f"Error evaluating system health: {e}")
+        
+        return health_incidents

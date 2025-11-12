@@ -1,5 +1,19 @@
-fastapi
-uvicorn[standard]
-python-jose[cryptography]
-passlib[bcrypt]
-pydantic[email]
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+pydantic[email]==2.5.0
+
+# AI/ML Capabilities
+scikit-learn==1.3.2
+numpy==1.24.3
+pandas==2.0.3
+
+# Data Processing & Caching
+redis==5.0.1
+
+# Database (if you're using SQLAlchemy)
+sqlalchemy==2.0.23
