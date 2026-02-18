@@ -13,6 +13,7 @@ import asyncio
 import json
 import csv
 import io
+import os
 import pandas as pd
 from slack_sdk import WebClient
 import time
@@ -165,10 +166,16 @@ async def startup():
     try:
         admin_user = await get_user_by_username("admin")
         if not admin_user:
+            default_admin_email = os.getenv("DEFAULT_ADMIN_EMAIL", "security@sesametechnologies.in")
+            default_admin_password = os.getenv("DEFAULT_ADMIN_PASSWORD")
+            if not default_admin_password:
+                print("⚠️ Skipping default admin creation: DEFAULT_ADMIN_PASSWORD is not set")
+                return
+
             user_id = await create_user(
                 username="admin",
-                email="security@sesametechnologies.in",
-                password="adminpass",
+                email=default_admin_email,
+                password=default_admin_password,
                 role="admin"
             )
             if user_id:
@@ -189,12 +196,12 @@ async def shutdown():
         await redis_client.close()
     print("✅ Database disconnected successfully!")
 
-SECRET_KEY = "your-secret-key-change-in-production-12345"
+SECRET_KEY = os.getenv("PURPLETEAM_SECRET_KEY", "change-me-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Slack configuration
-slack_token = "xoxb-your-slack-token-here"
+slack_token = os.getenv("SLACK_BOT_TOKEN", "")
 client = WebClient(token=slack_token)
 
 def send_slack_alert(message: str):
