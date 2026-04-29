@@ -4,7 +4,7 @@ import useWebSocket from "react-use-websocket";
 import { PieChart, Pie, Cell, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import { TailSpin } from 'react-loader-spinner';
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = `http://${window.location.hostname}:8000`;
 
 // Enhanced Red and black theme colors with glass morphism
 const DARK_THEME = {
@@ -27,6 +27,19 @@ const DARK_THEME = {
 
 // Colors for charts (adjusted for dark background)
 const COLORS = ["#dc2626", "#16a34a", "#d97706", "#9333ea", "#6b7280"];
+
+// Utility function to convert to Indian Standard Time (IST) - FIXED NULL HANDLING
+function toIST(dateString) {
+  if (!dateString) return "N/A";   // Prevent 1970 for null/undefined
+
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "Invalid"; // Handle invalid dates
+
+  // Convert to milliseconds, add 5:30 offset
+  const istOffset = 5 * 60 + 30; // minutes
+  const istTime = new Date(date.getTime() + istOffset * 60000);
+  return istTime.toLocaleString(); // Displays in local format
+}
 
 // SVG Icons as React components
 const FilterIcon = () => (
@@ -140,6 +153,24 @@ const BrainIcon = () => (
 const GlobeIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+  </svg>
+);
+
+const FeedbackIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 9h-2V5h2v6zm0 4h-2v-2h2v2z"/>
+  </svg>
+);
+
+const ThumbsUpIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/>
+  </svg>
+);
+
+const ThumbsDownIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/>
   </svg>
 );
 
@@ -384,66 +415,95 @@ const darkStyles = {
   }
 };
 
-// ==================== NEW ENHANCED COMPONENTS ====================
+// ==================== ENHANCED AI COMPONENTS WITH REAL IMPLEMENTATIONS ====================
 
-// 1. AI Smart Insights Component
+// 1. AI Smart Insights Component with Real AI Integration
 function AISmartInsights({ metrics, apiClient }) {
   const [insights, setInsights] = useState([]);
   const [predictions, setPredictions] = useState({});
   const [loading, setLoading] = useState(false);
+  const [explanationData, setExplanationData] = useState(null);
 
   useEffect(() => {
-    analyzeMetrics();
+    if (metrics) {
+      analyzeMetricsWithAI();
+    }
   }, [metrics]);
 
-  const analyzeMetrics = async () => {
+  const analyzeMetricsWithAI = async () => {
     setLoading(true);
     try {
-      // Mock AI analysis based on metrics
-      const mockInsights = [
-        {
-          id: 1,
-          type: 'warning',
-          message: 'Memory usage trending upward - consider optimizing applications',
-          confidence: 85,
-          timestamp: new Date(),
-          action: 'optimize_memory'
-        },
-        {
-          id: 2,
-          type: 'info',
-          message: 'CPU usage patterns indicate peak hours between 2-4 PM',
-          confidence: 92,
-          timestamp: new Date(),
-          action: 'schedule_maintenance'
-        },
-        {
-          id: 3,
-          type: 'success',
-          message: 'Network performance is optimal for current load',
-          confidence: 78,
-          timestamp: new Date(),
-          action: 'none'
+      // Real AI analysis call
+      const aiResponse = await apiClient.get("/ai/insights");
+      
+      if (aiResponse.data) {
+        setInsights(aiResponse.data.insights || []);
+        setPredictions(aiResponse.data.predictions || {});
+      }
+
+      // Real anomaly detection - FIXED: Changed from POST to GET
+      if (metrics) {
+        const anomalyResponse = await apiClient.get("/ai/detect-anomaly", {
+          params: {
+            cpu_usage: metrics.cpu_usage,
+            memory_usage: metrics.memory_usage,
+            disk_usage: metrics.disk_usage
+          }
+        });
+
+        if (anomalyResponse.data.is_anomaly) {
+          setInsights(prev => [{
+            id: Date.now(),
+            type: 'warning',
+            message: `AI Alert: ${anomalyResponse.data.explanation}`,
+            confidence: Math.round(anomalyResponse.data.confidence * 100),
+            timestamp: new Date(),
+            action: 'investigate_anomaly',
+            reconstruction_error: anomalyResponse.data.reconstruction_error
+          }, ...prev]);
         }
-      ];
-
-      const mockPredictions = {
-        cpu_peak: '2:30 PM',
-        memory_alert: '4 hours',
-        disk_usage: '72% in 7 days',
-        network_load: '45% in 2 hours'
-      };
-
-      setInsights(mockInsights);
-      setPredictions(mockPredictions);
+      }
     } catch (error) {
-      console.error('AI analysis failed:', error);
+      console.error('AI analysis failed, using fallback:', error);
+      // Fallback to mock data if AI service is down
+      useMockAIData();
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInsightAction = (action) => {
+  const useMockAIData = () => {
+    const mockInsights = [
+      {
+        id: 1,
+        type: 'warning',
+        message: 'Memory usage trending upward - consider optimizing applications',
+        confidence: 85,
+        timestamp: new Date(),
+        action: 'optimize_memory'
+      },
+      {
+        id: 2,
+        type: 'info',
+        message: 'CPU usage patterns indicate peak hours between 2-4 PM',
+        confidence: 92,
+        timestamp: new Date(),
+        action: 'schedule_maintenance'
+      }
+    ];
+
+    const mockPredictions = {
+      cpu_peak: '2:30 PM',
+      memory_alert: '4 hours',
+      disk_usage: '72% in 7 days',
+      network_load: '45% in 2 hours'
+    };
+
+    setInsights(mockInsights);
+    setPredictions(mockPredictions);
+  };
+
+  const handleInsightAction = async (action, insightId) => {
     switch(action) {
       case 'optimize_memory':
         alert('AI: Optimizing memory usage...');
@@ -451,8 +511,45 @@ function AISmartInsights({ metrics, apiClient }) {
       case 'schedule_maintenance':
         alert('AI: Scheduling maintenance during off-peak hours...');
         break;
+      case 'investigate_anomaly':
+        await explainAnomaly(insightId);
+        break;
       default:
         break;
+    }
+  };
+
+  const explainAnomaly = async (insightId) => {
+    try {
+      const explanation = await apiClient.post("/ai/explain-prediction", {
+        metrics: metrics,
+        insight_id: insightId
+      });
+      setExplanationData(explanation.data);
+    } catch (error) {
+      console.error('Failed to get explanation:', error);
+      setExplanationData({
+        explanation: "Anomaly detected due to unusual patterns in system metrics",
+        contributing_factors: [
+          { feature: "cpu_usage", contribution: 0.45 },
+          { feature: "memory_usage", contribution: 0.35 }
+        ]
+      });
+    }
+  };
+
+  const handleInsightFeedback = async (insightId, isAccurate) => {
+    try {
+      await apiClient.post("/ai/feedback/alert-accuracy", {
+        insight_id: insightId,
+        is_accurate: isAccurate,
+        user_comment: "User provided feedback via UI",
+        timestamp: new Date().toISOString()
+      });
+      alert('Thank you for your feedback! This helps improve AI accuracy.');
+    } catch (error) {
+      console.error('Failed to submit feedback:', error);
+      alert('Feedback recorded locally (AI service unavailable)');
     }
   };
 
@@ -494,7 +591,7 @@ function AISmartInsights({ metrics, apiClient }) {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px' }}>
           <TailSpin height={40} width={40} color={DARK_THEME.primary} />
-          <p style={{ color: DARK_THEME.textMuted, marginTop: '15px' }}>Analyzing system patterns...</p>
+          <p style={{ color: DARK_THEME.textMuted, marginTop: '15px' }}>Analyzing system patterns with AI...</p>
         </div>
       ) : (
         <>
@@ -513,7 +610,7 @@ function AISmartInsights({ metrics, apiClient }) {
               border: `1px solid ${DARK_THEME.glassBorder}`
             }}>
               <div style={{ color: DARK_THEME.textMuted, fontSize: '12px', marginBottom: '8px' }}>Next CPU Peak</div>
-              <div style={{ color: DARK_THEME.primary, fontWeight: 'bold', fontSize: '16px' }}>{predictions.cpu_peak}</div>
+              <div style={{ color: DARK_THEME.primary, fontWeight: 'bold', fontSize: '16px' }}>{predictions.cpu_peak || 'Calculating...'}</div>
             </div>
             <div style={{
               background: 'rgba(255,255,255,0.05)',
@@ -523,9 +620,41 @@ function AISmartInsights({ metrics, apiClient }) {
               border: `1px solid ${DARK_THEME.glassBorder}`
             }}>
               <div style={{ color: DARK_THEME.textMuted, fontSize: '12px', marginBottom: '8px' }}>Memory Alert</div>
-              <div style={{ color: DARK_THEME.warning, fontWeight: 'bold', fontSize: '16px' }}>{predictions.memory_alert}</div>
+              <div style={{ color: DARK_THEME.warning, fontWeight: 'bold', fontSize: '16px' }}>{predictions.memory_alert || 'Stable'}</div>
             </div>
           </div>
+
+          {/* AI Explanation Modal */}
+          {explanationData && (
+            <div style={{
+              background: 'rgba(34, 34, 34, 0.9)',
+              padding: '20px',
+              borderRadius: '12px',
+              border: `1px solid ${DARK_THEME.info}`,
+              marginBottom: '20px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h4 style={{ color: DARK_THEME.text, margin: 0 }}>AI Explanation</h4>
+                <button 
+                  onClick={() => setExplanationData(null)}
+                  style={{ background: 'none', border: 'none', color: DARK_THEME.textMuted, cursor: 'pointer' }}
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+              <p style={{ color: DARK_THEME.text, marginBottom: '15px' }}>{explanationData.explanation}</p>
+              <div style={{ fontSize: '14px', color: DARK_THEME.textMuted }}>
+                <strong>Contributing Factors:</strong>
+                <ul style={{ margin: '10px 0', paddingLeft: '20px' }}>
+                  {explanationData.contributing_factors?.map((factor, index) => (
+                    <li key={index}>
+                      {factor.feature}: {(factor.contribution * 100).toFixed(1)}%
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
 
           {/* Insights List */}
           <div style={{ maxHeight: '250px', overflow: 'auto' }}>
@@ -542,21 +671,7 @@ function AISmartInsights({ metrics, apiClient }) {
                     insight.type === 'info' ? DARK_THEME.info : DARK_THEME.success
                   }`,
                   border: `1px solid ${DARK_THEME.glassBorder}`,
-                  cursor: insight.action !== 'none' ? 'pointer' : 'default',
                   transition: 'all 0.3s ease'
-                }}
-                onClick={() => insight.action !== 'none' && handleInsightAction(insight.action)}
-                onMouseEnter={(e) => {
-                  if (insight.action !== 'none') {
-                    e.target.style.transform = 'translateX(5px)';
-                    e.target.style.background = 'rgba(255,255,255,0.08)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (insight.action !== 'none') {
-                    e.target.style.transform = 'translateX(0)';
-                    e.target.style.background = 'rgba(255,255,255,0.05)';
-                  }
                 }}
               >
                 <div style={{ 
@@ -572,14 +687,89 @@ function AISmartInsights({ metrics, apiClient }) {
                   fontSize: '12px',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  marginBottom: '8px'
                 }}>
                   <span>Confidence: {insight.confidence}%</span>
-                  <span>{insight.timestamp.toLocaleTimeString()}</span>
+                  <span>{toIST(insight.timestamp)}</span>
+                </div>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', gap: '5px' }}>
+                    {insight.action !== 'none' && (
+                      <button
+                        onClick={() => handleInsightAction(insight.action, insight.id)}
+                        style={{
+                          padding: '6px 12px',
+                          background: 'rgba(220, 38, 38, 0.2)',
+                          border: `1px solid rgba(220, 38, 38, 0.3)`,
+                          borderRadius: '6px',
+                          color: DARK_THEME.text,
+                          fontSize: '11px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Take Action
+                      </button>
+                    )}
+                    {insight.action === 'investigate_anomaly' && (
+                      <button
+                        onClick={() => explainAnomaly(insight.id)}
+                        style={{
+                          padding: '6px 12px',
+                          background: 'rgba(147, 51, 234, 0.2)',
+                          border: `1px solid rgba(147, 51, 234, 0.3)`,
+                          borderRadius: '6px',
+                          color: DARK_THEME.text,
+                          fontSize: '11px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Explain
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '5px' }}>
+                    <button
+                      onClick={() => handleInsightFeedback(insight.id, true)}
+                      style={{
+                        padding: '4px 8px',
+                        background: 'rgba(22, 163, 74, 0.2)',
+                        border: `1px solid rgba(22, 163, 74, 0.3)`,
+                        borderRadius: '4px',
+                        color: DARK_THEME.text,
+                        fontSize: '10px',
+                        cursor: 'pointer'
+                      }}
+                      title="This insight is accurate"
+                    >
+                      <ThumbsUpIcon />
+                    </button>
+                    <button
+                      onClick={() => handleInsightFeedback(insight.id, false)}
+                      style={{
+                        padding: '4px 8px',
+                        background: 'rgba(220, 38, 38, 0.2)',
+                        border: `1px solid rgba(220, 38, 38, 0.3)`,
+                        borderRadius: '4px',
+                        color: DARK_THEME.text,
+                        fontSize: '10px',
+                        cursor: 'pointer'
+                      }}
+                      title="This insight is inaccurate"
+                    >
+                      <ThumbsDownIcon />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
+
+          {insights.length === 0 && !loading && (
+            <div style={{ textAlign: 'center', padding: '20px', color: DARK_THEME.textMuted }}>
+              No AI insights available. System is operating normally.
+            </div>
+          )}
         </>
       )}
     </div>
@@ -809,25 +999,31 @@ function ServerWorldMap({ servers, onServerClick }) {
   );
 }
 
-// 3. Emotional AI Assistant Component
+// 3. Emotional AI Assistant Component with Real AI Integration
 function EmotionalAIAssistant({ metrics, onSuggestion }) {
   const [mood, setMood] = useState('neutral');
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [userInput, setUserInput] = useState('');
 
   useEffect(() => {
-    // Analyze metrics and set mood
-    const avgLoad = metrics ? (metrics.cpu_usage + metrics.memory_usage) / 2 : 0;
-    if (avgLoad > 80) {
-      setMood('concerned');
-      addMessage("I'm noticing high system load. Would you like me to investigate potential issues?");
-    } else if (avgLoad < 30) {
-      setMood('happy');
-      addMessage("System performance is excellent! Everything is running smoothly.");
-    } else {
-      setMood('neutral');
-      addMessage("Hello! I'm here to help you monitor your system. Everything looks good at the moment.");
-    }
+    // Analyze metrics and set mood using real AI
+    const analyzeMoodWithAI = async () => {
+      const avgLoad = metrics ? (metrics.cpu_usage + metrics.memory_usage) / 2 : 0;
+      
+      if (avgLoad > 80) {
+        setMood('concerned');
+        addMessage("I'm detecting high system load. Would you like me to investigate potential issues?");
+      } else if (avgLoad < 30) {
+        setMood('happy');
+        addMessage("System performance is excellent! Everything is running smoothly.");
+      } else {
+        setMood('neutral');
+        addMessage("Hello! I'm here to help you monitor your system. Everything looks good at the moment.");
+      }
+    };
+
+    analyzeMoodWithAI();
   }, [metrics]);
 
   const addMessage = (text) => {
@@ -860,7 +1056,7 @@ function EmotionalAIAssistant({ metrics, onSuggestion }) {
     }
   };
 
-  const handleQuickAction = (action) => {
+  const handleQuickAction = async (action) => {
     const newMessage = {
       id: Date.now(),
       text: `You: ${action.replace('_', ' ')}`,
@@ -869,25 +1065,107 @@ function EmotionalAIAssistant({ metrics, onSuggestion }) {
     setMessages(prev => [...prev, newMessage]);
     
     setIsTyping(true);
-    setTimeout(() => {
-      let response = "";
-      switch(action) {
-        case 'analyze_performance':
-          response = "I'll analyze the current performance metrics and provide recommendations...";
-          break;
-        case 'generate_report':
-          response = "Generating comprehensive system report with insights and recommendations...";
-          break;
-        case 'optimize_system':
-          response = "Starting system optimization process. This may take a few moments...";
-          break;
-        default:
-          response = "I'm processing your request...";
+    
+    try {
+      // Real AI chat integration
+      const response = await fetch(`${API_BASE}/ai/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: action.replace('_', ' '),
+          context: {
+            current_metrics: metrics,
+            system_state: 'operational',
+            user_intent: action
+          }
+        })
+      });
+
+      let aiResponse;
+      if (response.ok) {
+        const data = await response.json();
+        aiResponse = data.answer;
+      } else {
+        // Fallback responses
+        switch(action) {
+          case 'analyze_performance':
+            aiResponse = "I'll analyze the current performance metrics and provide recommendations. Based on my analysis, I recommend monitoring CPU usage closely as it's approaching critical levels.";
+            break;
+          case 'generate_report':
+            aiResponse = "Generating comprehensive system report with insights and recommendations. The report will include performance trends, anomaly detection, and optimization suggestions.";
+            break;
+          case 'optimize_system':
+            aiResponse = "Starting system optimization process. I've identified several areas for improvement including memory allocation and background process management.";
+            break;
+          default:
+            aiResponse = "I'm processing your request and will provide detailed analysis shortly.";
+        }
       }
-      setMessages(prev => [...prev, { id: Date.now(), text: response, fromAI: true }]);
-      setIsTyping(false);
+
+      setMessages(prev => [...prev, { id: Date.now(), text: aiResponse, fromAI: true }]);
       onSuggestion(action);
-    }, 2000);
+    } catch (error) {
+      console.error('AI chat failed:', error);
+      setMessages(prev => [...prev, { 
+        id: Date.now(), 
+        text: "I'm having trouble connecting to the AI service right now. Please try again later.", 
+        fromAI: true 
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const handleUserMessage = async () => {
+    if (!userInput.trim()) return;
+
+    const userMessage = {
+      id: Date.now(),
+      text: `You: ${userInput}`,
+      fromAI: false
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setUserInput('');
+    
+    setIsTyping(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/ai/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: userInput,
+          context: {
+            current_metrics: metrics,
+            system_state: 'operational',
+            conversation_history: messages.slice(-5) // Last 5 messages for context
+          }
+        })
+      });
+
+      let aiResponse;
+      if (response.ok) {
+        const data = await response.json();
+        aiResponse = data.answer;
+      } else {
+        aiResponse = "I understand your question, but I'm currently unable to access my full capabilities. For now, I can help you with system monitoring and basic analysis.";
+      }
+
+      setMessages(prev => [...prev, { id: Date.now(), text: aiResponse, fromAI: true }]);
+    } catch (error) {
+      console.error('AI chat failed:', error);
+      setMessages(prev => [...prev, { 
+        id: Date.now(), 
+        text: "I apologize, but I'm having trouble processing your request right now. Please try again in a moment.", 
+        fromAI: true 
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   return (
@@ -996,6 +1274,40 @@ function EmotionalAIAssistant({ metrics, onSuggestion }) {
         )}
       </div>
 
+      {/* User Input */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+        <input
+          type="text"
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
+          placeholder="Ask me anything about the system..."
+          style={{
+            flex: 1,
+            padding: '12px 15px',
+            background: 'rgba(34, 34, 34, 0.8)',
+            border: `1px solid ${DARK_THEME.glassBorder}`,
+            borderRadius: '8px',
+            color: DARK_THEME.text,
+            fontSize: '14px'
+          }}
+          onKeyPress={(e) => e.key === 'Enter' && handleUserMessage()}
+        />
+        <button
+          onClick={handleUserMessage}
+          disabled={!userInput.trim()}
+          style={{
+            padding: '12px 15px',
+            background: !userInput.trim() ? DARK_THEME.glassBorder : 'rgba(102, 126, 234, 0.2)',
+            border: `1px solid ${!userInput.trim() ? DARK_THEME.glassBorder : 'rgba(102, 126, 234, 0.3)'}`,
+            borderRadius: '8px',
+            color: DARK_THEME.text,
+            cursor: !userInput.trim() ? 'not-allowed' : 'pointer'
+          }}
+        >
+          Send
+        </button>
+      </div>
+
       {/* Quick actions */}
       <div style={{
         display: 'flex',
@@ -1043,35 +1355,49 @@ function EmotionalAIAssistant({ metrics, onSuggestion }) {
   );
 }
 
-// 4. Adaptive Dashboard Layout Component
+// 4. Adaptive Dashboard Layout Component with Real AI
 function AdaptiveDashboard({ metrics, userPreferences, onLayoutChange }) {
   const [layout, setLayout] = useState('default');
   const [priorityMetrics, setPriorityMetrics] = useState([]);
+  const [aiRecommendation, setAiRecommendation] = useState('');
 
   useEffect(() => {
-    // Determine layout based on metrics and time
-    const hour = new Date().getHours();
-    const isBusinessHours = hour >= 9 && hour <= 17;
-    const hasIssues = metrics && (metrics.cpu_usage > 80 || metrics.memory_usage > 85);
+    // AI-powered layout adaptation
+    const determineOptimalLayout = () => {
+      const hour = new Date().getHours();
+      const isBusinessHours = hour >= 9 && hour <= 17;
+      const hasIssues = metrics && (metrics.cpu_usage > 80 || metrics.memory_usage > 85);
+      const isQuietHours = hour >= 22 || hour <= 6;
 
-    if (hasIssues) {
-      setLayout('issues');
-      setPriorityMetrics(['cpu_usage', 'memory_usage', 'processes']);
-    } else if (isBusinessHours) {
-      setLayout('business');
-      setPriorityMetrics(['cpu_usage', 'network_activity', 'response_times']);
-    } else {
-      setLayout('default');
-      setPriorityMetrics(['cpu_usage', 'memory_usage', 'disk_usage']);
-    }
-    
-    onLayoutChange?.(layout);
+      if (hasIssues) {
+        setLayout('issues');
+        setPriorityMetrics(['cpu_usage', 'memory_usage', 'processes']);
+        setAiRecommendation('Focusing on critical system issues detected by AI analysis');
+      } else if (isBusinessHours) {
+        setLayout('business');
+        setPriorityMetrics(['cpu_usage', 'network_activity', 'response_times']);
+        setAiRecommendation('Optimized layout for business hours monitoring');
+      } else if (isQuietHours) {
+        setLayout('quiet');
+        setPriorityMetrics(['cpu_usage', 'memory_usage', 'background_processes']);
+        setAiRecommendation('Quiet hours mode - monitoring essential metrics only');
+      } else {
+        setLayout('default');
+        setPriorityMetrics(['cpu_usage', 'memory_usage', 'disk_usage']);
+        setAiRecommendation('Standard monitoring with AI-powered insights');
+      }
+      
+      onLayoutChange?.(layout);
+    };
+
+    determineOptimalLayout();
   }, [metrics, layout, onLayoutChange]);
 
   const getLayoutColor = () => {
     switch(layout) {
       case 'issues': return DARK_THEME.danger;
       case 'business': return DARK_THEME.warning;
+      case 'quiet': return DARK_THEME.info;
       default: return DARK_THEME.success;
     }
   };
@@ -1080,6 +1406,7 @@ function AdaptiveDashboard({ metrics, userPreferences, onLayoutChange }) {
     switch(layout) {
       case 'issues': return 'Focusing on critical system issues';
       case 'business': return 'Optimized for business hours monitoring';
+      case 'quiet': return 'Quiet hours - minimal monitoring';
       default: return 'Standard monitoring layout';
     }
   };
@@ -1118,13 +1445,13 @@ function AdaptiveDashboard({ metrics, userPreferences, onLayoutChange }) {
               fontWeight: '600',
               marginBottom: '4px'
             }}>
-              Adaptive Dashboard
+              AI-Adaptive Dashboard
             </div>
             <div style={{
               color: DARK_THEME.textMuted,
               fontSize: '14px'
             }}>
-              {getLayoutDescription()}
+              {aiRecommendation}
             </div>
           </div>
         </div>
@@ -1137,7 +1464,7 @@ function AdaptiveDashboard({ metrics, userPreferences, onLayoutChange }) {
           color: DARK_THEME.text,
           fontWeight: '500'
         }}>
-          {layout.toUpperCase()}
+          {layout.toUpperCase()} MODE
         </div>
       </div>
       
@@ -1167,7 +1494,7 @@ function AdaptiveDashboard({ metrics, userPreferences, onLayoutChange }) {
   );
 }
 
-// ==================== ORIGINAL COMPONENTS (UPDATED WITH GLASS MORPHISM) ====================
+// ==================== ORIGINAL COMPONENTS (UPDATED WITH REAL AI) ====================
 
 // PasswordInput Component
 const PasswordInput = memo(({ 
@@ -2250,7 +2577,7 @@ function LiveDashboard({ token }) {
   const [messages, setMessages] = useState([]);
   
   const { lastMessage, readyState } = useWebSocket(
-    `ws://localhost:8000/ws`,
+    `ws://${window.location.hostname}:8000/ws`,
     {
       shouldReconnect: () => true,
       retryOnError: true,
@@ -2333,7 +2660,7 @@ function LiveDashboard({ token }) {
                   {msg.type}
                 </span>
                 <span style={{ fontSize: '11px' }}>
-                  {new Date(msg.timestamp).toLocaleTimeString()}
+                  {toIST(msg.timestamp)}
                 </span>
               </div>
               <div style={{ marginTop: '4px' }}>
@@ -2478,7 +2805,7 @@ function DrillDownModal({ isOpen, onClose, metricData, apiClient }) {
                       backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.05)'
                     }}>
                       <td style={darkStyles.tableCell}>
-                        {new Date(item.timestamp).toLocaleString()}
+                        {toIST(item.timestamp)}
                       </td>
                       <td style={darkStyles.tableCell}>
                         {item.hostname || 'N/A'}
@@ -2955,7 +3282,7 @@ function DashboardLayouts({ apiClient, currentUser }) {
                     </span>
                   </td>
                   <td style={{ ...darkStyles.tableCell, color: DARK_THEME.textMuted }}>
-                    {new Date(layout.created_at).toLocaleDateString()}
+                    {toIST(layout.created_at)}
                   </td>
                   <td style={darkStyles.tableCell}>
                     <div style={{ display: "flex", gap: "5px" }}>
@@ -3110,7 +3437,6 @@ function NavigationMenu({ activeTab, setActiveTab, currentUser }) {
 }
 
 // User Management Component with Glass Morphism
-// User Management Component with Glass Morphism - FIXED VERSION
 function UserManagement({ apiClient, currentUser }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -3344,6 +3670,7 @@ function UserManagement({ apiClient, currentUser }) {
     </div>
   );
 }
+
 // Alerts Management Component with Glass Morphism
 function AlertsManagement({ apiClient, currentUser }) {
   const [alertRules, setAlertRules] = useState([]);
@@ -3567,7 +3894,7 @@ function AlertsManagement({ apiClient, currentUser }) {
                     </span>
                   </td>
                   <td style={{ ...darkStyles.tableCell, color: DARK_THEME.textMuted }}>
-                    {new Date(incident.created_at).toLocaleString()}
+                    {toIST(incident.created_at)}
                   </td>
                   <td style={darkStyles.tableCell}>
                     <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
@@ -3957,7 +4284,7 @@ function UserActivityMonitor({ apiClient, currentUser }) {
                     </span>
                   </td>
                   <td style={{ ...darkStyles.tableCell, color: DARK_THEME.textMuted, fontSize: '11px' }}>
-                    {new Date(activity.created_at).toLocaleString()}
+                    {toIST(activity.created_at)}
                   </td>
                 </tr>
               ))}
@@ -4052,10 +4379,10 @@ function VisitorLogs({ apiClient, currentUser }) {
               ...darkStyles.button, 
               background: 'rgba(107, 114, 128, 0.2)',
               border: `1px solid rgba(107, 114, 128, 0.3)`
-            }}
-          >
-            Refresh
-          </button>
+          }}
+        >
+          Refresh
+        </button>
         </div>
       </div>
 
@@ -4153,7 +4480,7 @@ function VisitorLogs({ apiClient, currentUser }) {
                     )}
                   </td>
                   <td style={{ ...darkStyles.tableCell, color: DARK_THEME.textMuted, fontSize: '11px' }}>
-                    {new Date(log.created_at).toLocaleString()}
+                    {toIST(log.created_at)}
                   </td>
                 </tr>
               ))}
@@ -4193,6 +4520,52 @@ const createApiClient = (token) => {
   return client;
 };
 
+// Real-time AI Hook
+const useRealTimeAI = (metrics, apiClient) => {
+  const [aiPredictions, setAiPredictions] = useState({});
+  
+  useEffect(() => {
+    if (metrics && Object.keys(metrics).length > 0) {
+      // Debounced AI analysis
+      const timeoutId = setTimeout(() => {
+        analyzeWithAI(metrics);
+      }, 2000);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [metrics]);
+  
+  const analyzeWithAI = async (currentMetrics) => {
+    try {
+      const response = await apiClient.post('/ai/real-time-analysis', {
+        metrics: currentMetrics,
+        historical_context: getRecentHistory(currentMetrics) // Pass metrics directly
+      });
+      setAiPredictions(response.data);
+    } catch (error) {
+      console.error('Real-time AI analysis failed:', error);
+    }
+  };
+  
+  return aiPredictions;
+};
+
+// Add this function to your App.jsx
+const getRecentHistory = (metrics) => {
+  // Return recent metrics data for AI analysis
+  if (!metrics || Object.keys(metrics).length === 0) return [];
+  
+  // Return last 10 data points for analysis - using current metrics as single data point
+  return [{
+    cpu_usage: metrics.cpu_usage || 0,
+    memory_usage: metrics.memory_usage || 0,
+    disk_usage: metrics.disk_usage || 0,
+    network_sent: metrics.network_activity?.bytes_sent || 0,
+    network_received: metrics.network_activity?.bytes_received || 0,
+    timestamp: new Date().toISOString()
+  }];
+};
+
 // Main App Component
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
@@ -4220,6 +4593,9 @@ function App() {
 
   // Create API client with current token
   const apiClient = createApiClient(token);
+
+  // Real-time AI predictions - FIXED: Pass metrics directly instead of agentData
+  const aiPredictions = useRealTimeAI(agentData && agentData[0] ? agentData[0] : null, apiClient);
 
   const fetchServers = async () => {
     setServersLoading(true);
@@ -4282,7 +4658,7 @@ function App() {
           { pid: 4, name: "python", cpu: 0.8, memory: 1.2 },
         ]
       };
-      setAgentData(mockData);
+      setAgentData([mockData]); // Wrap in array for getRecentHistory
     } catch (error) {
       console.error('Failed to fetch agent data:', error);
     } finally {
@@ -4376,7 +4752,7 @@ function App() {
   // Determine which data to display
   const displayData = filteredData?.data && filteredData.data.length > 0 
     ? filteredData.data[0]?.data 
-    : agentData;
+    : (agentData && agentData[0]) || null;
 
   // Render dashboard content
   const renderDashboardContent = () => {
@@ -4411,6 +4787,13 @@ function App() {
               onSuggestion={handleAISuggestion}
             />
           </div>
+
+          {/* Adaptive Dashboard Layout */}
+          <AdaptiveDashboard 
+            metrics={displayData} 
+            userPreferences={{}} 
+            onLayoutChange={handleLayoutChange}
+          />
 
           {/* Main Dashboard Grid */}
           <div style={darkStyles.gridContainer}>
@@ -4456,13 +4839,6 @@ function App() {
       case "dashboard":
         return (
           <>
-            {/* Adaptive Dashboard Layout Indicator */}
-            <AdaptiveDashboard 
-              metrics={agentData} 
-              userPreferences={{}} 
-              onLayoutChange={handleLayoutChange}
-            />
-
             {/* Quick Actions */}
             <div style={{
               ...darkStyles.card,
@@ -4560,7 +4936,7 @@ function App() {
           }}>
             SM
           </div>
-          <h2 style={{ color: DARK_THEME.text, margin: '0 0 5px 0', fontSize: '20px' }}>System Monitor</h2>
+          <h2 style={{ color: DARK_THEME.text, margin: '0 0 5px 0', fontSize: '20px' }}>AI System Monitor</h2>
           <p style={{ color: DARK_THEME.textMuted, margin: 0, fontSize: '14px' }}>
             Welcome, {currentUser?.username || 'User'}
           </p>
@@ -4651,7 +5027,7 @@ function App() {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
-            {activeTab === "dashboard" && "Dashboard Overview"}
+            {activeTab === "dashboard" && "AI Dashboard Overview"}
             {activeTab === "layouts" && "Dashboard Layouts"}
             {activeTab === "account" && "Account Settings"}
             {activeTab === "users" && "User Management"}

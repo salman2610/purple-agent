@@ -1,23 +1,36 @@
-# database.py - Fixed schema with all required columns
+# database.py - Fixed schema with all required columns including ai_feedback
 import os
 import databases
 import sqlalchemy
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy import Table, Column, Integer, String, Boolean, DateTime, Text, JSON, Float, ForeignKey
 from sqlalchemy.sql import func
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-# Database configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./purpleteam.db")
+# Database configuration - HARD REQUIRE PostgreSQL
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Create database connection
+if not DATABASE_URL:
+    # HARD FAIL → prevent silent fallback to SQLite
+    raise RuntimeError("❌ DATABASE_URL not set. Set PostgreSQL URL before running backend.")
+
+# Force asyncpg for PostgreSQL
+if not DATABASE_URL.startswith("postgresql"):
+    raise RuntimeError("❌ Invalid DB URL. Must be postgresql+asyncpg://")
+
 database = databases.Database(DATABASE_URL)
 metadata = MetaData()
 
-# For SQLite, we need to set check_same_thread to False
-if DATABASE_URL.startswith("sqlite"):
-    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-else:
-    engine = create_engine(DATABASE_URL)
+# For SQLAlchemy sync engine (used for table creation)
+engine = create_engine(DATABASE_URL.replace("+asyncpg", ""))
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+
+def utc_now():
+    return func.now()  # PostgreSQL-safe
 
 # Define ALL tables including new monitoring tables
 users = Table(
@@ -40,8 +53,8 @@ users = Table(
     Column("password_changed_at", DateTime, nullable=True),
     Column("force_password_change", Boolean, default=False),
     Column("disabled_at", DateTime, nullable=True),
-    Column("created_at", DateTime, default=func.now()),
-    Column("updated_at", DateTime, default=func.now(), onupdate=func.now())
+    Column("created_at", DateTime, server_default=func.now()),
+    Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now())
 )
 
 # New servers table for multi-server monitoring
@@ -61,8 +74,8 @@ servers = Table(
     Column("criticality", String(20), default="medium"),
     Column("status", String(20), default="unknown"),
     Column("created_by", Integer, ForeignKey('users.id'), nullable=True),
-    Column("created_at", DateTime, default=func.now()),
-    Column("updated_at", DateTime, default=func.now(), onupdate=func.now()),
+    Column("created_at", DateTime, server_default=func.now()),
+    Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now()),
     Column("last_seen", DateTime, nullable=True)
 )
 
@@ -75,7 +88,7 @@ agent_data = Table(
     Column("timestamp", DateTime),
     Column("hostname", String(100), nullable=True),
     Column("agent_version", String(50), nullable=True),
-    Column("created_at", DateTime, default=func.now())
+    Column("created_at", DateTime, server_default=func.now())
 )
 
 # Alerting tables
@@ -94,8 +107,8 @@ alert_rules = Table(
     Column("cooldown_period", Integer, default=300),
     Column("tags", JSON, nullable=True),
     Column("created_by", Integer, ForeignKey('users.id')),
-    Column("created_at", DateTime, default=func.now()),
-    Column("updated_at", DateTime, default=func.now(), onupdate=func.now())
+    Column("created_at", DateTime, server_default=func.now()),
+    Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now())
 )
 
 incidents = Table(
@@ -111,13 +124,13 @@ incidents = Table(
     Column("status", String(20), default="open"),
     Column("metadata", JSON),
     Column("comments", JSON, nullable=True),
-    Column("created_at", DateTime, default=func.now()),
+    Column("created_at", DateTime, server_default=func.now()),
     Column("acknowledged_by", Integer, ForeignKey('users.id'), nullable=True),
     Column("acknowledged_at", DateTime, nullable=True),
     Column("resolved_by", Integer, ForeignKey('users.id'), nullable=True),
     Column("resolved_at", DateTime, nullable=True),
     Column("resolved_notes", Text, nullable=True),
-    Column("updated_at", DateTime, default=func.now(), onupdate=func.now())
+    Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now())
 )
 
 # New user activity tracking table
@@ -135,7 +148,7 @@ user_activity = Table(
     Column("session_id", String(100), nullable=True),
     Column("country", String(100), nullable=True),
     Column("city", String(100), nullable=True),
-    Column("created_at", DateTime, default=func.now())
+    Column("created_at", DateTime, server_default=func.now())
 )
 
 # New visitor/request monitoring table
@@ -158,7 +171,7 @@ visitor_logs = Table(
     Column("suspicious_reason", Text, nullable=True),
     Column("country", String(100), nullable=True),
     Column("city", String(100), nullable=True),
-    Column("created_at", DateTime, default=func.now())
+    Column("created_at", DateTime, server_default=func.now())
 )
 
 # Dashboard layouts
@@ -172,8 +185,8 @@ user_dashboard_layouts = Table(
     Column("widgets", JSON), # Store widget configurations
     Column("filters", JSON), # Store saved filter presets
     Column("is_default", Boolean, default=False),
-    Column("created_at", DateTime, default=func.now()),
-    Column("updated_at", DateTime, default=func.now(), onupdate=func.now())
+    Column("created_at", DateTime, server_default=func.now()),
+    Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now())
 )
 
 # NEW TABLES FOR ENHANCED FEATURES
@@ -191,7 +204,22 @@ ai_insights = Table(
     Column("server_id", Integer, ForeignKey('servers.id'), nullable=True),
     Column("related_data_id", Integer, ForeignKey('agent_data.id'), nullable=True),
     Column("metadata", JSON, nullable=True),
-    Column("created_at", DateTime, default=func.now())
+    Column("created_at", DateTime, server_default=func.now())
+)
+
+# AI Feedback table
+ai_feedback = Table(
+    "ai_feedback",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("user_id", Integer, ForeignKey('users.id'), nullable=False),
+    Column("alert_id", Integer, ForeignKey('alert_rules.id'), nullable=True),
+    Column("incident_id", Integer, ForeignKey('incidents.id'), nullable=True),
+    Column("prediction_type", String(50), nullable=False),
+    Column("was_correct", Boolean, default=True),
+    Column("user_comment", Text, nullable=True),
+    Column("metrics_snapshot", JSON, nullable=True),
+    Column("created_at", DateTime, server_default=func.now())
 )
 
 # Server locations for global map
@@ -208,7 +236,7 @@ server_locations = Table(
     Column("server_id", Integer, ForeignKey('servers.id'), nullable=True),
     Column("description", Text, nullable=True),
     Column("tags", JSON, nullable=True),
-    Column("last_updated", DateTime, default=func.now())
+    Column("last_updated", DateTime, server_default=func.now())
 )
 
 # User preferences table
@@ -219,8 +247,8 @@ user_preferences = Table(
     Column("user_id", Integer, ForeignKey('users.id')),
     Column("preference_type", String(50)),
     Column("preference_value", JSON),
-    Column("created_at", DateTime, default=func.now()),
-    Column("updated_at", DateTime, default=func.now(), onupdate=func.now())
+    Column("created_at", DateTime, server_default=func.now()),
+    Column("updated_at", DateTime, server_default=func.now(), onupdate=func.now())
 )
 
 # Notifications table
@@ -236,7 +264,7 @@ notifications = Table(
     Column("metadata", JSON, nullable=True),
     Column("read", Boolean, default=False),
     Column("read_at", DateTime, nullable=True),
-    Column("created_at", DateTime, default=func.now())
+    Column("created_at", DateTime, server_default=func.now())
 )
 
 async def create_tables():

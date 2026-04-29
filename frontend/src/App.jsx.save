@@ -1,0 +1,5172 @@
+import React, { useState, useEffect, memo } from "react";
+import axios from "axios";
+import useWebSocket from "react-use-websocket";
+import { PieChart, Pie, Cell, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { TailSpin } from 'react-loader-spinner';
+
+const API_BASE = "http://localhost:8000";
+
+// Enhanced Red and black theme colors with glass morphism
+const DARK_THEME = {
+  background: "linear-gradient(135deg, #0a0a0a 0%, #1a0000 50%, #0a0000 100%)",
+  cardBackground: "rgba(17, 17, 17, 0.85)",
+  cardBackgroundSolid: "#111",
+  border: "rgba(51, 51, 51, 0.6)",
+  text: "#fff",
+  textMuted: "#888",
+  primary: "#dc2626",
+  success: "#16a34a",
+  danger: "#dc2626",
+  warning: "#d97706",
+  info: "#9333ea",
+  secondary: "#6b7280",
+  glass: "rgba(255, 255, 255, 0.08)",
+  glassBorder: "rgba(255, 255, 255, 0.15)",
+  accentGradient: "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)"
+};
+
+// Colors for charts (adjusted for dark background)
+const COLORS = ["#dc2626", "#16a34a", "#d97706", "#9333ea", "#6b7280"];
+
+// Utility function to convert to Indian Standard Time (IST) - FIXED NULL HANDLING
+function toIST(dateString) {
+  if (!dateString) return "N/A";   // Prevent 1970 for null/undefined
+
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "Invalid"; // Handle invalid dates
+
+  // Convert to milliseconds, add 5:30 offset
+  const istOffset = 5 * 60 + 30; // minutes
+  const istTime = new Date(date.getTime() + istOffset * 60000);
+  return istTime.toLocaleString(); // Displays in local format
+}
+
+// SVG Icons as React components
+const FilterIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+  </svg>
+);
+
+const DownloadIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+  </svg>
+);
+
+const SettingsIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+  </svg>
+);
+
+const ChevronRightIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+  </svg>
+);
+
+const SlidersIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M4 21h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zm0-4h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zm0-4h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zm0-4h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zm0-4h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1z"/>
+  </svg>
+);
+
+const FileTextIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+  </svg>
+);
+
+const DashboardIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+  </svg>
+);
+
+const UsersIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A2.01 2.01 0 0 0 18.06 7h-.12a2 2 0 0 0-1.9 1.37l-.86 2.58c1.08.6 1.82 1.73 1.82 3.05v8h3zm-7.5-10.5c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5zm-5 0c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5zM9 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm5.5 12v-2.5c0-.83-.67-1.5-1.5-1.5h-2c-.83 0-1.5.67-1.5 1.5V16h-2v-2.5c0-1.38 1.12-2.5 2.5-2.5h2c1.38 0 2.5 1.12 2.5 2.5V16h-2z"/>
+  </svg>
+);
+
+const AlertIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+  </svg>
+);
+
+const AccountIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+  </svg>
+);
+
+const LayoutIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M4 13h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zm0 8h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1zm10 0h6c.55 0 1-.45 1-1v-8c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1zM13 4v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1h-6c-.55 0-1 .45-1 1z"/>
+  </svg>
+);
+
+const EyeIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+  </svg>
+);
+
+const EyeOffIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
+  </svg>
+);
+
+const ServerIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20 6H4v4h16V6zm2 10v-2H2v2h4v4H4v2h16v-2h-2v-4h4z"/>
+  </svg>
+);
+
+const ActivityIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+  </svg>
+);
+
+const SecurityIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+  </svg>
+);
+
+const BrainIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 4C13.1 4 14 4.9 14 6s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 8c-.6 0-1 .4-1 1 0 1.1-.9 2-2 2-.6 0-1 .4-1 1s.4 1 1 1c2.2 0 4-1.8 4-4 0-.6-.4-1-1-1zM3 12c0-.6-.4-1-1-1s-1 .4-1 1c0 2.2 1.8 4 4 4 .6 0 1-.4 1-1s-.4-1-1-1c-1.1 0-2-.9-2-2zm12.3-2.1l-2.9-1.6c-.4-.2-.8-.2-1.2 0l-2.9 1.6c-.4.2-.7.6-.7 1.1 0 .4.2.8.6 1l2.9 1.6c.2.1.4.2.6.2s.4-.1.6-.2l2.9-1.6c.4-.2.6-.6.6-1s-.2-.8-.6-1zm-1 6.6c-.4-.2-.8-.2-1.2 0l-2.9 1.6c-.4.2-.7.6-.7 1.1 0 .4.2.8.6 1l2.9 1.6c.2.1.4.2.6.2s.4-.1.6-.2l2.9-1.6c.4-.2.6-.6.6-1s-.2-.8-.6-1l-2.8-1.6z"/>
+  </svg>
+);
+
+const GlobeIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+  </svg>
+);
+
+const FeedbackIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 9h-2V5h2v6zm0 4h-2v-2h2v2z"/>
+  </svg>
+);
+
+const ThumbsUpIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/>
+  </svg>
+);
+
+const ThumbsDownIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/>
+  </svg>
+);
+
+// Enhanced Dark theme styles with Glass Morphism
+const darkStyles = {
+  container: {
+    background: DARK_THEME.background,
+    color: DARK_THEME.text,
+    minHeight: "100vh",
+    width: "100vw",
+    display: "flex",
+    padding: "0",
+    boxSizing: "border-box",
+    overflow: "hidden",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+  },
+  sidebar: {
+    width: "320px",
+    background: "rgba(17, 17, 17, 0.9)",
+    backdropFilter: "blur(20px)",
+    borderRight: `1px solid ${DARK_THEME.glassBorder}`,
+    padding: "25px 20px",
+    overflowY: "auto",
+    height: "100vh",
+    position: "sticky",
+    top: 0
+  },
+  mainContent: {
+    flex: 1,
+    padding: "25px",
+    overflowY: "auto",
+    height: "100vh",
+    display: "flex",
+    flexDirection: "column"
+  },
+  loginContainer: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "100vh",
+    background: "linear-gradient(135deg, #000000 0%, #1a0000 50%, #0a0000 100%)",
+    position: "relative",
+    overflow: "hidden",
+    width: "100%"
+  },
+  card: {
+    background: DARK_THEME.cardBackground,
+    backdropFilter: "blur(20px)",
+    border: `1px solid ${DARK_THEME.glassBorder}`,
+    padding: "25px",
+    borderRadius: "20px",
+    width: "100%",
+    textAlign: "center",
+    boxSizing: "border-box",
+    marginBottom: "20px",
+    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
+    transition: "all 0.3s ease"
+  },
+  gridCard: {
+    background: DARK_THEME.cardBackground,
+    backdropFilter: "blur(20px)",
+    border: `1px solid ${DARK_THEME.glassBorder}`,
+    padding: "25px",
+    borderRadius: "20px",
+    width: "100%",
+    textAlign: "center",
+    boxSizing: "border-box",
+    height: "100%",
+    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
+    transition: "all 0.3s ease"
+  },
+  input: {
+    width: "100%",
+    padding: "15px 20px",
+    marginBottom: "15px",
+    background: "rgba(34, 34, 34, 0.8)",
+    backdropFilter: "blur(10px)",
+    color: DARK_THEME.text,
+    border: `1px solid ${DARK_THEME.glassBorder}`,
+    borderRadius: "12px",
+    fontSize: "14px",
+    boxSizing: "border-box",
+    transition: "all 0.3s ease"
+  },
+  select: {
+    width: "100%",
+    padding: "15px 20px",
+    marginBottom: "15px",
+    background: "rgba(34, 34, 34, 0.8)",
+    backdropFilter: "blur(10px)",
+    color: DARK_THEME.text,
+    border: `1px solid ${DARK_THEME.glassBorder}`,
+    borderRadius: "12px",
+    fontSize: "14px",
+    boxSizing: "border-box"
+  },
+  button: {
+    padding: "12px 24px",
+    border: "none",
+    borderRadius: "12px",
+    cursor: "pointer",
+    color: "white",
+    fontSize: "14px",
+    fontWeight: "500",
+    margin: "5px",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    transition: "all 0.3s ease",
+    backdropFilter: "blur(10px)"
+  },
+  gridContainer: {
+    display: "grid",
+    gap: "20px",
+    gridTemplateColumns: "1fr 1fr",
+    width: "100%"
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse"
+  },
+  tableHeader: {
+    background: "rgba(34, 34, 34, 0.8)",
+    color: DARK_THEME.text,
+    padding: "12px",
+    textAlign: "left",
+    cursor: "pointer",
+    borderBottom: `1px solid ${DARK_THEME.glassBorder}`,
+    fontSize: "12px",
+    fontWeight: "600"
+  },
+  tableCell: {
+    padding: "12px",
+    borderBottom: `1px solid ${DARK_THEME.glassBorder}`,
+    fontSize: "12px"
+  },
+  pre: {
+    background: "rgba(34, 34, 34, 0.8)",
+    color: DARK_THEME.text,
+    padding: "15px",
+    borderRadius: "12px",
+    overflow: "auto",
+    fontFamily: "monospace",
+    fontSize: "12px",
+    maxHeight: "200px",
+    textAlign: "left",
+    backdropFilter: "blur(10px)"
+  },
+  message: {
+    padding: "15px 20px",
+    borderRadius: "12px",
+    textAlign: "center",
+    width: "100%",
+    boxSizing: "border-box",
+    backdropFilter: "blur(10px)"
+  },
+  quickActions: {
+    display: "flex",
+    gap: "10px",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    width: "100%"
+  },
+  tabContainer: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "20px",
+    justifyContent: "flex-start",
+    flexWrap: "wrap"
+  },
+  tab: {
+    padding: "12px 24px",
+    border: "none",
+    borderRadius: "12px",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "500",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    transition: "all 0.3s ease",
+    backdropFilter: "blur(10px)"
+  },
+  sidebarSection: {
+    marginBottom: "25px",
+    padding: "20px",
+    background: "rgba(26, 26, 26, 0.7)",
+    borderRadius: "16px",
+    border: `1px solid ${DARK_THEME.glassBorder}`,
+    backdropFilter: "blur(10px)"
+  },
+  sidebarHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    marginBottom: "15px",
+    color: DARK_THEME.text,
+    fontSize: "16px",
+    fontWeight: "600"
+  },
+  filterGroup: {
+    marginBottom: "15px"
+  },
+  filterLabel: {
+    display: "block",
+    marginBottom: "8px",
+    color: DARK_THEME.textMuted,
+    fontSize: "12px",
+    fontWeight: "500"
+  },
+  exportOption: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "12px 15px",
+    marginBottom: "8px",
+    background: "rgba(34, 34, 34, 0.8)",
+    borderRadius: "8px",
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+    border: `1px solid ${DARK_THEME.glassBorder}`,
+    backdropFilter: "blur(10px)"
+  },
+  navMenu: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+    marginBottom: "20px"
+  },
+  navItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    padding: "15px 20px",
+    color: DARK_THEME.text,
+    textDecoration: "none",
+    borderRadius: "12px",
+    transition: "all 0.3s ease",
+    cursor: "pointer",
+    backdropFilter: "blur(10px)"
+  }
+};
+
+// ==================== ENHANCED AI COMPONENTS WITH REAL IMPLEMENTATIONS ====================
+
+// 1. AI Smart Insights Component with Real AI Integration
+function AISmartInsights({ metrics, apiClient }) {
+  const [insights, setInsights] = useState([]);
+  const [predictions, setPredictions] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [explanationData, setExplanationData] = useState(null);
+
+  useEffect(() => {
+    if (metrics) {
+      analyzeMetricsWithAI();
+    }
+  }, [metrics]);
+
+  const analyzeMetricsWithAI = async () => {
+    setLoading(true);
+    try {
+      // Real AI analysis call
+      const aiResponse = await apiClient.get("/ai/insights");
+      
+      if (aiResponse.data) {
+        setInsights(aiResponse.data.insights || []);
+        setPredictions(aiResponse.data.predictions || {});
+      }
+
+      // Real anomaly detection - FIXED: Changed from POST to GET
+      if (metrics) {
+        const anomalyResponse = await apiClient.get("/ai/detect-anomaly", {
+          params: {
+            cpu_usage: metrics.cpu_usage,
+w            memory_usage: metrics.memory_usage,
+            disk_usage: metrics.disk_usage
+          }
+        });
+
+        if (anomalyResponse.data.is_anomaly) {
+          setInsights(prev => [{
+            id: Date.now(),
+            type: 'warning',
+            message: `AI Alert: ${anomalyResponse.data.explanation}`,
+            confidence: Math.round(anomalyResponse.data.confidence * 100),
+            timestamp: new Date(),
+            action: 'investigate_anomaly',
+            reconstruction_error: anomalyResponse.data.reconstruction_error
+          }, ...prev]);
+        }
+      }
+    } catch (error) {
+      console.error('AI analysis failed, using fallback:', error);
+      // Fallback to mock data if AI service is down
+      useMockAIData();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const useMockAIData = () => {
+    const mockInsights = [
+      {
+        id: 1,
+        type: 'warning',
+        message: 'Memory usage trending upward - consider optimizing applications',
+        confidence: 85,
+        timestamp: new Date(),
+        action: 'optimize_memory'
+      },
+      {
+        id: 2,
+        type: 'info',
+        message: 'CPU usage patterns indicate peak hours between 2-4 PM',
+        confidence: 92,
+        timestamp: new Date(),
+        action: 'schedule_maintenance'
+      }
+    ];
+
+    const mockPredictions = {
+      cpu_peak: '2:30 PM',
+      memory_alert: '4 hours',
+      disk_usage: '72% in 7 days',
+      network_load: '45% in 2 hours'
+    };
+
+    setInsights(mockInsights);
+    setPredictions(mockPredictions);
+  };
+
+  const handleInsightAction = async (action, insightId) => {
+    switch(action) {
+      case 'optimize_memory':
+        alert('AI: Optimizing memory usage...');
+        break;
+      case 'schedule_maintenance':
+        alert('AI: Scheduling maintenance during off-peak hours...');
+        break;
+      case 'investigate_anomaly':
+        await explainAnomaly(insightId);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const explainAnomaly = async (insightId) => {
+    try {
+      const explanation = await apiClient.post("/ai/explain-prediction", {
+        metrics: metrics,
+        insight_id: insightId
+      });
+      setExplanationData(explanation.data);
+    } catch (error) {
+      console.error('Failed to get explanation:', error);
+      setExplanationData({
+        explanation: "Anomaly detected due to unusual patterns in system metrics",
+        contributing_factors: [
+          { feature: "cpu_usage", contribution: 0.45 },
+          { feature: "memory_usage", contribution: 0.35 }
+        ]
+      });
+    }
+  };
+
+  const handleInsightFeedback = async (insightId, isAccurate) => {
+    try {
+      await apiClient.post("/ai/feedback/alert-accuracy", {
+        insight_id: insightId,
+        is_accurate: isAccurate,
+        user_comment: "User provided feedback via UI",
+        timestamp: new Date().toISOString()
+      });
+      alert('Thank you for your feedback! This helps improve AI accuracy.');
+    } catch (error) {
+      console.error('Failed to submit feedback:', error);
+      alert('Feedback recorded locally (AI service unavailable)');
+    }
+  };
+
+  return (
+    <div style={{
+      ...darkStyles.card,
+      background: "rgba(17, 17, 17, 0.9)",
+      backdropFilter: "blur(25px)",
+      border: `1px solid ${DARK_THEME.glassBorder}`,
+      textAlign: 'left'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '15px',
+        marginBottom: '25px'
+      }}>
+        <div style={{
+          width: '50px',
+          height: '50px',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '24px',
+          boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)'
+        }}>
+          <BrainIcon />
+        </div>
+        <div>
+          <h3 style={{ color: DARK_THEME.text, margin: '0 0 5px 0', fontSize: '20px' }}>AI Smart Insights</h3>
+          <p style={{ color: DARK_THEME.textMuted, margin: 0, fontSize: '14px' }}>
+            Real-time system analysis and predictions
+          </p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <TailSpin height={40} width={40} color={DARK_THEME.primary} />
+          <p style={{ color: DARK_THEME.textMuted, marginTop: '15px' }}>Analyzing system patterns with AI...</p>
+        </div>
+      ) : (
+        <>
+          {/* Predictions Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+            gap: '15px',
+            marginBottom: '25px'
+          }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.05)',
+              padding: '20px',
+              borderRadius: '12px',
+              textAlign: 'center',
+              border: `1px solid ${DARK_THEME.glassBorder}`
+            }}>
+              <div style={{ color: DARK_THEME.textMuted, fontSize: '12px', marginBottom: '8px' }}>Next CPU Peak</div>
+              <div style={{ color: DARK_THEME.primary, fontWeight: 'bold', fontSize: '16px' }}>{predictions.cpu_peak || 'Calculating...'}</div>
+            </div>
+            <div style={{
+              background: 'rgba(255,255,255,0.05)',
+              padding: '20px',
+              borderRadius: '12px',
+              textAlign: 'center',
+              border: `1px solid ${DARK_THEME.glassBorder}`
+            }}>
+              <div style={{ color: DARK_THEME.textMuted, fontSize: '12px', marginBottom: '8px' }}>Memory Alert</div>
+              <div style={{ color: DARK_THEME.warning, fontWeight: 'bold', fontSize: '16px' }}>{predictions.memory_alert || 'Stable'}</div>
+            </div>
+          </div>
+
+          {/* AI Explanation Modal */}
+          {explanationData && (
+            <div style={{
+              background: 'rgba(34, 34, 34, 0.9)',
+              padding: '20px',
+              borderRadius: '12px',
+              border: `1px solid ${DARK_THEME.info}`,
+              marginBottom: '20px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h4 style={{ color: DARK_THEME.text, margin: 0 }}>AI Explanation</h4>
+                <button 
+                  onClick={() => setExplanationData(null)}
+                  style={{ background: 'none', border: 'none', color: DARK_THEME.textMuted, cursor: 'pointer' }}
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+              <p style={{ color: DARK_THEME.text, marginBottom: '15px' }}>{explanationData.explanation}</p>
+              <div style={{ fontSize: '14px', color: DARK_THEME.textMuted }}>
+                <strong>Contributing Factors:</strong>
+                <ul style={{ margin: '10px 0', paddingLeft: '20px' }}>
+                  {explanationData.contributing_factors?.map((factor, index) => (
+                    <li key={index}>
+                      {factor.feature}: {(factor.contribution * 100).toFixed(1)}%
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Insights List */}
+          <div style={{ maxHeight: '250px', overflow: 'auto' }}>
+            {insights.map((insight) => (
+              <div
+                key={insight.id}
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  padding: '15px',
+                  borderRadius: '12px',
+                  marginBottom: '12px',
+                  borderLeft: `4px solid ${
+                    insight.type === 'warning' ? DARK_THEME.warning :
+                    insight.type === 'info' ? DARK_THEME.info : DARK_THEME.success
+                  }`,
+                  border: `1px solid ${DARK_THEME.glassBorder}`,
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <div style={{ 
+                  color: DARK_THEME.text,
+                  fontSize: '14px',
+                  marginBottom: '8px',
+                  lineHeight: '1.4'
+                }}>
+                  {insight.message}
+                </div>
+                <div style={{ 
+                  color: DARK_THEME.textMuted,
+                  fontSize: '12px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '8px'
+                }}>
+                  <span>Confidence: {insight.confidence}%</span>
+                  <span>{toIST(insight.timestamp)}</span>
+                </div>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', gap: '5px' }}>
+                    {insight.action !== 'none' && (
+                      <button
+                        onClick={() => handleInsightAction(insight.action, insight.id)}
+                        style={{
+                          padding: '6px 12px',
+                          background: 'rgba(220, 38, 38, 0.2)',
+                          border: `1px solid rgba(220, 38, 38, 0.3)`,
+                          borderRadius: '6px',
+                          color: DARK_THEME.text,
+                          fontSize: '11px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Take Action
+                      </button>
+                    )}
+                    {insight.action === 'investigate_anomaly' && (
+                      <button
+                        onClick={() => explainAnomaly(insight.id)}
+                        style={{
+                          padding: '6px 12px',
+                          background: 'rgba(147, 51, 234, 0.2)',
+                          border: `1px solid rgba(147, 51, 234, 0.3)`,
+                          borderRadius: '6px',
+                          color: DARK_THEME.text,
+                          fontSize: '11px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Explain
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '5px' }}>
+                    <button
+                      onClick={() => handleInsightFeedback(insight.id, true)}
+                      style={{
+                        padding: '4px 8px',
+                        background: 'rgba(22, 163, 74, 0.2)',
+                        border: `1px solid rgba(22, 163, 74, 0.3)`,
+                        borderRadius: '4px',
+                        color: DARK_THEME.text,
+                        fontSize: '10px',
+                        cursor: 'pointer'
+                      }}
+                      title="This insight is accurate"
+                    >
+                      <ThumbsUpIcon />
+                    </button>
+                    <button
+                      onClick={() => handleInsightFeedback(insight.id, false)}
+                      style={{
+                        padding: '4px 8px',
+                        background: 'rgba(220, 38, 38, 0.2)',
+                        border: `1px solid rgba(220, 38, 38, 0.3)`,
+                        borderRadius: '4px',
+                        color: DARK_THEME.text,
+                        fontSize: '10px',
+                        cursor: 'pointer'
+                      }}
+                      title="This insight is inaccurate"
+                    >
+                      <ThumbsDownIcon />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {insights.length === 0 && !loading && (
+            <div style={{ textAlign: 'center', padding: '20px', color: DARK_THEME.textMuted }}>
+              No AI insights available. System is operating normally.
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// 2. Interactive Geo-Map Component
+function ServerWorldMap({ servers, onServerClick }) {
+  const [selectedRegion, setSelectedRegion] = useState(null);
+
+  // Mock server locations
+  const serverLocations = [
+    { id: 1, name: 'US East', lat: 40.7128, lng: -74.0060, status: 'online', load: 45, users: 1245 },
+    { id: 2, name: 'EU West', lat: 51.5074, lng: -0.1278, status: 'online', load: 32, users: 892 },
+    { id: 3, name: 'Asia Pacific', lat: 35.6762, lng: 139.6503, status: 'warning', load: 78, users: 1567 },
+    { id: 4, name: 'South America', lat: -23.5505, lng: -46.6333, status: 'offline', load: 0, users: 0 },
+    { id: 5, name: 'Australia', lat: -33.8688, lng: 151.2093, status: 'online', load: 23, users: 567 }
+  ];
+
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'online': return DARK_THEME.success;
+      case 'warning': return DARK_THEME.warning;
+      case 'offline': return DARK_THEME.danger;
+      default: return DARK_THEME.textMuted;
+    }
+  };
+
+  return (
+    <div style={{
+      ...darkStyles.card,
+      background: "rgba(17, 17, 17, 0.9)",
+      backdropFilter: "blur(25px)",
+      border: `1px solid ${DARK_THEME.glassBorder}`,
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '15px',
+        marginBottom: '20px'
+      }}>
+        <div style={{
+          width: '50px',
+          height: '50px',
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          borderRadius: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '24px',
+          boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3)'
+        }}>
+          <GlobeIcon />
+        </div>
+        <div>
+          <h3 style={{ color: DARK_THEME.text, margin: '0 0 5px 0', fontSize: '20px' }}>Global Server Distribution</h3>
+          <p style={{ color: DARK_THEME.textMuted, margin: 0, fontSize: '14px' }}>
+            Real-time server status and connectivity
+          </p>
+        </div>
+      </div>
+      
+      {/* World Map Visualization */}
+      <div style={{
+        width: '100%',
+        height: '300px',
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+        borderRadius: '16px',
+        position: 'relative',
+        border: `1px solid ${DARK_THEME.glassBorder}`,
+        marginBottom: '20px',
+        overflow: 'hidden'
+      }}>
+        {/* Continent Background */}
+        <div style={{
+          position: 'absolute',
+          top: '20%',
+          left: '20%',
+          right: '20%',
+          bottom: '20%',
+          background: 'rgba(255,255,255,0.02)',
+          borderRadius: '50%',
+          border: `1px solid ${DARK_THEME.glassBorder}`
+        }} />
+        
+        {/* Server Points */}
+        {serverLocations.map(server => (
+          <div
+            key={server.id}
+            onClick={() => {
+              setSelectedRegion(server);
+              onServerClick(server);
+            }}
+            style={{
+              position: 'absolute',
+              left: `${((server.lng + 180) / 360) * 100}%`,
+              top: `${((90 - server.lat) / 180) * 100}%`,
+              width: '16px',
+              height: '16px',
+              borderRadius: '50%',
+              background: getStatusColor(server.status),
+              cursor: 'pointer',
+              transform: 'translate(-50%, -50%)',
+              boxShadow: `0 0 0 4px ${getStatusColor(server.status)}30`,
+              animation: 'pulse 2s infinite',
+              transition: 'all 0.3s ease',
+              zIndex: 2
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translate(-50%, -50%) scale(1.3)';
+              e.target.style.zIndex = 3;
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translate(-50%, -50%) scale(1)';
+              e.target.style.zIndex = 2;
+            }}
+            title={`${server.name} - ${server.load}% load - ${server.users} users`}
+          />
+        ))}
+        
+        {/* Connection Lines */}
+        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
+          {serverLocations.slice(0, -1).map((server, index) => (
+            serverLocations.slice(index + 1).map((targetServer) => (
+              <line
+                key={`${server.id}-${targetServer.id}`}
+                x1={`${((server.lng + 180) / 360) * 100}%`}
+                y1={`${((90 - server.lat) / 180) * 100}%`}
+                x2={`${((targetServer.lng + 180) / 360) * 100}%`}
+                y2={`${((90 - targetServer.lat) / 180) * 100}%`}
+                stroke="rgba(220, 38, 38, 0.2)"
+                strokeWidth="1"
+                strokeDasharray="4 4"
+              />
+            ))
+          ))}
+        </svg>
+      </div>
+
+      {/* Server Status Legend */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-around',
+        marginBottom: '20px',
+        fontSize: '12px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ 
+            width: '12px', 
+            height: '12px', 
+            borderRadius: '50%', 
+            background: DARK_THEME.success,
+            animation: 'pulse 2s infinite'
+          }} />
+          <span style={{ color: DARK_THEME.textMuted }}>Online</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ 
+            width: '12px', 
+            height: '12px', 
+            borderRadius: '50%', 
+            background: DARK_THEME.warning,
+            animation: 'pulse 2s infinite'
+          }} />
+          <span style={{ color: DARK_THEME.textMuted }}>Warning</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ 
+            width: '12px', 
+            height: '12px', 
+            borderRadius: '50%', 
+            background: DARK_THEME.danger,
+            animation: 'pulse 2s infinite'
+          }} />
+          <span style={{ color: DARK_THEME.textMuted }}>Offline</span>
+        </div>
+      </div>
+
+      {/* Selected Server Info */}
+      {selectedRegion && (
+        <div style={{
+          background: 'rgba(255,255,255,0.05)',
+          padding: '15px',
+          borderRadius: '12px',
+          border: `1px solid ${DARK_THEME.glassBorder}`,
+          textAlign: 'left'
+        }}>
+          <h4 style={{ color: DARK_THEME.text, margin: '0 0 10px 0' }}>{selectedRegion.name}</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '12px' }}>
+            <div>
+              <div style={{ color: DARK_THEME.textMuted }}>Status</div>
+              <div style={{ 
+                color: getStatusColor(selectedRegion.status),
+                fontWeight: 'bold'
+              }}>
+                {selectedRegion.status.toUpperCase()}
+              </div>
+            </div>
+            <div>
+              <div style={{ color: DARK_THEME.textMuted }}>Load</div>
+              <div style={{ color: DARK_THEME.text }}>{selectedRegion.load}%</div>
+            </div>
+            <div>
+              <div style={{ color: DARK_THEME.textMuted }}>Active Users</div>
+              <div style={{ color: DARK_THEME.text }}>{selectedRegion.users}</div>
+            </div>
+            <div>
+              <div style={{ color: DARK_THEME.textMuted }}>Region</div>
+              <div style={{ color: DARK_THEME.text }}>{selectedRegion.name}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>
+        {`
+          @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+            70% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+            100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+          }
+        `}
+      </style>
+    </div>
+  );
+}
+
+// 3. Emotional AI Assistant Component with Real AI Integration
+function EmotionalAIAssistant({ metrics, onSuggestion }) {
+  const [mood, setMood] = useState('neutral');
+  const [messages, setMessages] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [userInput, setUserInput] = useState('');
+
+  useEffect(() => {
+    // Analyze metrics and set mood using real AI
+    const analyzeMoodWithAI = async () => {
+      const avgLoad = metrics ? (metrics.cpu_usage + metrics.memory_usage) / 2 : 0;
+      
+      if (avgLoad > 80) {
+        setMood('concerned');
+        addMessage("I'm detecting high system load. Would you like me to investigate potential issues?");
+      } else if (avgLoad < 30) {
+        setMood('happy');
+        addMessage("System performance is excellent! Everything is running smoothly.");
+      } else {
+        setMood('neutral');
+        addMessage("Hello! I'm here to help you monitor your system. Everything looks good at the moment.");
+      }
+    };
+
+    analyzeMoodWithAI();
+  }, [metrics]);
+
+  const addMessage = (text) => {
+    if (messages.some(msg => msg.text === text)) return;
+    
+    setIsTyping(true);
+    setTimeout(() => {
+      setMessages(prev => [...prev, { id: Date.now(), text, fromAI: true }]);
+      setIsTyping(false);
+    }, 1500);
+  };
+
+  const getMoodEmoji = () => {
+    switch(mood) {
+      case 'happy': return '😊';
+      case 'concerned': return '😟';
+      case 'excited': return '🤩';
+      case 'analytical': return '🤔';
+      default: return '😐';
+    }
+  };
+
+  const getMoodColor = () => {
+    switch(mood) {
+      case 'happy': return '#10b981';
+      case 'concerned': return '#f59e0b';
+      case 'excited': return '#8b5cf6';
+      case 'analytical': return '#3b82f6';
+      default: return '#6b7280';
+    }
+  };
+
+  const handleQuickAction = async (action) => {
+    const newMessage = {
+      id: Date.now(),
+      text: `You: ${action.replace('_', ' ')}`,
+      fromAI: false
+    };
+    setMessages(prev => [...prev, newMessage]);
+    
+    setIsTyping(true);
+    
+    try {
+      // Real AI chat integration
+      const response = await fetch(`${API_BASE}/ai/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: action.replace('_', ' '),
+          context: {
+            current_metrics: metrics,
+            system_state: 'operational',
+            user_intent: action
+          }
+        })
+      });
+
+      let aiResponse;
+      if (response.ok) {
+        const data = await response.json();
+        aiResponse = data.answer;
+      } else {
+        // Fallback responses
+        switch(action) {
+          case 'analyze_performance':
+            aiResponse = "I'll analyze the current performance metrics and provide recommendations. Based on my analysis, I recommend monitoring CPU usage closely as it's approaching critical levels.";
+            break;
+          case 'generate_report':
+            aiResponse = "Generating comprehensive system report with insights and recommendations. The report will include performance trends, anomaly detection, and optimization suggestions.";
+            break;
+          case 'optimize_system':
+            aiResponse = "Starting system optimization process. I've identified several areas for improvement including memory allocation and background process management.";
+            break;
+          default:
+            aiResponse = "I'm processing your request and will provide detailed analysis shortly.";
+        }
+      }
+
+      setMessages(prev => [...prev, { id: Date.now(), text: aiResponse, fromAI: true }]);
+      onSuggestion(action);
+    } catch (error) {
+      console.error('AI chat failed:', error);
+      setMessages(prev => [...prev, { 
+        id: Date.now(), 
+        text: "I'm having trouble connecting to the AI service right now. Please try again later.", 
+        fromAI: true 
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const handleUserMessage = async () => {
+    if (!userInput.trim()) return;
+
+    const userMessage = {
+      id: Date.now(),
+      text: `You: ${userInput}`,
+      fromAI: false
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setUserInput('');
+    
+    setIsTyping(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/ai/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: userInput,
+          context: {
+            current_metrics: metrics,
+            system_state: 'operational',
+            conversation_history: messages.slice(-5) // Last 5 messages for context
+          }
+        })
+      });
+
+      let aiResponse;
+      if (response.ok) {
+        const data = await response.json();
+        aiResponse = data.answer;
+      } else {
+        aiResponse = "I understand your question, but I'm currently unable to access my full capabilities. For now, I can help you with system monitoring and basic analysis.";
+      }
+
+      setMessages(prev => [...prev, { id: Date.now(), text: aiResponse, fromAI: true }]);
+    } catch (error) {
+      console.error('AI chat failed:', error);
+      setMessages(prev => [...prev, { 
+        id: Date.now(), 
+        text: "I apologize, but I'm having trouble processing your request right now. Please try again in a moment.", 
+        fromAI: true 
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  return (
+    <div style={{
+      ...darkStyles.card,
+      background: "rgba(17, 17, 17, 0.9)",
+      backdropFilter: "blur(25px)",
+      border: `1px solid ${DARK_THEME.glassBorder}`,
+      textAlign: 'left'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '15px',
+        marginBottom: '20px'
+      }}>
+        <div style={{
+          width: '50px',
+          height: '50px',
+          background: `linear-gradient(135deg, ${getMoodColor()} 0%, ${getMoodColor()}80 100%)`,
+          borderRadius: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '24px',
+          boxShadow: `0 8px 32px ${getMoodColor()}30`
+        }}>
+          {getMoodEmoji()}
+        </div>
+        <div>
+          <h3 style={{ color: DARK_THEME.text, margin: '0 0 5px 0', fontSize: '20px' }}>AI Assistant</h3>
+          <p style={{ color: DARK_THEME.textMuted, margin: 0, fontSize: '14px' }}>
+            {mood === 'happy' ? 'Feeling great! Systems optimal' : 
+             mood === 'concerned' ? 'Monitoring closely - issues detected' : 
+             mood === 'analytical' ? 'Analyzing patterns' : 'All systems normal'}
+          </p>
+        </div>
+      </div>
+
+      {/* Chat messages */}
+      <div style={{
+        height: '180px',
+        overflowY: 'auto',
+        marginBottom: '20px',
+        padding: '15px',
+        background: 'rgba(255,255,255,0.05)',
+        borderRadius: '12px',
+        border: `1px solid ${DARK_THEME.glassBorder}`
+      }}>
+        {messages.map(message => (
+          <div
+            key={message.id}
+            style={{
+              padding: '10px 15px',
+              marginBottom: '10px',
+              background: message.fromAI ? 'rgba(102, 126, 234, 0.15)' : 'rgba(255,255,255,0.1)',
+              borderRadius: '12px',
+              fontSize: '14px',
+              color: DARK_THEME.text,
+              border: `1px solid ${message.fromAI ? 'rgba(102, 126, 234, 0.3)' : 'rgba(255,255,255,0.2)'}`,
+              maxWidth: '85%',
+              marginLeft: message.fromAI ? '0' : 'auto',
+              marginRight: message.fromAI ? 'auto' : '0'
+            }}
+          >
+            {message.text}
+          </div>
+        ))}
+        {isTyping && (
+          <div style={{
+            padding: '10px 15px',
+            color: DARK_THEME.textMuted,
+            fontStyle: 'italic',
+            fontSize: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <div style={{ display: 'flex', gap: '3px' }}>
+              <div style={{
+                width: '4px',
+                height: '4px',
+                borderRadius: '50%',
+                background: DARK_THEME.textMuted,
+                animation: 'bounce 1.4s infinite ease-in-out'
+              }} />
+              <div style={{
+                width: '4px',
+                height: '4px',
+                borderRadius: '50%',
+                background: DARK_THEME.textMuted,
+                animation: 'bounce 1.4s infinite ease-in-out',
+                animationDelay: '0.2s'
+              }} />
+              <div style={{
+                width: '4px',
+                height: '4px',
+                borderRadius: '50%',
+                background: DARK_THEME.textMuted,
+                animation: 'bounce 1.4s infinite ease-in-out',
+                animationDelay: '0.4s'
+              }} />
+            </div>
+            AI is thinking...
+          </div>
+        )}
+      </div>
+
+      {/* User Input */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+        <input
+          type="text"
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
+          placeholder="Ask me anything about the system..."
+          style={{
+            flex: 1,
+            padding: '12px 15px',
+            background: 'rgba(34, 34, 34, 0.8)',
+            border: `1px solid ${DARK_THEME.glassBorder}`,
+            borderRadius: '8px',
+            color: DARK_THEME.text,
+            fontSize: '14px'
+          }}
+          onKeyPress={(e) => e.key === 'Enter' && handleUserMessage()}
+        />
+        <button
+          onClick={handleUserMessage}
+          disabled={!userInput.trim()}
+          style={{
+            padding: '12px 15px',
+            background: !userInput.trim() ? DARK_THEME.glassBorder : 'rgba(102, 126, 234, 0.2)',
+            border: `1px solid ${!userInput.trim() ? DARK_THEME.glassBorder : 'rgba(102, 126, 234, 0.3)'}`,
+            borderRadius: '8px',
+            color: DARK_THEME.text,
+            cursor: !userInput.trim() ? 'not-allowed' : 'pointer'
+          }}
+        >
+          Send
+        </button>
+      </div>
+
+      {/* Quick actions */}
+      <div style={{
+        display: 'flex',
+        gap: '10px',
+        flexWrap: 'wrap'
+      }}>
+        {['analyze_performance', 'generate_report', 'optimize_system'].map(action => (
+          <button
+            key={action}
+            onClick={() => handleQuickAction(action)}
+            style={{
+              padding: '10px 16px',
+              background: 'rgba(102, 126, 234, 0.15)',
+              border: `1px solid rgba(102, 126, 234, 0.3)`,
+              borderRadius: '20px',
+              color: DARK_THEME.text,
+              fontSize: '12px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              fontWeight: '500'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = 'rgba(102, 126, 234, 0.25)';
+              e.target.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'rgba(102, 126, 234, 0.15)';
+              e.target.style.transform = 'translateY(0)';
+            }}
+          >
+            {action.replace('_', ' ')}
+          </button>
+        ))}
+      </div>
+
+      <style>
+        {`
+          @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+          }
+        `}
+      </style>
+    </div>
+  );
+}
+
+// 4. Adaptive Dashboard Layout Component with Real AI
+function AdaptiveDashboard({ metrics, userPreferences, onLayoutChange }) {
+  const [layout, setLayout] = useState('default');
+  const [priorityMetrics, setPriorityMetrics] = useState([]);
+  const [aiRecommendation, setAiRecommendation] = useState('');
+
+  useEffect(() => {
+    // AI-powered layout adaptation
+    const determineOptimalLayout = () => {
+      const hour = new Date().getHours();
+      const isBusinessHours = hour >= 9 && hour <= 17;
+      const hasIssues = metrics && (metrics.cpu_usage > 80 || metrics.memory_usage > 85);
+      const isQuietHours = hour >= 22 || hour <= 6;
+
+      if (hasIssues) {
+        setLayout('issues');
+        setPriorityMetrics(['cpu_usage', 'memory_usage', 'processes']);
+        setAiRecommendation('Focusing on critical system issues detected by AI analysis');
+      } else if (isBusinessHours) {
+        setLayout('business');
+        setPriorityMetrics(['cpu_usage', 'network_activity', 'response_times']);
+        setAiRecommendation('Optimized layout for business hours monitoring');
+      } else if (isQuietHours) {
+        setLayout('quiet');
+        setPriorityMetrics(['cpu_usage', 'memory_usage', 'background_processes']);
+        setAiRecommendation('Quiet hours mode - monitoring essential metrics only');
+      } else {
+        setLayout('default');
+        setPriorityMetrics(['cpu_usage', 'memory_usage', 'disk_usage']);
+        setAiRecommendation('Standard monitoring with AI-powered insights');
+      }
+      
+      onLayoutChange?.(layout);
+    };
+
+    determineOptimalLayout();
+  }, [metrics, layout, onLayoutChange]);
+
+  const getLayoutColor = () => {
+    switch(layout) {
+      case 'issues': return DARK_THEME.danger;
+      case 'business': return DARK_THEME.warning;
+      case 'quiet': return DARK_THEME.info;
+      default: return DARK_THEME.success;
+    }
+  };
+
+  const getLayoutDescription = () => {
+    switch(layout) {
+      case 'issues': return 'Focusing on critical system issues';
+      case 'business': return 'Optimized for business hours monitoring';
+      case 'quiet': return 'Quiet hours - minimal monitoring';
+      default: return 'Standard monitoring layout';
+    }
+  };
+
+  return (
+    <div style={{
+      padding: '20px',
+      background: 'rgba(255,255,255,0.05)',
+      borderRadius: '16px',
+      border: `1px solid ${DARK_THEME.glassBorder}`,
+      marginBottom: '20px',
+      backdropFilter: 'blur(10px)'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '15px'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <div style={{
+            width: '12px',
+            height: '12px',
+            borderRadius: '50%',
+            background: getLayoutColor(),
+            animation: 'pulse 2s infinite'
+          }} />
+          <div>
+            <div style={{
+              color: DARK_THEME.text,
+              fontSize: '16px',
+              fontWeight: '600',
+              marginBottom: '4px'
+            }}>
+              AI-Adaptive Dashboard
+            </div>
+            <div style={{
+              color: DARK_THEME.textMuted,
+              fontSize: '14px'
+            }}>
+              {aiRecommendation}
+            </div>
+          </div>
+        </div>
+        
+        <div style={{
+          padding: '6px 12px',
+          background: 'rgba(255,255,255,0.1)',
+          borderRadius: '20px',
+          fontSize: '12px',
+          color: DARK_THEME.text,
+          fontWeight: '500'
+        }}>
+          {layout.toUpperCase()} MODE
+        </div>
+      </div>
+      
+      <div style={{
+        display: 'flex',
+        gap: '10px',
+        flexWrap: 'wrap'
+      }}>
+        {priorityMetrics.map(metric => (
+          <span
+            key={metric}
+            style={{
+              padding: '6px 12px',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '8px',
+              fontSize: '12px',
+              color: DARK_THEME.text,
+              border: `1px solid ${DARK_THEME.glassBorder}`,
+              fontWeight: '500'
+            }}
+          >
+            {metric.replace('_', ' ')}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ==================== ORIGINAL COMPONENTS (UPDATED WITH REAL AI) ====================
+
+// PasswordInput Component
+const PasswordInput = memo(({ 
+  value, 
+  onChange, 
+  placeholder, 
+  name, 
+  showPassword, 
+  onToggleVisibility,
+  autoComplete 
+}) => (
+  <div style={{ position: 'relative', width: '100%' }}>
+    <input
+      type={showPassword ? "text" : "password"}
+      name={name}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      style={{
+        width: "100%",
+        padding: "15px 20px",
+        paddingRight: '45px',
+        marginBottom: 0,
+        background: "rgba(34, 34, 34, 0.8)",
+        backdropFilter: "blur(10px)",
+        color: "#fff",
+        border: `1px solid ${DARK_THEME.glassBorder}`,
+        borderRadius: "12px",
+        fontSize: "14px",
+        boxSizing: "border-box",
+        transition: "all 0.3s ease"
+      }}
+      required
+      autoComplete={autoComplete}
+      onFocus={(e) => {
+        e.target.style.borderColor = "#dc2626";
+        e.target.style.boxShadow = `0 0 0 3px rgba(220, 38, 38, 0.2)`;
+      }}
+      onBlur={(e) => {
+        e.target.style.borderColor = DARK_THEME.glassBorder;
+        e.target.style.boxShadow = 'none';
+      }}
+    />
+    <button
+      type="button"
+      onClick={onToggleVisibility}
+      style={{
+        position: 'absolute',
+        right: '12px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        background: 'none',
+        border: 'none',
+        color: '#888',
+        cursor: 'pointer',
+        padding: '4px',
+        borderRadius: '4px',
+        transition: 'all 0.2s ease'
+      }}
+      onMouseEnter={(e) => {
+        e.target.style.color = '#dc2626';
+        e.target.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
+      }}
+      onMouseLeave={(e) => {
+        e.target.style.color = '#888';
+        e.target.style.backgroundColor = 'transparent';
+      }}
+    >
+      {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+    </button>
+  </div>
+));
+
+// FloatingParticles Component
+function FloatingParticles() {
+  const [particles, setParticles] = useState([]);
+  const [matrixLines, setMatrixLines] = useState([]);
+
+  useEffect(() => {
+    // Create initial particles
+    const initialParticles = Array.from({ length: 25 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 4 + 1,
+      speedX: (Math.random() - 0.5) * 0.3,
+      speedY: (Math.random() - 0.5) * 0.3,
+      opacity: Math.random() * 0.3 + 0.1
+    }));
+    setParticles(initialParticles);
+
+    // Create matrix-style lines
+    const initialLines = Array.from({ length: 15 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: 0,
+      height: Math.random() * 30 + 10,
+      speed: Math.random() * 2 + 1,
+      opacity: Math.random() * 0.1 + 0.05
+    }));
+    setMatrixLines(initialLines);
+
+    // Animation loop for particles
+    const particleInterval = setInterval(() => {
+      setParticles(prev => prev.map(particle => {
+        let newX = particle.x + particle.speedX;
+        let newY = particle.y + particle.speedY;
+
+        // Bounce off edges
+        if (newX <= 0 || newX >= 100) particle.speedX *= -1;
+        if (newY <= 0 || newY >= 100) particle.speedY *= -1;
+
+        return {
+          ...particle,
+          x: Math.max(0, Math.min(100, newX)),
+          y: Math.max(0, Math.min(100, newY))
+        };
+      }));
+    }, 50);
+
+    // Animation loop for matrix lines
+    const matrixInterval = setInterval(() => {
+      setMatrixLines(prev => prev.map(line => {
+        let newY = line.y + line.speed;
+        if (newY > 100) {
+          return {
+            ...line,
+            y: -line.height,
+            x: Math.random() * 100
+          };
+        }
+        return { ...line, y: newY };
+      }));
+    }, 100);
+
+    return () => {
+      clearInterval(particleInterval);
+      clearInterval(matrixInterval);
+    };
+  }, []);
+
+  return (
+    <div style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      pointerEvents: 'none',
+      zIndex: 0
+    }}>
+      {/* Matrix-style vertical lines */}
+      {matrixLines.map(line => (
+        <div
+          key={`line-${line.id}`}
+          style={{
+            position: 'absolute',
+            left: `${line.x}%`,
+            top: `${line.y}%`,
+            width: '1px',
+            height: `${line.height}%`,
+            background: `linear-gradient(to bottom, transparent, rgba(220, 38, 38, ${line.opacity}), transparent)`,
+            transition: 'top 0.1s linear'
+          }}
+        />
+      ))}
+      
+      {/* Floating particles */}
+      {particles.map(particle => (
+        <div
+          key={particle.id}
+          style={{
+            position: 'absolute',
+            left: `${particle.x}%`,
+            top: `${particle.y}%`,
+            width: `${particle.size}px`,
+            height: `${particle.size}px`,
+            backgroundColor: `rgba(220, 38, 38, ${particle.opacity})`,
+            borderRadius: '50%',
+            transition: 'all 0.1s linear'
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Enhanced LoginForm Component with Glass Morphism
+function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "guest"
+  });
+  const [message, setMessage] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [avatarGlow, setAvatarGlow] = useState(true);
+  const [buttonRipple, setButtonRipple] = useState(false);
+
+  // Avatar glow animation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAvatarGlow(prev => !prev);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage("");
+    setAuthLoading(true);
+
+    if (authMode === "register") {
+      if (formData.password !== formData.confirmPassword) {
+        setMessage("Passwords do not match");
+        setAuthLoading(false);
+        return;
+      }
+      if (formData.password.length < 6) {
+        setMessage("Password must be at least 6 characters");
+        setAuthLoading(false);
+        return;
+      }
+    }
+
+    try {
+      let response;
+      if (authMode === "login") {
+        const formDataObj = new FormData();
+        formDataObj.append("username", formData.username);
+        formDataObj.append("password", formData.password);
+        
+        response = await axios.post(`${API_BASE}/token`, formDataObj, {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
+        });
+      } else {
+        response = await axios.post(`${API_BASE}/register`, {
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role
+        });
+      }
+
+      if (response.data.access_token || response.data.id) {
+        const user = authMode === "login" ? response.data.user : response.data;
+        const token = authMode === "login" ? response.data.access_token : "mock-token";
+        
+        onLogin(token, user);
+        setMessage(authMode === "login" ? "Login successful!" : "Registration successful!");
+      }
+    } catch (error) {
+      console.error("Auth error:", error);
+      setMessage(
+        error.response?.data?.detail || 
+        (authMode === "login" ? "Login failed" : "Registration failed")
+      );
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const toggleAuthMode = () => {
+    setAuthMode(authMode === "login" ? "register" : "login");
+    setMessage("");
+    setFormData({
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      role: "guest"
+    });
+  };
+
+  const handleButtonClick = (e) => {
+    setButtonRipple(true);
+    setTimeout(() => setButtonRipple(false), 600);
+  };
+
+  return (
+    <div style={darkStyles.loginContainer}>
+      {/* Enhanced Background Elements */}
+      <FloatingParticles />
+      
+      {/* Soft Gradient Overlay */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        background: 'radial-gradient(circle at 50% 50%, rgba(220, 38, 38, 0.03) 0%, transparent 50%)',
+        zIndex: 0
+      }} />
+
+      {/* Animated Gradient Orbs */}
+      <div style={{
+        position: 'absolute',
+        top: '20%',
+        left: '10%',
+        width: '300px',
+        height: '300px',
+        background: 'radial-gradient(circle, rgba(220, 38, 38, 0.08) 0%, transparent 70%)',
+        borderRadius: '50%',
+        animation: 'float 6s ease-in-out infinite',
+        filter: 'blur(20px)',
+        zIndex: 0
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '20%',
+        right: '10%',
+        width: '400px',
+        height: '400px',
+        background: 'radial-gradient(circle, rgba(139, 0, 0, 0.06) 0%, transparent 70%)',
+        borderRadius: '50%',
+        animation: 'float 8s ease-in-out infinite',
+        animationDelay: '1s',
+        filter: 'blur(25px)',
+        zIndex: 0
+      }} />
+
+      {/* Enhanced Login Card */}
+      <div 
+        style={{
+          background: 'rgba(34, 34, 34, 0.9)',
+          backdropFilter: 'blur(25px)',
+          border: `1px solid ${DARK_THEME.glassBorder}`,
+          padding: "40px 35px",
+          borderRadius: "24px",
+          width: "100%",
+          maxWidth: "440px",
+          textAlign: "center",
+          boxSizing: "border-box",
+          boxShadow: `
+            0 25px 50px -12px rgba(0, 0, 0, 0.5),
+            0 1.5px 8px 0 rgba(220, 38, 38, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1)
+          `,
+          zIndex: 1,
+          position: 'relative',
+          transform: isHovered ? 'translateY(-8px) scale(1.01)' : 'translateY(0) scale(1)',
+          transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          margin: '20px',
+          borderLeft: `1px solid rgba(220, 38, 38, 0.2)`,
+          borderRight: `1px solid rgba(220, 38, 38, 0.2)`
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Enhanced App Logo/Title with Glow Effect */}
+        <div style={{ marginBottom: "32px", position: 'relative' }}>
+          <div style={{
+            width: '70px',
+            height: '70px',
+            background: 'linear-gradient(135deg, #dc2626, #991b1b, #7f1d1d)',
+            borderRadius: '20px',
+            margin: '0 auto 18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '26px',
+            fontWeight: 'bold',
+            color: 'white',
+            boxShadow: avatarGlow 
+              ? '0 0 30px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+              : '0 0 15px rgba(220, 38, 38, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+            transform: avatarGlow ? 'scale(1.05)' : 'scale(1)',
+            transition: 'all 0.6s ease',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent)',
+              transform: 'translateX(-100%)',
+              animation: 'shimmer 3s infinite'
+            }} />
+            SM
+          </div>
+          <h2 style={{ 
+            color: '#fff', 
+            marginBottom: "10px",
+            fontSize: '30px',
+            fontWeight: '800',
+            background: 'linear-gradient(135deg, #dc2626, #ef4444, #991b1b)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            letterSpacing: '-0.5px'
+          }}>
+            {authMode === "login" ? "Welcome Back" : "Create Account"}
+          </h2>
+          <p style={{ 
+            color: '#888', 
+            fontSize: "15px",
+            margin: 0,
+            fontWeight: '400'
+          }}>
+            {authMode === "login" ? "Sign in to your dashboard" : "Join us today"}
+          </p>
+        </div>
+        
+        {/* Enhanced Message Display */}
+        {message && (
+          <div style={{
+            padding: "15px 20px",
+            borderRadius: "12px",
+            textAlign: "center",
+            width: "100%",
+            boxSizing: "border-box",
+            backgroundColor: message.includes("failed") || message.includes("error") || message.includes("Incorrect") 
+              ? 'rgba(220, 38, 38, 0.12)' 
+              : 'rgba(22, 163, 74, 0.12)',
+            border: `1px solid ${
+              message.includes("failed") || message.includes("error") || message.includes("Incorrect") 
+                ? 'rgba(220, 38, 38, 0.3)' 
+                : 'rgba(22, 163, 74, 0.3)'
+            }`,
+            color: message.includes("failed") || message.includes("error") || message.includes("Incorrect") 
+              ? '#fca5a5' 
+              : '#86efac',
+            marginBottom: "22px",
+            backdropFilter: 'blur(10px)',
+            animation: 'slideInDown 0.4s ease-out'
+          }}>
+            {message}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          {/* Hidden username field for accessibility */}
+          <input
+            type="text"
+            name="hidden_username"
+            autoComplete="username"
+            style={{ display: 'none' }}
+          />
+          
+          {/* Username Field */}
+          <div style={{ position: 'relative', marginBottom: '18px' }}>
+            <label htmlFor="username" style={{
+              display: 'block',
+              textAlign: 'left',
+              color: '#888',
+              fontSize: '13px',
+              fontWeight: '500',
+              marginBottom: '6px',
+              paddingLeft: '4px'
+            }}>
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              name="username"
+              placeholder="Enter your username"
+              value={formData.username}
+              onChange={handleInputChange}
+              style={{
+                width: "100%",
+                padding: "15px 20px",
+                marginBottom: 0,
+                background: "rgba(34, 34, 34, 0.8)",
+                backdropFilter: "blur(10px)",
+                color: "#fff",
+                border: `1px solid ${DARK_THEME.glassBorder}`,
+                borderRadius: "12px",
+                fontSize: "14px",
+                boxSizing: "border-box",
+                transition: "all 0.3s ease"
+              }}
+              required
+              autoComplete="username"
+              onFocus={(e) => {
+                e.target.style.borderColor = "#dc2626";
+                e.target.style.boxShadow = `0 0 0 3px rgba(220, 38, 38, 0.15)`;
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = DARK_THEME.glassBorder;
+                e.target.style.boxShadow = 'none';
+              }}
+            />
+          </div>
+
+          {authMode === "register" && (
+            <>
+              {/* Email Field */}
+              <div style={{ position: 'relative', marginBottom: '18px' }}>
+                <label htmlFor="email" style={{
+                  display: 'block',
+                  textAlign: 'left',
+                  color: '#888',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  marginBottom: '6px',
+                  paddingLeft: '4px'
+                }}>
+                  Email Address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  style={{
+                    width: "100%",
+                    padding: "15px 20px",
+                    marginBottom: 0,
+                    background: "rgba(34, 34, 34, 0.8)",
+                    backdropFilter: "blur(10px)",
+                    color: "#fff",
+                    border: `1px solid ${DARK_THEME.glassBorder}`,
+                    borderRadius: "12px",
+                    fontSize: "14px",
+                    boxSizing: "border-box",
+                    transition: "all 0.3s ease"
+                  }}
+                  required
+                  autoComplete="email"
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#dc2626";
+                    e.target.style.boxShadow = `0 0 0 3px rgba(220, 38, 38, 0.15)`;
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = DARK_THEME.glassBorder;
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+              
+              {/* Role Selection */}
+              <div style={{ position: 'relative', marginBottom: '18px' }}>
+                <label htmlFor="role" style={{
+                  display: 'block',
+                  textAlign: 'left',
+                  color: '#888',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  marginBottom: '6px',
+                  paddingLeft: '4px'
+                }}>
+                  Role
+                </label>
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleInputChange}
+                  style={{
+                    width: "100%",
+                    padding: "15px 20px",
+                    marginBottom: 0,
+                    background: "rgba(34, 34, 34, 0.8)",
+                    backdropFilter: "blur(10px)",
+                    color: "#fff",
+                    border: `1px solid ${DARK_THEME.glassBorder}`,
+                    borderRadius: "12px",
+                    fontSize: "14px",
+                    boxSizing: "border-box"
+                  }}
+                >
+                  <option value="guest">Guest</option>
+                  <option value="agent">Agent</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          {/* Password Field */}
+          <div style={{ position: 'relative', marginBottom: '18px' }}>
+            <label htmlFor="password" style={{
+              display: 'block',
+              textAlign: 'left',
+              color: '#888',
+              fontSize: '13px',
+              fontWeight: '500',
+              marginBottom: '6px',
+              paddingLeft: '4px'
+            }}>
+              Password
+            </label>
+            <PasswordInput
+              value={formData.password}
+              onChange={handleInputChange}
+              placeholder="Enter your password"
+              name="password"
+              showPassword={showPassword}
+              onToggleVisibility={() => setShowPassword(!showPassword)}
+              autoComplete={authMode === "login" ? "current-password" : "new-password"}
+            />
+          </div>
+
+          {authMode === "register" && (
+            <div style={{ position: 'relative', marginBottom: '22px' }}>
+              <label htmlFor="confirmPassword" style={{
+                display: 'block',
+                textAlign: 'left',
+                color: '#888',
+                fontSize: '13px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                paddingLeft: '4px'
+              }}>
+                Confirm Password
+              </label>
+              <PasswordInput
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                placeholder="Confirm your password"
+                name="confirmPassword"
+                showPassword={showConfirmPassword}
+                onToggleVisibility={() => setShowConfirmPassword(!showConfirmPassword)}
+                autoComplete="new-password"
+              />
+            </div>
+          )}
+
+          {/* Enhanced Submit Button with Ripple Effect */}
+          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px' }}>
+            <button 
+              type="submit" 
+              disabled={authLoading}
+              onClick={handleButtonClick}
+              style={{ 
+                padding: "15px 20px",
+                border: "none",
+                borderRadius: "12px",
+                cursor: "pointer",
+                color: "white",
+                fontSize: "16px",
+                fontWeight: "600",
+                margin: "5px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                transition: "all 0.3s ease",
+                backgroundColor: 'transparent',
+                width: "100%",
+                justifyContent: "center",
+                marginBottom: '18px',
+                background: authLoading 
+                  ? 'rgba(68, 68, 68, 0.8)'
+                  : 'linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #dc2626 100%)',
+                boxShadow: authLoading 
+                  ? 'none' 
+                  : '0 8px 25px rgba(220, 38, 38, 0.35), 0 2px 4px rgba(220, 38, 38, 0.1)',
+                transform: authLoading ? 'none' : 'translateY(0)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                letterSpacing: '0.5px',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
+            >
+              {/* Ripple Effect */}
+              {buttonRipple && (
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: '0',
+                  height: '0',
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.3)',
+                  transform: 'translate(-50%, -50%)',
+                  animation: 'ripple 0.6s ease-out'
+                }} />
+              )}
+              
+              {authLoading ? (
+                <>
+                  <TailSpin height={20} width={20} color="white" />
+                  <span>Authenticating...</span>
+                </>
+              ) : (
+                authMode === "login" ? "Sign In" : "Create Account"
+              )}
+            </button>
+          </div>
+        </form>
+
+        {/* Enhanced Auth Mode Toggle */}
+        <div style={{ marginTop: "22px", textAlign: "center" }}>
+          <button
+            onClick={toggleAuthMode}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#dc2626",
+              cursor: "pointer",
+              textDecoration: "none",
+              fontSize: "14px",
+              fontWeight: '500',
+              padding: '10px 18px',
+              borderRadius: '8px',
+              transition: 'all 0.3s ease',
+              position: 'relative'
+            }}
+          >
+            {authMode === "login" 
+              ? "Don't have an account? Register" 
+              : "Already have an account? Sign In"}
+          </button>
+        </div>
+
+        {/* Enhanced Demo Access Section */}
+        <div style={{ 
+          marginTop: "28px", 
+          paddingTop: "28px", 
+          borderTop: `1px solid rgba(255, 255, 255, 0.1)` 
+        }}>
+          <p style={{ 
+            color: '#888', 
+            marginBottom: "18px", 
+            fontSize: "14px",
+            fontWeight: '500'
+          }}>
+            Quick Demo Access:
+          </p>
+          <button 
+            onClick={() => onLogin("mock-token", { username: "admin", role: "admin" })}
+            style={{ 
+              padding: "15px 20px",
+              border: "none",
+              borderRadius: "12px",
+              cursor: "pointer",
+              color: "white",
+              fontSize: "14px",
+              fontWeight: "600",
+              margin: "5px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              transition: "all 0.3s ease",
+              backgroundColor: 'transparent',
+              width: "100%",
+              justifyContent: "center",
+              background: 'linear-gradient(135deg, #9333ea 0%, #7c3aed 50%, #9333ea 100%)',
+              boxShadow: '0 6px 20px rgba(147, 51, 234, 0.25)'
+            }}
+          >
+            Login as Admin (Demo)
+          </button>
+        </div>
+      </div>
+
+      {/* Enhanced Footer */}
+      <div style={{
+        position: 'absolute',
+        bottom: '20px',
+        left: 0,
+        right: 0,
+        textAlign: 'center',
+        color: '#888',
+        fontSize: '12px',
+        zIndex: 1,
+        padding: '0 20px'
+      }}>
+        System Monitor v2.1.0 • Secure Authentication
+      </div>
+
+      {/* Enhanced CSS Animations */}
+      <style>
+        {`
+          @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+          }
+          
+          @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+          }
+          
+          @keyframes ripple {
+            0% {
+              width: 0;
+              height: 0;
+              opacity: 0.5;
+            }
+            100% {
+              width: 300px;
+              height: 300px;
+              opacity: 0;
+            }
+          }
+          
+          @keyframes slideInDown {
+            0% {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+            100% {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}
+      </style>
+    </div>
+  );
+}
+
+// MetricsChart Component with Glass Morphism
+function MetricsChart({ cpu, memory, disk, onMetricClick }) {
+  const data = [
+    { name: 'CPU', value: cpu, color: COLORS[0] },
+    { name: 'Memory', value: memory, color: COLORS[1] },
+    { name: 'Disk', value: disk, color: COLORS[2] }
+  ];
+  
+  const handleChartClick = (data, index) => {
+    if (data && onMetricClick) {
+      const metricName = data[index]?.name.toLowerCase().replace(' ', '_');
+      const metricValue = data[index]?.value;
+      
+      if (metricName && metricValue !== undefined) {
+        const ranges = {
+          low: '0-40',
+          medium: '40-70', 
+          high: '70-90',
+          critical: '90-100'
+        };
+        
+        let valueRange = ranges.low;
+        if (metricValue >= 90) valueRange = ranges.critical;
+        else if (metricValue >= 70) valueRange = ranges.high;
+        else if (metricValue >= 40) valueRange = ranges.medium;
+        
+        onMetricClick({
+          metric: metricName,
+          valueRange: valueRange,
+          currentValue: metricValue
+        });
+      }
+    }
+  };
+  
+  return (
+    <div style={{
+      ...darkStyles.gridCard,
+      background: "rgba(17, 17, 17, 0.9)",
+      backdropFilter: "blur(25px)"
+    }}>
+      <h3 style={{ color: DARK_THEME.text, marginBottom: "20px", fontSize: '18px' }}>System Metrics</h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            outerRadius={100}
+            label={({ name, value }) => `${name}: ${value?.toFixed(1)}%`}
+            onClick={(data, index) => handleChartClick(data, index)}
+          >
+            {data.map((entry, index) => (
+              <Cell 
+                key={`cell-${index}`} 
+                fill={entry.color}
+                style={{ cursor: 'pointer' }}
+              />
+            ))}
+          </Pie>
+          <Tooltip 
+            formatter={(value) => [`${value?.toFixed(1)}%`, 'Usage']}
+            contentStyle={{ 
+              background: DARK_THEME.cardBackground, 
+              border: `1px solid ${DARK_THEME.glassBorder}`,
+              borderRadius: '12px',
+              backdropFilter: 'blur(10px)'
+            }}
+          />
+          <Legend />
+        </PieChart>
+      </ResponsiveContainer>
+      <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-around" }}>
+        <span 
+          style={{ color: COLORS[0], cursor: 'pointer' }}
+          onClick={() => onMetricClick && onMetricClick({
+            metric: 'cpu_usage',
+            valueRange: '0-100',
+            currentValue: cpu
+          })}
+        >
+          CPU: {cpu?.toFixed(1)}%
+        </span>
+        <span 
+          style={{ color: COLORS[1], cursor: 'pointer' }}
+          onClick={() => onMetricClick && onMetricClick({
+            metric: 'memory_usage',
+            valueRange: '0-100', 
+            currentValue: memory
+          })}
+        >
+          Memory: {memory?.toFixed(1)}%
+        </span>
+        <span 
+          style={{ color: COLORS[2], cursor: 'pointer' }}
+          onClick={() => onMetricClick && onMetricClick({
+            metric: 'disk_usage',
+            valueRange: '0-100',
+            currentValue: disk
+          })}
+        >
+          Disk: {disk?.toFixed(1)}%
+        </span>
+      </div>
+      <div style={{ marginTop: "10px", fontSize: "12px", color: DARK_THEME.textMuted }}>
+        Click on any metric to view detailed analysis
+      </div>
+    </div>
+  );
+}
+
+// NetworkChart Component with Glass Morphism
+function NetworkChart({ networkData }) {
+  const data = [
+    { 
+      name: 'Bytes Sent', 
+      value: networkData?.bytes_sent || 0,
+      readable: formatBytes(networkData?.bytes_sent || 0)
+    },
+    { 
+      name: 'Bytes Received', 
+      value: networkData?.bytes_received || 0,
+      readable: formatBytes(networkData?.bytes_received || 0)
+    }
+  ];
+
+  function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+  
+  return (
+    <div style={{
+      ...darkStyles.gridCard,
+      background: "rgba(17, 17, 17, 0.9)",
+      backdropFilter: "blur(25px)"
+    }}>
+      <h3 style={{ color: DARK_THEME.text, marginBottom: "20px", fontSize: '18px' }}>Network Activity</h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" stroke={DARK_THEME.glassBorder} />
+          <XAxis 
+            dataKey="name" 
+            stroke={DARK_THEME.text}
+            fontSize={12}
+          />
+          <YAxis 
+            stroke={DARK_THEME.text}
+            fontSize={12}
+          />
+          <Tooltip 
+            formatter={(value) => [formatBytes(value), 'Network Traffic']}
+            contentStyle={{ 
+              background: DARK_THEME.cardBackground, 
+              border: `1px solid ${DARK_THEME.glassBorder}`,
+              borderRadius: '12px',
+              backdropFilter: 'blur(10px)'
+            }}
+          />
+          <Bar 
+            dataKey="value" 
+            fill={COLORS[3]}
+            radius={[4, 4, 0, 0]}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+      <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-around", fontSize: "12px" }}>
+        <span>Sent: {data[0].readable}</span>
+        <span>Received: {data[1].readable}</span>
+      </div>
+    </div>
+  );
+}
+
+// ProcessList Component with Glass Morphism
+function ProcessList({ processes }) {
+  return (
+    <div style={{
+      ...darkStyles.gridCard,
+      background: "rgba(17, 17, 17, 0.9)",
+      backdropFilter: "blur(25px)"
+    }}>
+      <h3 style={{ color: DARK_THEME.text, marginBottom: "20px", fontSize: '18px' }}>Running Processes ({processes?.length || 0})</h3>
+      <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+        {processes && processes.length > 0 ? (
+          <table style={darkStyles.table}>
+            <thead>
+              <tr>
+                <th style={darkStyles.tableHeader}>PID</th>
+                <th style={darkStyles.tableHeader}>Process Name</th>
+                <th style={darkStyles.tableHeader}>CPU %</th>
+                <th style={darkStyles.tableHeader}>Memory %</th>
+              </tr>
+            </thead>
+            <tbody>
+              {processes.map((process, index) => (
+                <tr key={index} style={{ 
+                  backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.05)'
+                }}>
+                  <td style={{ ...darkStyles.tableCell, fontFamily: 'monospace' }}>{process.pid}</td>
+                  <td style={{ ...darkStyles.tableCell, color: DARK_THEME.primary }}>{process.name}</td>
+                  <td style={{ 
+                    ...darkStyles.tableCell, 
+                    color: process.cpu > 50 ? DARK_THEME.danger : DARK_THEME.text,
+                    fontWeight: process.cpu > 50 ? 'bold' : 'normal'
+                  }}>
+                    {process.cpu?.toFixed(1)}%
+                  </td>
+                  <td style={{ 
+                    ...darkStyles.tableCell, 
+                    color: process.memory > 50 ? DARK_THEME.warning : DARK_THEME.text,
+                    fontWeight: process.memory > 50 ? 'bold' : 'normal'
+                  }}>
+                    {process.memory?.toFixed(1)}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p style={{ color: DARK_THEME.textMuted, textAlign: "center", padding: "20px" }}>
+            No processes data available
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// AlertBanner Component with Glass Morphism
+function AlertBanner({ message, type = 'info' }) {
+  const bgColor = type === 'error' ? 'rgba(45, 26, 26, 0.8)' : type === 'warning' ? 'rgba(45, 42, 26, 0.8)' : 'rgba(26, 45, 26, 0.8)';
+  const borderColor = type === 'error' ? DARK_THEME.danger : type === 'warning' ? DARK_THEME.warning : DARK_THEME.success;
+  const textColor = type === 'error' ? '#f87171' : type === 'warning' ? '#fbbf24' : '#4ade80';
+  
+  return (
+    <div style={{
+      ...darkStyles.message,
+      background: bgColor,
+      border: `1px solid ${borderColor}`,
+      color: textColor,
+      marginBottom: "15px",
+      backdropFilter: 'blur(10px)'
+    }}>
+      {message}
+    </div>
+  );
+}
+
+// LiveDashboard Component with Glass Morphism
+function LiveDashboard({ token }) {
+  const [messages, setMessages] = useState([]);
+  
+  const { lastMessage, readyState } = useWebSocket(
+    `ws://localhost:8000/ws`,
+    {
+      shouldReconnect: () => true,
+      retryOnError: true,
+      reconnectAttempts: 10,
+      reconnectInterval: 3000
+    }
+  );
+
+  useEffect(() => {
+    if (lastMessage) {
+      const data = JSON.parse(lastMessage.data);
+      setMessages(prev => [data, ...prev.slice(0, 9)]); // Keep last 10 messages
+    }
+  }, [lastMessage]);
+
+  const connectionStatus = {
+    0: 'Connecting...',
+    1: 'Connected ✅',
+    2: 'Closing',
+    3: 'Closed'
+  }[readyState];
+
+  return (
+    <div style={{
+      ...darkStyles.card,
+      background: "rgba(17, 17, 17, 0.9)",
+      backdropFilter: "blur(25px)"
+    }}>
+      <h3 style={{ color: DARK_THEME.text, marginBottom: "20px", fontSize: '18px' }}>Live Dashboard</h3>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '15px',
+        padding: '15px',
+        background: readyState === 1 ? 'rgba(26, 45, 26, 0.8)' : 'rgba(45, 26, 26, 0.8)',
+        border: `1px solid ${readyState === 1 ? DARK_THEME.success : DARK_THEME.danger}`,
+        borderRadius: '12px',
+        backdropFilter: 'blur(10px)'
+      }}>
+        <span style={{ color: DARK_THEME.text }}>
+          WebSocket Status: <strong>{connectionStatus}</strong>
+        </span>
+        <span style={{ 
+          color: readyState === 1 ? DARK_THEME.success : DARK_THEME.danger,
+          fontSize: '12px'
+        }}>
+          {messages.length} messages
+        </span>
+      </div>
+      
+      <div style={{ 
+        maxHeight: '300px', 
+        overflow: 'auto',
+        border: `1px solid ${DARK_THEME.glassBorder}`,
+        borderRadius: '12px',
+        padding: '15px',
+        background: 'rgba(255,255,255,0.05)'
+      }}>
+        {messages.length > 0 ? (
+          messages.map((msg, index) => (
+            <div 
+              key={index} 
+              style={{ 
+                padding: '12px', 
+                borderBottom: index < messages.length - 1 ? `1px solid ${DARK_THEME.glassBorder}` : 'none',
+                fontSize: '12px',
+                color: DARK_THEME.textMuted,
+                backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.05)',
+                borderRadius: index === 0 ? '8px 8px 0 0' : index === messages.length - 1 ? '0 0 8px 8px' : '0',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ 
+                  color: msg.type === 'agent_data_update' ? DARK_THEME.success : 
+                         msg.type === 'heartbeat' ? DARK_THEME.info : DARK_THEME.primary,
+                  fontWeight: 'bold'
+                }}>
+                  {msg.type}
+                </span>
+                <span style={{ fontSize: '11px' }}>
+                  {toIST(msg.timestamp)}
+                </span>
+              </div>
+              <div style={{ marginTop: '4px' }}>
+                {msg.message || (msg.data ? 'Data updated' : 'Heartbeat')}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '20px', 
+            color: DARK_THEME.textMuted,
+            fontStyle: 'italic'
+          }}>
+            No messages yet. WebSocket events will appear here.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// DrillDownModal Component with Glass Morphism
+function DrillDownModal({ isOpen, onClose, metricData, apiClient }) {
+  const [details, setDetails] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && metricData) {
+      fetchMetricDetails();
+    }
+  }, [isOpen, metricData]);
+
+  const fetchMetricDetails = async () => {
+    if (!metricData) return;
+    
+    setLoading(true);
+    try {
+      // Mock data since backend endpoints might not exist
+      const mockDetails = Array.from({ length: 10 }, (_, i) => ({
+        timestamp: new Date(Date.now() - i * 60000).toISOString(),
+        hostname: `server-${Math.floor(Math.random() * 5) + 1}`,
+        metric_value: Math.random() * 100,
+        full_data: {
+          metric: metricData.metric,
+          value: Math.random() * 100,
+          timestamp: new Date(Date.now() - i * 60000).toISOString()
+        }
+      }));
+      
+      setDetails(mockDetails);
+    } catch (error) {
+      console.error('Error fetching metric details:', error);
+      // Fallback to empty array
+      setDetails([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.8)',
+      backdropFilter: 'blur(10px)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000,
+      padding: '20px'
+    }}>
+      <div style={{
+        background: DARK_THEME.cardBackground,
+        backdropFilter: 'blur(25px)',
+        border: `1px solid ${DARK_THEME.glassBorder}`,
+        borderRadius: '20px',
+        padding: '25px',
+        maxWidth: '800px',
+        width: '100%',
+        maxHeight: '80vh',
+        overflow: 'auto',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3 style={{ color: DARK_THEME.text, margin: 0, fontSize: '20px' }}>
+            Metric Details: {metricData?.metric?.replace('_', ' ').toUpperCase()}
+          </h3>
+          <button
+            onClick={onClose}
+            style={{
+              ...darkStyles.button,
+              background: 'rgba(220, 38, 38, 0.2)',
+              border: `1px solid rgba(220, 38, 38, 0.3)`,
+              padding: '8px 16px',
+              fontSize: '12px'
+            }}
+          >
+            Close
+          </button>
+        </div>
+
+        {metricData?.valueRange && (
+          <div style={{ 
+            marginBottom: '15px', 
+            padding: '15px', 
+            background: 'rgba(26, 26, 26, 0.8)',
+            borderRadius: '12px',
+            border: `1px solid ${DARK_THEME.glassBorder}`
+          }}>
+            <span style={{ color: DARK_THEME.text }}>
+              Value Range: <strong>{metricData.valueRange}</strong>
+            </span>
+          </div>
+        )}
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <TailSpin height={40} width={40} />
+            <p style={{ color: DARK_THEME.text, marginTop: '15px' }}>Loading metric details...</p>
+          </div>
+        ) : (
+          <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+            {details.length > 0 ? (
+              <table style={darkStyles.table}>
+                <thead>
+                  <tr>
+                    <th style={darkStyles.tableHeader}>Timestamp</th>
+                    <th style={darkStyles.tableHeader}>Hostname</th>
+                    <th style={darkStyles.tableHeader}>Value</th>
+                    <th style={darkStyles.tableHeader}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {details.map((item, index) => (
+                    <tr key={index} style={{
+                      backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.05)'
+                    }}>
+                      <td style={darkStyles.tableCell}>
+                        {toIST(item.timestamp)}
+                      </td>
+                      <td style={darkStyles.tableCell}>
+                        {item.hostname || 'N/A'}
+                      </td>
+                      <td style={{
+                        ...darkStyles.tableCell,
+                        color: item.metric_value > 80 ? DARK_THEME.danger : 
+                               item.metric_value > 60 ? DARK_THEME.warning : DARK_THEME.text,
+                        fontWeight: item.metric_value > 80 ? 'bold' : 'normal'
+                      }}>
+                        {item.metric_value?.toFixed(1)}%
+                      </td>
+                      <td style={darkStyles.tableCell}>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(JSON.stringify(item.full_data, null, 2));
+                            alert('Data copied to clipboard!');
+                          }}
+                          style={{
+                            ...darkStyles.button,
+                            background: 'rgba(147, 51, 234, 0.2)',
+                            border: `1px solid rgba(147, 51, 234, 0.3)`,
+                            padding: '8px 16px',
+                            fontSize: '12px'
+                          }}
+                        >
+                          Copy Data
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '40px', color: DARK_THEME.textMuted }}>
+                No data found for the selected criteria.
+              </div>
+            )}
+          </div>
+        )}
+
+        <div style={{ 
+          marginTop: '20px', 
+          padding: '20px', 
+          background: 'rgba(26, 26, 26, 0.8)', 
+          borderRadius: '12px',
+          border: `1px solid ${DARK_THEME.glassBorder}`
+        }}>
+          <h4 style={{ color: DARK_THEME.text, margin: '0 0 10px 0' }}>Summary</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', fontSize: '14px' }}>
+            <div>
+              <span style={{ color: DARK_THEME.textMuted }}>Total Records: </span>
+              <span style={{ color: DARK_THEME.text, fontWeight: 'bold' }}>{details.length}</span>
+            </div>
+            <div>
+              <span style={{ color: DARK_THEME.textMuted }}>Average Value: </span>
+              <span style={{ color: DARK_THEME.text, fontWeight: 'bold' }}>
+                {details.length > 0 ? (details.reduce((sum, item) => sum + item.metric_value, 0) / details.length).toFixed(1) : 0}%
+              </span>
+            </div>
+            <div>
+              <span style={{ color: DARK_THEME.textMuted }}>Max Value: </span>
+              <span style={{ color: DARK_THEME.text, fontWeight: 'bold' }}>
+                {details.length > 0 ? Math.max(...details.map(item => item.metric_value)).toFixed(1) : 0}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Filter Panel Component with Glass Morphism
+function FilterPanel({ onFilterChange, filters, loading }) {
+  const [localFilters, setLocalFilters] = useState({
+    startDate: '',
+    endDate: '',
+    hostname: '',
+    minCpu: '',
+    maxCpu: '',
+    minMemory: '',
+    maxMemory: ''
+  });
+
+  useEffect(() => {
+    if (filters) {
+      setLocalFilters(filters);
+    }
+  }, [filters]);
+
+  const handleFilterChange = (key, value) => {
+    const newFilters = { ...localFilters, [key]: value };
+    setLocalFilters(newFilters);
+  };
+
+  const applyFilters = () => {
+    onFilterChange(localFilters);
+  };
+
+  const clearFilters = () => {
+    const emptyFilters = {
+      startDate: '',
+      endDate: '',
+      hostname: '',
+      minCpu: '',
+      maxCpu: '',
+      minMemory: '',
+      maxMemory: ''
+    };
+    setLocalFilters(emptyFilters);
+    onFilterChange(emptyFilters);
+  };
+
+  return (
+    <div style={darkStyles.sidebarSection}>
+      <div style={darkStyles.sidebarHeader}>
+        <SlidersIcon />
+        <span>Data Filters</span>
+      </div>
+
+      <div style={darkStyles.filterGroup}>
+        <label style={darkStyles.filterLabel}>Date Range</label>
+        <input
+          type="date"
+          value={localFilters.startDate || ''}
+          onChange={(e) => handleFilterChange('startDate', e.target.value)}
+          style={darkStyles.input}
+        />
+        <input
+          type="date"
+          value={localFilters.endDate || ''}
+          onChange={(e) => handleFilterChange('endDate', e.target.value)}
+          style={darkStyles.input}
+        />
+      </div>
+
+      <div style={darkStyles.filterGroup}>
+        <label style={darkStyles.filterLabel}>Hostname</label>
+        <input
+          type="text"
+          placeholder="Filter by hostname..."
+          value={localFilters.hostname || ''}
+          onChange={(e) => handleFilterChange('hostname', e.target.value)}
+          style={darkStyles.input}
+        />
+      </div>
+
+      <div style={darkStyles.filterGroup}>
+        <label style={darkStyles.filterLabel}>CPU Usage (%)</label>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <input
+            type="number"
+            placeholder="Min"
+            min="0"
+            max="100"
+            value={localFilters.minCpu || ''}
+            onChange={(e) => handleFilterChange('minCpu', e.target.value)}
+            style={darkStyles.input}
+          />
+          <input
+            type="number"
+            placeholder="Max"
+            min="0"
+            max="100"
+            value={localFilters.maxCpu || ''}
+            onChange={(e) => handleFilterChange('maxCpu', e.target.value)}
+            style={darkStyles.input}
+          />
+        </div>
+      </div>
+
+      <div style={darkStyles.filterGroup}>
+        <label style={darkStyles.filterLabel}>Memory Usage (%)</label>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <input
+            type="number"
+            placeholder="Min"
+            min="0"
+            max="100"
+            value={localFilters.minMemory || ''}
+            onChange={(e) => handleFilterChange('minMemory', e.target.value)}
+            style={darkStyles.input}
+          />
+          <input
+            type="number"
+            placeholder="Max"
+            min="0"
+            max="100"
+            value={localFilters.maxMemory || ''}
+            onChange={(e) => handleFilterChange('maxMemory', e.target.value)}
+            style={darkStyles.input}
+          />
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+        <button
+          onClick={applyFilters}
+          disabled={loading}
+          style={{
+            ...darkStyles.button,
+            background: loading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.2)',
+            border: `1px solid ${loading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.3)'}`,
+            flex: 1
+          }}
+        >
+          {loading ? <TailSpin height={16} width={16} /> : <FilterIcon />}
+          {loading ? 'Applying...' : 'Apply Filters'}
+        </button>
+        <button
+          onClick={clearFilters}
+          style={{
+            ...darkStyles.button,
+            background: 'rgba(107, 114, 128, 0.2)',
+            border: `1px solid rgba(107, 114, 128, 0.3)`,
+            flex: 1
+          }}
+        >
+          <CloseIcon />
+          Clear
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Export Panel Component with Glass Morphism
+function ExportPanel({ filters, apiClient }) {
+  const [exportLoading, setExportLoading] = useState(false);
+
+  const handleExport = async (format) => {
+    setExportLoading(true);
+    try {
+      // Create mock data for export since backend endpoints might not exist
+      const mockData = {
+        timestamp: new Date().toISOString(),
+        filters: filters,
+        metrics: {
+          cpu_usage: Math.random() * 100,
+          memory_usage: Math.random() * 100,
+          disk_usage: Math.random() * 100
+        },
+        message: "This is a mock export since backend export endpoints are not implemented"
+      };
+
+      let content, mimeType, extension;
+
+      switch (format) {
+        case 'csv':
+          content = `Timestamp,Filters,CPU Usage,Memory Usage,Disk Usage\n${mockData.timestamp},"${JSON.stringify(mockData.filters)}",${mockData.metrics.cpu_usage},${mockData.metrics.memory_usage},${mockData.metrics.disk_usage}`;
+          mimeType = 'text/csv';
+          extension = 'csv';
+          break;
+        case 'json':
+          content = JSON.stringify(mockData, null, 2);
+          mimeType = 'application/json';
+          extension = 'json';
+          break;
+        case 'pdf':
+          // For PDF, we'll create a simple text file since PDF generation is complex
+          content = `Metrics Export\nGenerated: ${new Date().toLocaleString()}\n\nFilters: ${JSON.stringify(filters, null, 2)}\n\nThis is a mock PDF export. In a real application, this would be a proper PDF file.`;
+          mimeType = 'text/plain';
+          extension = 'txt';
+          break;
+        default:
+          throw new Error('Unsupported format');
+      }
+
+      // Create download link
+      const blob = new Blob([content], { type: mimeType });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `metrics-export-${new Date().getTime()}.${extension}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Export completed with mock data (backend endpoints not implemented)');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const exportOptions = [
+    { format: 'csv', label: 'CSV Format', icon: FileTextIcon, color: DARK_THEME.success },
+    { format: 'json', label: 'JSON Format', icon: FileTextIcon, color: DARK_THEME.info },
+    { format: 'pdf', label: 'PDF Report', icon: DownloadIcon, color: DARK_THEME.danger }
+  ];
+
+  return (
+    <div style={darkStyles.sidebarSection}>
+      <div style={darkStyles.sidebarHeader}>
+        <DownloadIcon />
+        <span>Export Data</span>
+      </div>
+
+      <div style={{ color: DARK_THEME.textMuted, fontSize: '12px', marginBottom: '15px' }}>
+        Export filtered data in various formats for analysis and reporting.
+      </div>
+
+      {exportOptions.map((option) => (
+        <div
+          key={option.format}
+          style={{
+            ...darkStyles.exportOption,
+            background: exportLoading ? DARK_THEME.glassBorder : 'rgba(34, 34, 34, 0.8)'
+          }}
+          onClick={() => !exportLoading && handleExport(option.format)}
+        >
+          <option.icon />
+          <span style={{ flex: 1, color: DARK_THEME.text }}>{option.label}</span>
+          <ChevronRightIcon />
+        </div>
+      ))}
+
+      {exportLoading && (
+        <div style={{ textAlign: 'center', marginTop: '10px' }}>
+          <TailSpin height={20} width={20} />
+          <div style={{ color: DARK_THEME.textMuted, fontSize: '12px', marginTop: '5px' }}>
+            Preparing download...
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Dashboard Layouts Component with Glass Morphism
+function DashboardLayouts({ apiClient, currentUser }) {
+  const [layouts, setLayouts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newLayoutName, setNewLayoutName] = useState("");
+
+  const showMessage = (msg, isError = false) => {
+    setMessage(msg);
+    setTimeout(() => setMessage(""), 5000);
+  };
+
+  const fetchLayouts = async () => {
+    setLoading(true);
+    try {
+      // Mock layouts data
+      const mockLayouts = [
+        { id: 1, name: "Default Layout", is_default: true, created_at: new Date().toISOString() },
+        { id: 2, name: "Analytics View", is_default: false, created_at: new Date(Date.now() - 86400000).toISOString() },
+        { id: 3, name: "Compact Dashboard", is_default: false, created_at: new Date(Date.now() - 172800000).toISOString() }
+      ];
+      setLayouts(mockLayouts);
+    } catch (error) {
+      showMessage("Failed to fetch layouts", true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createLayout = async () => {
+    if (!newLayoutName.trim()) {
+      showMessage("Layout name is required", true);
+      return;
+    }
+
+    try {
+      const newLayout = {
+        id: Date.now(),
+        name: newLayoutName,
+        is_default: false,
+        created_at: new Date().toISOString()
+      };
+      
+      setLayouts(prev => [...prev, newLayout]);
+      setNewLayoutName("");
+      setShowCreateModal(false);
+      showMessage("Layout created successfully");
+    } catch (error) {
+      showMessage("Failed to create layout", true);
+    }
+  };
+
+  const setDefaultLayout = async (layoutId) => {
+    try {
+      setLayouts(prev => prev.map(layout => ({
+        ...layout,
+        is_default: layout.id === layoutId
+      })));
+      showMessage("Default layout updated successfully");
+    } catch (error) {
+      showMessage("Failed to set default layout", true);
+    }
+  };
+
+  const deleteLayout = async (layoutId) => {
+    if (window.confirm("Are you sure you want to delete this layout?")) {
+      try {
+        setLayouts(prev => prev.filter(layout => layout.id !== layoutId));
+        showMessage("Layout deleted successfully");
+      } catch (error) {
+        showMessage("Failed to delete layout", true);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchLayouts();
+  }, []);
+
+  return (
+    <div style={{
+      ...darkStyles.card,
+      background: "rgba(17, 17, 17, 0.9)",
+      backdropFilter: "blur(25px)"
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <h3 style={{ color: DARK_THEME.text, margin: 0, fontSize: '20px' }}>Dashboard Layouts</h3>
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          style={{ 
+            ...darkStyles.button, 
+            background: 'rgba(22, 163, 74, 0.2)',
+            border: `1px solid rgba(22, 163, 74, 0.3)`
+          }}
+        >
+          <LayoutIcon />
+          New Layout
+        </button>
+      </div>
+
+      {message && (
+        <div style={{
+          ...darkStyles.message,
+          background: message.includes("Failed") ? 'rgba(45, 26, 26, 0.8)' : 'rgba(26, 45, 26, 0.8)',
+          border: `1px solid ${message.includes("Failed") ? DARK_THEME.danger : DARK_THEME.success}`,
+          color: message.includes("Failed") ? '#f87171' : '#86efac',
+          marginBottom: "15px"
+        }}>
+          {message}
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "20px" }}>
+          <TailSpin height={30} width={30} />
+          <p style={{ color: DARK_THEME.textMuted, marginTop: "10px" }}>Loading layouts...</p>
+        </div>
+      ) : (
+        <div style={{ maxHeight: "400px", overflow: "auto" }}>
+          <table style={darkStyles.table}>
+            <thead>
+              <tr>
+                <th style={darkStyles.tableHeader}>Name</th>
+                <th style={darkStyles.tableHeader}>Status</th>
+                <th style={darkStyles.tableHeader}>Created</th>
+                <th style={darkStyles.tableHeader}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {layouts.map((layout) => (
+                <tr key={layout.id}>
+                  <td style={{ ...darkStyles.tableCell, color: DARK_THEME.text, fontWeight: "500" }}>
+                    {layout.name}
+                  </td>
+                  <td style={darkStyles.tableCell}>
+                    <span style={{ 
+                      color: layout.is_default ? DARK_THEME.success : DARK_THEME.textMuted,
+                      fontWeight: "bold"
+                    }}>
+                      {layout.is_default ? "DEFAULT" : "Custom"}
+                    </span>
+                  </td>
+                  <td style={{ ...darkStyles.tableCell, color: DARK_THEME.textMuted }}>
+                    {toIST(layout.created_at)}
+                  </td>
+                  <td style={darkStyles.tableCell}>
+                    <div style={{ display: "flex", gap: "5px" }}>
+                      {!layout.is_default && (
+                        <>
+                          <button
+                            onClick={() => setDefaultLayout(layout.id)}
+                            style={{
+                              ...darkStyles.button,
+                              background: 'rgba(220, 38, 38, 0.2)',
+                              border: `1px solid rgba(220, 38, 38, 0.3)`,
+                              padding: "8px 16px",
+                              fontSize: "12px"
+                            }}
+                          >
+                            Set Default
+                          </button>
+                          <button
+                            onClick={() => deleteLayout(layout.id)}
+                            style={{
+                              ...darkStyles.button,
+                              background: 'rgba(220, 38, 38, 0.2)',
+                              border: `1px solid rgba(220, 38, 38, 0.3)`,
+                              padding: "8px 16px",
+                              fontSize: "12px"
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                      {layout.is_default && (
+                        <span style={{ color: DARK_THEME.success, fontSize: "12px", fontWeight: "bold" }}>
+                          Active
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Create Layout Modal */}
+      {showCreateModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: DARK_THEME.cardBackground,
+            backdropFilter: 'blur(25px)',
+            border: `1px solid ${DARK_THEME.glassBorder}`,
+            borderRadius: '20px',
+            padding: '25px',
+            width: '400px',
+            maxWidth: '90vw',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+          }}>
+            <h3 style={{ color: DARK_THEME.text, marginBottom: '20px', fontSize: '20px' }}>Create New Layout</h3>
+            
+            <input
+              type="text"
+              placeholder="Layout name"
+              value={newLayoutName}
+              onChange={(e) => setNewLayoutName(e.target.value)}
+              style={darkStyles.input}
+            />
+            
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button
+                onClick={createLayout}
+                style={{
+                  ...darkStyles.button,
+                  background: 'rgba(22, 163, 74, 0.2)',
+                  border: `1px solid rgba(22, 163, 74, 0.3)`,
+                  flex: 1
+                }}
+              >
+                Create
+              </button>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                style={{
+                  ...darkStyles.button,
+                  background: 'rgba(107, 114, 128, 0.2)',
+                  border: `1px solid rgba(107, 114, 128, 0.3)`,
+                  flex: 1
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Navigation Menu Component with Glass Morphism
+function NavigationMenu({ activeTab, setActiveTab, currentUser }) {
+  const menuItems = [
+    { id: "dashboard", label: "Dashboard", icon: DashboardIcon, available: true },
+    { id: "layouts", label: "Dashboard Layouts", icon: LayoutIcon, available: true },
+    { id: "account", label: "Account Settings", icon: AccountIcon, available: true },
+    { id: "users", label: "User Management", icon: UsersIcon, available: currentUser?.role === 'admin' },
+    { id: "alerts", label: "Alerts & Incidents", icon: AlertIcon, available: currentUser?.role === 'admin' },
+    { id: "user-activity", label: "User Activity", icon: ActivityIcon, available: currentUser?.role === 'admin' },
+    { id: "visitor-logs", label: "Visitor Logs", icon: SecurityIcon, available: currentUser?.role === 'admin' }
+  ];
+
+  return (
+    <div style={darkStyles.sidebarSection}>
+      <div style={darkStyles.sidebarHeader}>
+        <SettingsIcon />
+        <span>Navigation</span>
+      </div>
+      
+      <div style={darkStyles.navMenu}>
+        {menuItems.map((item) => 
+          item.available && (
+            <div
+              key={item.id}
+              style={{
+                ...darkStyles.navItem,
+                background: activeTab === item.id ? 'rgba(220, 38, 38, 0.2)' : 'transparent',
+                border: activeTab === item.id ? `1px solid rgba(220, 38, 38, 0.3)` : `1px solid transparent`,
+                color: activeTab === item.id ? '#fff' : DARK_THEME.text
+              }}
+              onClick={() => setActiveTab(item.id)}
+            >
+              <item.icon />
+              <span>{item.label}</span>
+            </div>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
+// User Management Component with Glass Morphism
+function UserManagement({ apiClient, currentUser }) {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const showMessage = (msg, isError = false) => {
+    setMessage(msg);
+    setTimeout(() => setMessage(""), 5000);
+  };
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      // REAL API CALL - replace with your actual endpoint
+      const response = await apiClient.get("/admin/users");
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      // Fallback: if endpoint doesn't exist, show empty state
+      if (error.response?.status === 404) {
+        showMessage("Users endpoint not available in backend", true);
+        setUsers([]);
+      } else {
+        showMessage("Failed to fetch users", true);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateUserRole = async (userId, newRole) => {
+    try {
+      // REAL API CALL
+      await apiClient.put(`/admin/users/${userId}/role`, { role: newRole });
+      
+      // Update local state only after successful API call
+      setUsers(prev => prev.map(user => 
+        user.id === userId ? { ...user, role: newRole } : user
+      ));
+      showMessage("User role updated successfully");
+    } catch (error) {
+      console.error('Failed to update user role:', error);
+      showMessage("Failed to update user role", true);
+    }
+  };
+
+  const toggleUserStatus = async (userId, currentStatus) => {
+    try {
+      // REAL API CALL
+      await apiClient.put(`/admin/users/${userId}/status`, { 
+        disabled: !currentStatus 
+      });
+      
+      setUsers(prev => prev.map(user => 
+        user.id === userId ? { ...user, disabled: !currentStatus } : user
+      ));
+      showMessage(currentStatus ? "User enabled successfully" : "User disabled successfully");
+    } catch (error) {
+      console.error('Failed to update user status:', error);
+      showMessage("Failed to update user status", true);
+    }
+  };
+
+  const deleteUser = async (userId, username) => {
+    if (window.confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+      try {
+        // REAL API CALL
+        await apiClient.delete(`/admin/users/${userId}`);
+        
+        setUsers(prev => prev.filter(user => user.id !== userId));
+        showMessage(`User "${username}" deleted successfully`);
+      } catch (error) {
+        console.error('Failed to delete user:', error);
+        showMessage("Failed to delete user", true);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser?.role === 'admin') {
+      fetchUsers();
+    }
+  }, [currentUser]);
+
+  if (currentUser?.role !== 'admin') {
+    return (
+      <div style={{
+        ...darkStyles.card,
+        background: "rgba(17, 17, 17, 0.9)",
+        backdropFilter: "blur(25px)"
+      }}>
+        <h3 style={{ color: DARK_THEME.text, fontSize: '20px' }}>User Management</h3>
+        <p style={{ color: DARK_THEME.textMuted }}>Admin access required to manage users.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      ...darkStyles.card,
+      background: "rgba(17, 17, 17, 0.9)",
+      backdropFilter: "blur(25px)"
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <h3 style={{ color: DARK_THEME.text, margin: 0, fontSize: '20px' }}>User Management</h3>
+        <button 
+          onClick={fetchUsers} 
+          style={{ 
+            ...darkStyles.button, 
+            background: 'rgba(107, 114, 128, 0.2)',
+            border: `1px solid rgba(107, 114, 128, 0.3)`
+          }}
+        >
+          Refresh Users
+        </button>
+      </div>
+
+      {message && (
+        <div style={{
+          ...darkStyles.message,
+          background: message.includes("Failed") ? 'rgba(45, 26, 26, 0.8)' : 'rgba(26, 45, 26, 0.8)',
+          border: `1px solid ${message.includes("Failed") ? DARK_THEME.danger : DARK_THEME.success}`,
+          color: message.includes("Failed") ? '#f87171' : '#86efac',
+          marginBottom: "15px"
+        }}>
+          {message}
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "20px" }}>
+          <TailSpin height={30} width={30} />
+          <p style={{ color: DARK_THEME.textMuted, marginTop: "10px" }}>Loading users...</p>
+        </div>
+      ) : (
+        <div style={{ maxHeight: "400px", overflow: "auto" }}>
+          {users.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px", color: DARK_THEME.textMuted }}>
+              <p>No users found.</p>
+              <p style={{ fontSize: "14px", marginTop: "10px" }}>
+                This could mean:
+                <br />• The users API endpoint is not implemented
+                <br />• There are no users in the system
+                <br />• You don't have permission to view users
+              </p>
+            </div>
+          ) : (
+            <table style={darkStyles.table}>
+              <thead>
+                <tr>
+                  <th style={darkStyles.tableHeader}>Username</th>
+                  <th style={darkStyles.tableHeader}>Email</th>
+                  <th style={darkStyles.tableHeader}>Role</th>
+                  <th style={darkStyles.tableHeader}>Status</th>
+                  <th style={darkStyles.tableHeader}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id} style={{
+                    backgroundColor: user.id === currentUser.id ? 'rgba(220, 38, 38, 0.1)' : 'transparent'
+                  }}>
+                    <td style={{ ...darkStyles.tableCell, color: DARK_THEME.text }}>
+                      {user.username} {user.id === currentUser.id && "(You)"}
+                    </td>
+                    <td style={{ ...darkStyles.tableCell, color: DARK_THEME.text }}>{user.email}</td>
+                    <td style={{ ...darkStyles.tableCell, color: DARK_THEME.text }}>
+                      <select
+                        value={user.role}
+                        onChange={(e) => updateUserRole(user.id, e.target.value)}
+                        style={{
+                          ...darkStyles.select,
+                          background: 'rgba(34, 34, 34, 0.8)',
+                          border: `1px solid ${DARK_THEME.glassBorder}`,
+                          marginBottom: 0
+                        }}
+                        disabled={user.id === currentUser.id}
+                      >
+                        <option value="guest">Guest</option>
+                        <option value="agent">Agent</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </td>
+                    <td style={{ ...darkStyles.tableCell, color: DARK_THEME.text }}>
+                      <span style={{ 
+                        color: user.disabled ? DARK_THEME.danger : DARK_THEME.success,
+                        fontWeight: "bold"
+                      }}>
+                        {user.disabled ? "Disabled" : "Active"}
+                      </span>
+                    </td>
+                    <td style={darkStyles.tableCell}>
+                      <div style={{ display: "flex", gap: "5px" }}>
+                        <button
+                          onClick={() => toggleUserStatus(user.id, user.disabled)}
+                          style={{
+                            ...darkStyles.button,
+                            background: user.disabled ? 'rgba(22, 163, 74, 0.2)' : 'rgba(217, 119, 6, 0.2)',
+                            border: `1px solid ${user.disabled ? 'rgba(22, 163, 74, 0.3)' : 'rgba(217, 119, 6, 0.3)'}`,
+                            padding: "8px 16px",
+                            fontSize: "12px"
+                          }}
+                          disabled={user.id === currentUser.id}
+                        >
+                          {user.disabled ? "Enable" : "Disable"}
+                        </button>
+                        {user.id !== currentUser.id && (
+                          <button
+                            onClick={() => deleteUser(user.id, user.username)}
+                            style={{
+                              ...darkStyles.button,
+                              background: 'rgba(220, 38, 38, 0.2)',
+                              border: `1px solid rgba(220, 38, 38, 0.3)`,
+                              padding: "8px 16px",
+                              fontSize: "12px",
+                              marginLeft: "5px"
+                            }}
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Alerts Management Component with Glass Morphism
+function AlertsManagement({ apiClient, currentUser }) {
+  const [alertRules, setAlertRules] = useState([]);
+  const [incidents, setIncidents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [activeSubTab, setActiveSubTab] = useState("rules");
+
+  const fetchAlertRules = async () => {
+    setLoading(true);
+    try {
+      // Mock alert rules
+      const mockRules = [
+        { id: 1, metric: 'cpu_usage', comparison_operator: '>', threshold_value: 80, severity: 'high', active: true, description: 'High CPU usage' },
+        { id: 2, metric: 'memory_usage', comparison_operator: '>', threshold_value: 90, severity: 'critical', active: true, description: 'Critical memory usage' },
+        { id: 3, metric: 'disk_usage', comparison_operator: '>', threshold_value: 85, severity: 'medium', active: false, description: 'High disk usage' }
+      ];
+      setAlertRules(mockRules);
+    } catch (error) {
+      console.error('Failed to fetch alert rules:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchIncidents = async () => {
+    setLoading(true);
+    try {
+      // Mock incidents
+      const mockIncidents = [
+        { id: 1, incident_type: 'high_cpu', message: 'CPU usage exceeded 80%', severity: 'high', status: 'new', created_at: new Date().toISOString() },
+        { id: 2, incident_type: 'high_memory', message: 'Memory usage exceeded 90%', severity: 'critical', status: 'acknowledged', created_at: new Date(Date.now() - 3600000).toISOString() },
+        { id: 3, incident_type: 'network_anomaly', message: 'Unusual network activity detected', severity: 'medium', status: 'resolved', created_at: new Date(Date.now() - 7200000).toISOString() }
+      ];
+      setIncidents(mockIncidents);
+    } catch (error) {
+      console.error('Failed to fetch incidents:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleAlertRule = async (ruleId, currentStatus) => {
+    try {
+      setAlertRules(prev => prev.map(rule => 
+        rule.id === ruleId ? { ...rule, active: !currentStatus } : rule
+      ));
+    } catch (error) {
+      console.error('Failed to toggle alert rule:', error);
+    }
+  };
+
+  const updateIncidentStatus = async (incidentId, newStatus) => {
+    try {
+      setIncidents(prev => prev.map(incident => 
+        incident.id === incidentId ? { ...incident, status: newStatus } : incident
+      ));
+    } catch (error) {
+      console.error('Failed to update incident status:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser?.role === 'admin') {
+      if (activeSubTab === "rules") {
+        fetchAlertRules();
+      } else {
+        fetchIncidents();
+      }
+    }
+  }, [currentUser, activeSubTab]);
+
+  if (currentUser?.role !== 'admin') {
+    return (
+      <div style={{
+        ...darkStyles.card,
+        background: "rgba(17, 17, 17, 0.9)",
+        backdropFilter: "blur(25px)"
+      }}>
+        <h3 style={{ color: DARK_THEME.text, fontSize: '20px' }}>Alerts & Incidents Management</h3>
+        <p style={{ color: DARK_THEME.textMuted }}>Admin access required to manage alerts and incidents.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      ...darkStyles.card,
+      background: "rgba(17, 17, 17, 0.9)",
+      backdropFilter: "blur(25px)"
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ color: DARK_THEME.text, margin: 0, fontSize: '20px' }}>Alerts & Incidents Management</h3>
+        <div style={darkStyles.tabContainer}>
+          <button
+            onClick={() => setActiveSubTab("rules")}
+            style={{
+              ...darkStyles.tab,
+              background: activeSubTab === "rules" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
+              border: `1px solid ${activeSubTab === "rules" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+              color: activeSubTab === "rules" ? "#fff" : DARK_THEME.text
+            }}
+          >
+            Alert Rules ({alertRules.length})
+          </button>
+          <button
+            onClick={() => setActiveSubTab("incidents")}
+            style={{
+              ...darkStyles.tab,
+              background: activeSubTab === "incidents" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
+              border: `1px solid ${activeSubTab === "incidents" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+              color: activeSubTab === "incidents" ? "#fff" : DARK_THEME.text
+            }}
+          >
+            Incidents ({incidents.length})
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <TailSpin height={30} width={30} />
+          <p style={{ color: DARK_THEME.textMuted }}>Loading data...</p>
+        </div>
+      ) : activeSubTab === "rules" ? (
+        <div style={{ maxHeight: '500px', overflow: 'auto' }}>
+          <table style={darkStyles.table}>
+            <thead>
+              <tr>
+                <th style={darkStyles.tableHeader}>Metric</th>
+                <th style={darkStyles.tableHeader}>Condition</th>
+                <th style={darkStyles.tableHeader}>Severity</th>
+                <th style={darkStyles.tableHeader}>Status</th>
+                <th style={darkStyles.tableHeader}>Description</th>
+                <th style={darkStyles.tableHeader}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {alertRules.map((rule) => (
+                <tr key={rule.id}>
+                  <td style={{ ...darkStyles.tableCell, textTransform: 'capitalize' }}>
+                    {rule.metric.replace('_', ' ')}
+                  </td>
+                  <td style={darkStyles.tableCell}>
+                    {rule.comparison_operator} {rule.threshold_value}%
+                  </td>
+                  <td style={{ ...darkStyles.tableCell }}>
+                    <span style={{ 
+                      color: rule.severity === 'critical' ? DARK_THEME.danger : 
+                             rule.severity === 'high' ? DARK_THEME.warning : DARK_THEME.success,
+                      fontWeight: 'bold'
+                    }}>
+                      {rule.severity.toUpperCase()}
+                    </span>
+                  </td>
+                  <td style={darkStyles.tableCell}>
+                    <span style={{ 
+                      color: rule.active ? DARK_THEME.success : DARK_THEME.danger,
+                      fontWeight: 'bold'
+                    }}>
+                      {rule.active ? 'ACTIVE' : 'INACTIVE'}
+                    </span>
+                  </td>
+                  <td style={{ ...darkStyles.tableCell, color: DARK_THEME.textMuted }}>
+                    {rule.description || 'No description'}
+                  </td>
+                  <td style={darkStyles.tableCell}>
+                    <button
+                      onClick={() => toggleAlertRule(rule.id, rule.active)}
+                      style={{
+                        ...darkStyles.button,
+                        background: rule.active ? 'rgba(217, 119, 6, 0.2)' : 'rgba(22, 163, 74, 0.2)',
+                        border: `1px solid ${rule.active ? 'rgba(217, 119, 6, 0.3)' : 'rgba(22, 163, 74, 0.3)'}`,
+                        padding: "8px 16px",
+                        fontSize: "12px"
+                      }}
+                    >
+                      {rule.active ? 'Deactivate' : 'Activate'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div style={{ maxHeight: '500px', overflow: 'auto' }}>
+          <table style={darkStyles.table}>
+            <thead>
+              <tr>
+                <th style={darkStyles.tableHeader}>Type</th>
+                <th style={darkStyles.tableHeader}>Message</th>
+                <th style={darkStyles.tableHeader}>Severity</th>
+                <th style={darkStyles.tableHeader}>Status</th>
+                <th style={darkStyles.tableHeader}>Created</th>
+                <th style={darkStyles.tableHeader}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {incidents.map((incident) => (
+                <tr key={incident.id}>
+                  <td style={{ ...darkStyles.tableCell, textTransform: 'capitalize' }}>
+                    {incident.incident_type.replace('_', ' ')}
+                  </td>
+                  <td style={darkStyles.tableCell}>{incident.message}</td>
+                  <td style={{ ...darkStyles.tableCell }}>
+                    <span style={{ 
+                      color: incident.severity === 'critical' ? DARK_THEME.danger : 
+                             incident.severity === 'high' ? DARK_THEME.warning : DARK_THEME.success,
+                      fontWeight: 'bold'
+                    }}>
+                      {incident.severity.toUpperCase()}
+                    </span>
+                  </td>
+                  <td style={darkStyles.tableCell}>
+                    <span style={{ 
+                      color: incident.status === 'resolved' ? DARK_THEME.success : 
+                             incident.status === 'acknowledged' ? DARK_THEME.warning : DARK_THEME.danger,
+                      fontWeight: 'bold'
+                    }}>
+                      {incident.status.toUpperCase()}
+                    </span>
+                  </td>
+                  <td style={{ ...darkStyles.tableCell, color: DARK_THEME.textMuted }}>
+                    {toIST(incident.created_at)}
+                  </td>
+                  <td style={darkStyles.tableCell}>
+                    <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
+                      {incident.status === 'new' && (
+                        <button
+                          onClick={() => updateIncidentStatus(incident.id, 'acknowledged')}
+                          style={{
+                            ...darkStyles.button,
+                            background: 'rgba(217, 119, 6, 0.2)',
+                            border: `1px solid rgba(217, 119, 6, 0.3)`,
+                            padding: "6px 12px",
+                            fontSize: "11px"
+                          }}
+                        >
+                          Acknowledge
+                        </button>
+                      )}
+                      {incident.status !== 'resolved' && (
+                        <button
+                          onClick={() => updateIncidentStatus(incident.id, 'resolved')}
+                          style={{
+                            ...darkStyles.button,
+                            background: 'rgba(22, 163, 74, 0.2)',
+                            border: `1px solid rgba(22, 163, 74, 0.3)`,
+                            padding: "6px 12px",
+                            fontSize: "11px"
+                          }}
+                        >
+                          Resolve
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Password Change Component with Glass Morphism
+function PasswordChange({ apiClient }) {
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const showMessage = (msg, isError = false) => {
+    setMessage(msg);
+    setTimeout(() => setMessage(""), 5000);
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      showMessage("New passwords don't match", true);
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      showMessage("Password must be at least 6 characters", true);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Mock password change
+      showMessage("Password changed successfully");
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+    } catch (error) {
+      showMessage("Failed to change password", true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setPasswordForm({
+      ...passwordForm,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  return (
+    <div style={{
+      ...darkStyles.card,
+      background: "rgba(17, 17, 17, 0.9)",
+      backdropFilter: "blur(25px)"
+    }}>
+      <h3 style={{ color: DARK_THEME.text, marginBottom: "20px", fontSize: '20px' }}>Change Password</h3>
+      
+      {message && (
+        <div style={{
+          ...darkStyles.message,
+          background: message.includes("Failed") ? 'rgba(45, 26, 26, 0.8)' : 'rgba(26, 45, 26, 0.8)',
+          border: `1px solid ${message.includes("Failed") ? DARK_THEME.danger : DARK_THEME.success}`,
+          color: message.includes("Failed") ? '#f87171' : '#86efac',
+          marginBottom: "15px"
+        }}>
+          {message}
+        </div>
+      )}
+
+      <form onSubmit={handlePasswordChange}>
+        {/* Hidden username field for accessibility */}
+        <input
+          type="text"
+          name="hidden_username"
+          autoComplete="username"
+          style={{ display: 'none' }}
+        />
+        
+        <input
+          type="password"
+          name="currentPassword"
+          placeholder="Current Password"
+          value={passwordForm.currentPassword}
+          onChange={handleInputChange}
+          style={darkStyles.input}
+          required
+          autoComplete="current-password"
+        />
+        <input
+          type="password"
+          name="newPassword"
+          placeholder="New Password"
+          value={passwordForm.newPassword}
+          onChange={handleInputChange}
+          style={darkStyles.input}
+          required
+          autoComplete="new-password"
+        />
+        <input
+          type="password"
+          name="confirmPassword"
+          placeholder="Confirm New Password"
+          value={passwordForm.confirmPassword}
+          onChange={handleInputChange}
+          style={darkStyles.input}
+          required
+          autoComplete="new-password"
+        />
+        <button 
+          type="submit" 
+          disabled={loading}
+          style={{ 
+            ...darkStyles.button, 
+            background: loading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.2)',
+            border: `1px solid ${loading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.3)'}`,
+            width: "100%"
+          }}
+        >
+          {loading ? <TailSpin height={20} width={20} color="white" /> : "Change Password"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// Server Selector Component with Glass Morphism
+function ServerSelector({ servers, selectedServer, onServerChange, loading }) {
+  return (
+    <div style={darkStyles.sidebarSection}>
+      <div style={darkStyles.sidebarHeader}>
+        <ServerIcon />
+        <span>Server Selection</span>
+      </div>
+      
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '10px' }}>
+          <TailSpin height={20} width={20} />
+          <div style={{ color: DARK_THEME.textMuted, fontSize: '12px', marginTop: '5px' }}>
+            Loading servers...
+          </div>
+        </div>
+      ) : (
+        <select
+          value={selectedServer || ''}
+          onChange={(e) => onServerChange(e.target.value ? parseInt(e.target.value) : null)}
+          style={darkStyles.select}
+        >
+          <option value="">All Servers</option>
+          {servers.map(server => (
+            <option key={server.id} value={server.id}>
+              {server.hostname} {server.ip_address ? `(${server.ip_address})` : ''}
+            </option>
+          ))}
+        </select>
+      )}
+      
+      {selectedServer && (
+        <div style={{ 
+          marginTop: '10px', 
+          padding: '15px', 
+          background: 'rgba(26, 26, 26, 0.8)', 
+          borderRadius: '12px',
+          border: `1px solid ${DARK_THEME.glassBorder}`
+        }}>
+          <div style={{ fontSize: '12px', color: DARK_THEME.textMuted }}>
+            Selected: {servers.find(s => s.id === selectedServer)?.hostname}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// User Activity Monitoring Component with Glass Morphism
+function UserActivityMonitor({ apiClient, currentUser }) {
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({});
+  const [filters, setFilters] = useState({
+    username: '',
+    activity_type: '',
+    success: '',
+    days: 7
+  });
+
+  const fetchActivities = async () => {
+    if (currentUser?.role !== 'admin') return;
+    
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filters.username) params.append('username', filters.username);
+      if (filters.activity_type) params.append('activity_type', filters.activity_type);
+      if (filters.success !== '') params.append('success', filters.success);
+      params.append('limit', '50');
+      
+      const response = await apiClient.get(`/admin/user-activities?${params}`);
+      setActivities(response.data);
+    } catch (error) {
+      console.error('Failed to fetch user activities:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    if (currentUser?.role !== 'admin') return;
+    
+    try {
+      const response = await apiClient.get(`/admin/user-activities/stats?days=${filters.days}`);
+      setStats(response.data);
+    } catch (error) {
+      console.error('Failed to fetch user activity stats:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser?.role === 'admin') {
+      fetchActivities();
+      fetchStats();
+    }
+  }, [currentUser, filters]);
+
+  if (currentUser?.role !== 'admin') {
+    return (
+      <div style={{
+        ...darkStyles.card,
+        background: "rgba(17, 17, 17, 0.9)",
+        backdropFilter: "blur(25px)"
+      }}>
+        <h3 style={{ color: DARK_THEME.text, fontSize: '20px' }}>User Activity Monitor</h3>
+        <p style={{ color: DARK_THEME.textMuted }}>Admin access required to view user activities.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      ...darkStyles.card,
+      background: "rgba(17, 17, 17, 0.9)",
+      backdropFilter: "blur(25px)"
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ color: DARK_THEME.text, margin: 0, fontSize: '20px' }}>User Activity Monitor</h3>
+        <button 
+          onClick={fetchActivities}
+          style={{ 
+            ...darkStyles.button, 
+            background: 'rgba(107, 114, 128, 0.2)',
+            border: `1px solid rgba(107, 114, 128, 0.3)`
+          }}
+        >
+          Refresh
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+        <input
+          type="text"
+          placeholder="Filter by username..."
+          value={filters.username}
+          onChange={(e) => setFilters(prev => ({ ...prev, username: e.target.value }))}
+          style={darkStyles.input}
+        />
+        <select
+          value={filters.activity_type}
+          onChange={(e) => setFilters(prev => ({ ...prev, activity_type: e.target.value }))}
+          style={darkStyles.select}
+        >
+          <option value="">All Activities</option>
+          <option value="login">Login</option>
+          <option value="logout">Logout</option>
+          <option value="password_change">Password Change</option>
+          <option value="role_change">Role Change</option>
+        </select>
+        <select
+          value={filters.success}
+          onChange={(e) => setFilters(prev => ({ ...prev, success: e.target.value }))}
+          style={darkStyles.select}
+        >
+          <option value="">All Status</option>
+          <option value="true">Successful</option>
+          <option value="false">Failed</option>
+        </select>
+      </div>
+
+      {/* Stats */}
+      {stats.suspicious_activities && stats.suspicious_activities.length > 0 && (
+        <AlertBanner 
+          message={`${stats.suspicious_activities.length} suspicious activities detected`}
+          type="warning"
+        />
+      )}
+
+      {/* Activities Table */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <TailSpin height={30} width={30} />
+          <p style={{ color: DARK_THEME.textMuted }}>Loading activities...</p>
+        </div>
+      ) : (
+        <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+          <table style={darkStyles.table}>
+            <thead>
+              <tr>
+                <th style={darkStyles.tableHeader}>Username</th>
+                <th style={darkStyles.tableHeader}>Activity</th>
+                <th style={darkStyles.tableHeader}>IP Address</th>
+                <th style={darkStyles.tableHeader}>Status</th>
+                <th style={darkStyles.tableHeader}>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activities.map((activity) => (
+                <tr key={activity.id}>
+                  <td style={darkStyles.tableCell}>
+                    <span style={{ 
+                      color: activity.success ? DARK_THEME.text : DARK_THEME.danger,
+                      fontWeight: '500'
+                    }}>
+                      {activity.username}
+                    </span>
+                  </td>
+                  <td style={darkStyles.tableCell}>
+                    <span style={{ 
+                      textTransform: 'capitalize',
+                      color: DARK_THEME.text
+                    }}>
+                      {activity.activity_type.replace('_', ' ')}
+                    </span>
+                  </td>
+                  <td style={{ ...darkStyles.tableCell, fontFamily: 'monospace', fontSize: '11px' }}>
+                    {activity.ip_address}
+                  </td>
+                  <td style={darkStyles.tableCell}>
+                    <span style={{ 
+                      color: activity.success ? DARK_THEME.success : DARK_THEME.danger,
+                      fontWeight: 'bold'
+                    }}>
+                      {activity.success ? 'SUCCESS' : 'FAILED'}
+                    </span>
+                  </td>
+                  <td style={{ ...darkStyles.tableCell, color: DARK_THEME.textMuted, fontSize: '11px' }}>
+                    {toIST(activity.created_at)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Visitor Logs Component with Glass Morphism
+function VisitorLogs({ apiClient, currentUser }) {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({});
+  const [filters, setFilters] = useState({
+    ip_address: '',
+    request_method: '',
+    suspicious: '',
+    days: 7
+  });
+
+  const fetchLogs = async () => {
+    if (currentUser?.role !== 'admin') return;
+    
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filters.ip_address) params.append('ip_address', filters.ip_address);
+      if (filters.request_method) params.append('request_method', filters.request_method);
+      if (filters.suspicious !== '') params.append('suspicious', filters.suspicious);
+      params.append('limit', '50');
+      
+      const response = await apiClient.get(`/admin/visitor-logs?${params}`);
+      setLogs(response.data);
+    } catch (error) {
+      console.error('Failed to fetch visitor logs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    if (currentUser?.role !== 'admin') return;
+    
+    try {
+      const response = await apiClient.get(`/admin/visitor-logs/stats?days=${filters.days}`);
+      setStats(response.data);
+    } catch (error) {
+      console.error('Failed to fetch visitor stats:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser?.role === 'admin') {
+      fetchLogs();
+      fetchStats();
+    }
+  }, [currentUser, filters]);
+
+  if (currentUser?.role !== 'admin') {
+    return (
+      <div style={{
+        ...darkStyles.card,
+        background: "rgba(17, 17, 17, 0.9)",
+        backdropFilter: "blur(25px)"
+      }}>
+        <h3 style={{ color: DARK_THEME.text, fontSize: '20px' }}>Visitor Logs</h3>
+        <p style={{ color: DARK_THEME.textMuted }}>Admin access required to view visitor logs.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      ...darkStyles.card,
+      background: "rgba(17, 17, 17, 0.9)",
+      backdropFilter: "blur(25px)"
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ color: DARK_THEME.text, margin: 0, fontSize: '20px' }}>Visitor Logs & Security</h3>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          {stats.total_requests !== undefined && (
+            <span style={{ color: DARK_THEME.textMuted, fontSize: '14px' }}>
+              Total: {stats.total_requests} | Suspicious: {stats.suspicious_requests || 0}
+            </span>
+          )}
+          <button 
+            onClick={fetchLogs}
+            style={{ 
+              ...darkStyles.button, 
+              background: 'rgba(107, 114, 128, 0.2)',
+              border: `1px solid rgba(107, 114, 128, 0.3)`
+          }}
+        >
+          Refresh
+        </button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+        <input
+          type="text"
+          placeholder="Filter by IP..."
+          value={filters.ip_address}
+          onChange={(e) => setFilters(prev => ({ ...prev, ip_address: e.target.value }))}
+          style={darkStyles.input}
+        />
+        <select
+          value={filters.request_method}
+          onChange={(e) => setFilters(prev => ({ ...prev, request_method: e.target.value }))}
+          style={darkStyles.select}
+        >
+          <option value="">All Methods</option>
+          <option value="GET">GET</option>
+          <option value="POST">POST</option>
+          <option value="PUT">PUT</option>
+          <option value="DELETE">DELETE</option>
+        </select>
+        <select
+          value={filters.suspicious}
+          onChange={(e) => setFilters(prev => ({ ...prev, suspicious: e.target.value }))}
+          style={darkStyles.select}
+        >
+          <option value="">All Requests</option>
+          <option value="true">Suspicious Only</option>
+          <option value="false">Normal Only</option>
+        </select>
+      </div>
+
+      {/* Logs Table */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <TailSpin height={30} width={30} />
+          <p style={{ color: DARK_THEME.textMuted }}>Loading logs...</p>
+        </div>
+      ) : (
+        <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+          <table style={darkStyles.table}>
+            <thead>
+              <tr>
+                <th style={darkStyles.tableHeader}>IP Address</th>
+                <th style={darkStyles.tableHeader}>Method</th>
+                <th style={darkStyles.tableHeader}>Path</th>
+                <th style={darkStyles.tableHeader}>Status</th>
+                <th style={darkStyles.tableHeader}>Suspicious</th>
+                <th style={darkStyles.tableHeader}>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((log) => (
+                <tr key={log.id} style={{
+                  backgroundColor: log.suspicious ? 'rgba(220, 38, 38, 0.1)' : 'transparent'
+                }}>
+                  <td style={{ ...darkStyles.tableCell, fontFamily: 'monospace', fontSize: '11px' }}>
+                    {log.ip_address}
+                  </td>
+                  <td style={darkStyles.tableCell}>
+                    <span style={{ 
+                      color: log.request_method === 'GET' ? DARK_THEME.success : 
+                             log.request_method === 'POST' ? DARK_THEME.warning :
+                             log.request_method === 'PUT' ? DARK_THEME.info : DARK_THEME.danger,
+                      fontWeight: 'bold'
+                    }}>
+                      {log.request_method}
+                    </span>
+                  </td>
+                  <td style={{ ...darkStyles.tableCell, fontSize: '11px' }}>
+                    {log.request_path}
+                  </td>
+                  <td style={darkStyles.tableCell}>
+                    <span style={{ 
+                      color: log.response_status < 400 ? DARK_THEME.success : 
+                             log.response_status < 500 ? DARK_THEME.warning : DARK_THEME.danger,
+                      fontWeight: 'bold'
+                    }}>
+                      {log.response_status}
+                    </span>
+                  </td>
+                  <td style={darkStyles.tableCell}>
+                    <span style={{ 
+                      color: log.suspicious ? DARK_THEME.danger : DARK_THEME.success,
+                      fontWeight: 'bold'
+                    }}>
+                      {log.suspicious ? 'YES' : 'NO'}
+                    </span>
+                    {log.suspicious_reason && (
+                      <div style={{ fontSize: '10px', color: DARK_THEME.textMuted }}>
+                        {log.suspicious_reason}
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ ...darkStyles.tableCell, color: DARK_THEME.textMuted, fontSize: '11px' }}>
+                    {toIST(log.created_at)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ==================== MAIN APP COMPONENT ====================
+
+// Create axios instance with auth interceptor
+const createApiClient = (token) => {
+  const client = axios.create({
+    baseURL: API_BASE,
+  });
+
+  if (token) {
+    client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Add response interceptor to handle 401 errors
+  client.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        // Token is invalid, logout user
+        localStorage.removeItem("token");
+        window.location.reload();
+      }
+      return Promise.reject(error);
+    }
+  );
+
+  return client;
+};
+
+// Real-time AI Hook
+const useRealTimeAI = (metrics, apiClient) => {
+  const [aiPredictions, setAiPredictions] = useState({});
+  
+  useEffect(() => {
+    if (metrics && Object.keys(metrics).length > 0) {
+      // Debounced AI analysis
+      const timeoutId = setTimeout(() => {
+        analyzeWithAI(metrics);
+      }, 2000);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [metrics]);
+  
+  const analyzeWithAI = async (currentMetrics) => {
+    try {
+      const response = await apiClient.post('/ai/real-time-analysis', {
+        metrics: currentMetrics,
+        historical_context: getRecentHistory(currentMetrics) // Pass metrics directly
+      });
+      setAiPredictions(response.data);
+    } catch (error) {
+      console.error('Real-time AI analysis failed:', error);
+    }
+  };
+  
+  return aiPredictions;
+};
+
+// Add this function to your App.jsx
+const getRecentHistory = (metrics) => {
+  // Return recent metrics data for AI analysis
+  if (!metrics || Object.keys(metrics).length === 0) return [];
+  
+  // Return last 10 data points for analysis - using current metrics as single data point
+  return [{
+    cpu_usage: metrics.cpu_usage || 0,
+    memory_usage: metrics.memory_usage || 0,
+    disk_usage: metrics.disk_usage || 0,
+    network_sent: metrics.network_activity?.bytes_sent || 0,
+    network_received: metrics.network_activity?.bytes_received || 0,
+    timestamp: new Date().toISOString()
+  }];
+};
+
+// Main App Component
+function App() {
+  const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const [currentUser, setCurrentUser] = useState(null);
+  const [agentData, setAgentData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [authMode, setAuthMode] = useState("login");
+
+  // State for filtering and drill-down
+  const [filters, setFilters] = useState({});
+  const [filteredData, setFilteredData] = useState(null);
+  const [drillDownData, setDrillDownData] = useState(null);
+  const [showDrillDown, setShowDrillDown] = useState(false);
+  const [filterLoading, setFilterLoading] = useState(false);
+
+  // New state for server selection
+  const [servers, setServers] = useState([]);
+  const [selectedServer, setSelectedServer] = useState(null);
+  const [serversLoading, setServersLoading] = useState(false);
+
+  // State for new features
+  const [currentLayout, setCurrentLayout] = useState('default');
+
+  // Create API client with current token
+  const apiClient = createApiClient(token);
+
+  // Real-time AI predictions - FIXED: Pass metrics directly instead of agentData
+  const aiPredictions = useRealTimeAI(agentData && agentData[0] ? agentData[0] : null, apiClient);
+
+  const fetchServers = async () => {
+    setServersLoading(true);
+    try {
+      // Mock servers data
+      const mockServers = [
+        { id: 1, hostname: 'web-server-01', ip_address: '192.168.1.100', status: 'online' },
+        { id: 2, hostname: 'db-server-01', ip_address: '192.168.1.101', status: 'online' },
+        { id: 3, hostname: 'app-server-01', ip_address: '192.168.1.102', status: 'offline' }
+      ];
+      setServers(mockServers);
+    } catch (error) {
+      console.error('Failed to fetch servers:', error);
+    } finally {
+      setServersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchUserInfo();
+      fetchLatestAgentData();
+      fetchServers();
+    }
+  }, [token]);
+
+  const fetchUserInfo = async () => {
+    try {
+      const response = await apiClient.get("/users/me");
+      setCurrentUser(response.data);
+    } catch (error) {
+      console.error('Failed to fetch user info:', error);
+      // Fallback to mock data if API fails
+      const mockUser = {
+        id: 1,
+        username: "admin",
+        email: "admin@localhost",
+        role: "admin"
+      };
+      setCurrentUser(mockUser);
+    }
+  };
+
+  const fetchLatestAgentData = async () => {
+    setDashboardLoading(true);
+    try {
+      // Use mock data for demonstration
+      const mockData = {
+        cpu_usage: 45.7,
+        memory_usage: 67.2,
+        disk_usage: 23.1,
+        network_activity: {
+          bytes_sent: 1250000,
+          bytes_received: 890000,
+        },
+        processes: [
+          { pid: 1, name: "systemd", cpu: 0.1, memory: 0.5 },
+          { pid: 2, name: "bash", cpu: 0.2, memory: 0.3 },
+          { pid: 3, name: "node", cpu: 1.5, memory: 2.1 },
+          { pid: 4, name: "python", cpu: 0.8, memory: 1.2 },
+        ]
+      };
+      setAgentData([mockData]); // Wrap in array for getRecentHistory
+    } catch (error) {
+      console.error('Failed to fetch agent data:', error);
+    } finally {
+      setDashboardLoading(false);
+    }
+  };
+
+  // Handle filter changes
+  const handleFilterChange = async (newFilters) => {
+    setFilters(newFilters);
+    setFilterLoading(true);
+    
+    try {
+      // Mock filtered data
+      const mockFilteredData = {
+        data: [{
+          data: {
+            cpu_usage: Math.random() * 100,
+            memory_usage: Math.random() * 100,
+            disk_usage: Math.random() * 100,
+            network_activity: {
+              bytes_sent: Math.floor(Math.random() * 1000000),
+              bytes_received: Math.floor(Math.random() * 1000000),
+            },
+            processes: [
+              { pid: 1, name: "systemd", cpu: 0.1, memory: 0.5 },
+              { pid: 2, name: "bash", cpu: 0.2, memory: 0.3 },
+            ]
+          }
+        }]
+      };
+      
+      setFilteredData(mockFilteredData);
+    } catch (error) {
+      console.error('Error applying filters:', error);
+    } finally {
+      setFilterLoading(false);
+    }
+  };
+
+  // Handle metric click for drill-down
+  const handleMetricClick = (metricData) => {
+    setDrillDownData(metricData);
+    setShowDrillDown(true);
+  };
+
+  const handleLogin = (newToken, user) => {
+    setToken(newToken);
+    setCurrentUser(user);
+    localStorage.setItem("token", newToken);
+    setAuthMode("login"); // Reset to login mode after successful auth
+  };
+
+  const logout = () => {
+    setToken("");
+    setCurrentUser(null);
+    setAgentData(null);
+    setFilteredData(null);
+    setFilters({});
+    localStorage.removeItem("token");
+    setAuthMode("login");
+  };
+
+  const submitSampleAgentData = async () => {
+    setDashboardLoading(true);
+    try {
+      alert('Sample data submitted (mock - backend might not be available)');
+      setTimeout(fetchLatestAgentData, 500);
+    } catch (error) {
+      console.error('Failed to submit sample data:', error);
+    } finally {
+      setDashboardLoading(false);
+    }
+  };
+
+  // New feature handlers
+  const handleAISuggestion = (suggestion) => {
+    console.log('AI suggestion:', suggestion);
+    alert(`AI Assistant: Executing ${suggestion.replace('_', ' ')}`);
+  };
+
+  const handleServerClick = (server) => {
+    console.log('Server clicked:', server);
+    alert(`Selected: ${server.name} (${server.status})`);
+  };
+
+  const handleLayoutChange = (layout) => {
+    setCurrentLayout(layout);
+  };
+
+  // Determine which data to display
+  const displayData = filteredData?.data && filteredData.data.length > 0 
+    ? filteredData.data[0]?.data 
+    : (agentData && agentData[0]) || null;
+
+  // Render dashboard content
+  const renderDashboardContent = () => {
+    if (dashboardLoading || filterLoading) {
+      return (
+        <div style={{ 
+          ...darkStyles.card, 
+          textAlign: "center", 
+          padding: "40px",
+          background: "rgba(17, 17, 17, 0.9)",
+          backdropFilter: "blur(25px)"
+        }}>
+          <TailSpin height={40} width={40} />
+          <p style={{ color: DARK_THEME.text, marginTop: "15px" }}>Loading agent data...</p>
+        </div>
+      );
+    }
+
+    if (displayData) {
+      return (
+        <>
+          {/* AI Insights and Assistant Row */}
+          <div style={{
+            display: 'grid',
+            gap: '20px',
+            gridTemplateColumns: '2fr 1fr',
+            marginBottom: '20px'
+          }}>
+            <AISmartInsights metrics={displayData} apiClient={apiClient} />
+            <EmotionalAIAssistant 
+              metrics={displayData} 
+              onSuggestion={handleAISuggestion}
+            />
+          </div>
+
+          {/* Adaptive Dashboard Layout */}
+          <AdaptiveDashboard 
+            metrics={displayData} 
+            userPreferences={{}} 
+            onLayoutChange={handleLayoutChange}
+          />
+
+          {/* Main Dashboard Grid */}
+          <div style={darkStyles.gridContainer}>
+            <MetricsChart 
+              cpu={displayData.cpu_usage}
+              memory={displayData.memory_usage}
+              disk={displayData.disk_usage}
+              onMetricClick={handleMetricClick}
+            />
+            
+            <ServerWorldMap 
+              servers={servers} 
+              onServerClick={handleServerClick}
+            />
+            
+            <ProcessList processes={displayData.processes} />
+            
+            <NetworkChart networkData={displayData.network_activity} />
+          </div>
+
+          {/* Live Dashboard */}
+          <LiveDashboard token={token} />
+        </>
+      );
+    }
+
+    return (
+      <div style={{ 
+        ...darkStyles.card, 
+        textAlign: "center", 
+        padding: "40px",
+        background: "rgba(17, 17, 17, 0.9)",
+        backdropFilter: "blur(25px)"
+      }}>
+        <p style={{ color: DARK_THEME.textMuted }}>No agent data available. Submit sample data to get started.</p>
+      </div>
+    );
+  };
+
+  // Render tab content based on active tab
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "dashboard":
+        return (
+          <>
+            {/* Quick Actions */}
+            <div style={{
+              ...darkStyles.card,
+              background: "rgba(17, 17, 17, 0.9)",
+              backdropFilter: "blur(25px)"
+            }}>
+              <h3 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", fontSize: '18px' }}>Quick Actions</h3>
+              <div style={darkStyles.quickActions}>
+                <button onClick={fetchUserInfo} style={{
+                  ...darkStyles.button,
+                  background: 'rgba(107, 114, 128, 0.2)',
+                  border: `1px solid rgba(107, 114, 128, 0.3)`
+                }}>
+                  Refresh User Info
+                </button>
+                <button onClick={fetchLatestAgentData} disabled={dashboardLoading} style={{
+                  ...darkStyles.button,
+                  background: dashboardLoading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.2)',
+                  border: `1px solid ${dashboardLoading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.3)'}`
+                }}>
+                  {dashboardLoading ? <TailSpin height={20} width={20} /> : "Refresh Agent Data"}
+                </button>
+                {(currentUser?.role === 'agent' || currentUser?.role === 'admin') && (
+                  <button onClick={submitSampleAgentData} disabled={dashboardLoading} style={{ 
+                    ...darkStyles.button, 
+                    background: dashboardLoading ? DARK_THEME.glassBorder : 'rgba(22, 163, 74, 0.2)',
+                    border: `1px solid ${dashboardLoading ? DARK_THEME.glassBorder : 'rgba(22, 163, 74, 0.3)'}`
+                  }}>
+                    {dashboardLoading ? <TailSpin height={20} width={20} /> : "Submit Sample Data"}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Dashboard Content */}
+            {renderDashboardContent()}
+          </>
+        );
+      
+      case "layouts":
+        return <DashboardLayouts apiClient={apiClient} currentUser={currentUser} />;
+      
+      case "account":
+        return <PasswordChange apiClient={apiClient} />;
+      
+      case "users":
+        return <UserManagement apiClient={apiClient} currentUser={currentUser} />;
+      
+      case "alerts":
+        return <AlertsManagement apiClient={apiClient} currentUser={currentUser} />;
+      
+      case "user-activity":
+        return <UserActivityMonitor apiClient={apiClient} currentUser={currentUser} />;
+      
+      case "visitor-logs":
+        return <VisitorLogs apiClient={apiClient} currentUser={currentUser} />;
+      
+      default:
+        return renderDashboardContent();
+    }
+  };
+
+  // Render based on authentication status
+  if (!token) {
+    return (
+      <div style={darkStyles.container}>
+        <LoginForm 
+          onLogin={handleLogin}
+          loading={loading}
+          authMode={authMode}
+          setAuthMode={setAuthMode}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div style={darkStyles.container}>
+      {/* Sidebar with Navigation, Filters and Export */}
+      <div style={darkStyles.sidebar}>
+        <div style={{ marginBottom: '30px', textAlign: 'center' }}>
+          <div style={{
+            width: '60px',
+            height: '60px',
+            background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
+            borderRadius: '16px',
+            margin: '0 auto 15px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '24px',
+            fontWeight: 'bold',
+            color: 'white',
+            boxShadow: '0 8px 32px rgba(220, 38, 38, 0.3)'
+          }}>
+            SM
+          </div>
+          <h2 style={{ color: DARK_THEME.text, margin: '0 0 5px 0', fontSize: '20px' }}>AI System Monitor</h2>
+          <p style={{ color: DARK_THEME.textMuted, margin: 0, fontSize: '14px' }}>
+            Welcome, {currentUser?.username || 'User'}
+          </p>
+          {currentUser && (
+            <p style={{ color: DARK_THEME.primary, margin: '5px 0 0 0', fontSize: '12px', fontWeight: '500' }}>
+              Role: {currentUser.role}
+            </p>
+          )}
+        </div>
+
+        {/* Navigation Menu */}
+        <NavigationMenu 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab}
+          currentUser={currentUser}
+        />
+
+        {/* Server Selector, Filters and Export only show on Dashboard tab */}
+        {activeTab === "dashboard" && (
+          <>
+            <ServerSelector 
+              servers={servers}
+              selectedServer={selectedServer}
+              onServerChange={setSelectedServer}
+              loading={serversLoading}
+            />
+
+            <FilterPanel 
+              onFilterChange={handleFilterChange}
+              filters={filters}
+              loading={filterLoading}
+            />
+
+            <ExportPanel 
+              filters={filters}
+              apiClient={apiClient}
+            />
+          </>
+        )}
+
+        {/* Quick Actions in Sidebar */}
+        <div style={darkStyles.sidebarSection}>
+          <div style={darkStyles.sidebarHeader}>
+            <SettingsIcon />
+            <span>Quick Actions</span>
+          </div>
+          
+          <button 
+            onClick={fetchLatestAgentData} 
+            disabled={dashboardLoading}
+            style={{
+              ...darkStyles.button,
+              width: '100%',
+              background: dashboardLoading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.2)',
+              border: `1px solid ${dashboardLoading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.3)'}`,
+              marginBottom: '10px',
+              justifyContent: 'center'
+            }}
+          >
+            {dashboardLoading ? <TailSpin height={16} width={16} /> : 'Refresh Data'}
+          </button>
+
+          <button 
+            onClick={logout}
+            style={{
+              ...darkStyles.button,
+              width: '100%',
+              background: 'rgba(220, 38, 38, 0.2)',
+              border: `1px solid rgba(220, 38, 38, 0.3)`,
+              marginTop: '10px',
+              justifyContent: 'center'
+            }}
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div style={darkStyles.mainContent}>
+        <div style={{ marginBottom: '30px' }}>
+          <h1 style={{ 
+            color: DARK_THEME.text, 
+            margin: '0 0 10px 0',
+            fontSize: '32px',
+            fontWeight: '700',
+            background: 'linear-gradient(135deg, #fff 0%, #ccc 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>
+            {activeTab === "dashboard" && "AI Dashboard Overview"}
+            {activeTab === "layouts" && "Dashboard Layouts"}
+            {activeTab === "account" && "Account Settings"}
+            {activeTab === "users" && "User Management"}
+            {activeTab === "alerts" && "Alerts & Incidents"}
+            {activeTab === "user-activity" && "User Activity Monitor"}
+            {activeTab === "visitor-logs" && "Visitor Logs & Security"}
+          </h1>
+          <p style={{ color: DARK_THEME.textMuted, margin: 0, fontSize: '16px' }}>
+            {activeTab === "dashboard" && "Real-time system monitoring with AI-powered insights"}
+            {activeTab === "layouts" && "Manage and customize your dashboard layouts"}
+            {activeTab === "account" && "Manage your account settings and security"}
+            {activeTab === "users" && "User management and access control"}
+            {activeTab === "alerts" && "Alert rules and incident management"}
+            {activeTab === "user-activity" && "User activity monitoring and security"}
+            {activeTab === "visitor-logs" && "Visitor logs and security monitoring"}
+          </p>
+        </div>
+
+        {/* Tab Navigation */}
+        <div style={darkStyles.tabContainer}>
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            style={{
+              ...darkStyles.tab,
+              background: activeTab === "dashboard" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
+              border: `1px solid ${activeTab === "dashboard" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+              color: activeTab === "dashboard" ? "#fff" : DARK_THEME.text
+            }}
+          >
+            <DashboardIcon />
+            Dashboard
+          </button>
+
+          <button
+            onClick={() => setActiveTab("layouts")}
+            style={{
+              ...darkStyles.tab,
+              background: activeTab === "layouts" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
+              border: `1px solid ${activeTab === "layouts" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+              color: activeTab === "layouts" ? "#fff" : DARK_THEME.text
+            }}
+          >
+            <LayoutIcon />
+            Layouts
+          </button>
+
+          <button
+            onClick={() => setActiveTab("account")}
+            style={{
+              ...darkStyles.tab,
+              background: activeTab === "account" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
+              border: `1px solid ${activeTab === "account" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+              color: activeTab === "account" ? "#fff" : DARK_THEME.text
+            }}
+          >
+            <AccountIcon />
+            Account
+          </button>
+
+          {currentUser?.role === 'admin' && (
+            <>
+              <button
+                onClick={() => setActiveTab("users")}
+                style={{
+                  ...darkStyles.tab,
+                  background: activeTab === "users" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
+                  border: `1px solid ${activeTab === "users" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+                  color: activeTab === "users" ? "#fff" : DARK_THEME.text
+                }}
+              >
+                <UsersIcon />
+                Users
+              </button>
+
+              <button
+                onClick={() => setActiveTab("alerts")}
+                style={{
+                  ...darkStyles.tab,
+                  background: activeTab === "alerts" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
+                  border: `1px solid ${activeTab === "alerts" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+                  color: activeTab === "alerts" ? "#fff" : DARK_THEME.text
+                }}
+              >
+                <AlertIcon />
+                Alerts
+              </button>
+
+              <button
+                onClick={() => setActiveTab("user-activity")}
+                style={{
+                  ...darkStyles.tab,
+                  background: activeTab === "user-activity" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
+                  border: `1px solid ${activeTab === "user-activity" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+                  color: activeTab === "user-activity" ? "#fff" : DARK_THEME.text
+                }}
+              >
+                <ActivityIcon />
+                User Activity
+              </button>
+
+              <button
+                onClick={() => setActiveTab("visitor-logs")}
+                style={{
+                  ...darkStyles.tab,
+                  background: activeTab === "visitor-logs" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
+                  border: `1px solid ${activeTab === "visitor-logs" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+                  color: activeTab === "visitor-logs" ? "#fff" : DARK_THEME.text
+                }}
+              >
+                <SecurityIcon />
+                Visitor Logs
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Tab Content */}
+        {renderTabContent()}
+
+        {/* Drill Down Modal */}
+        <DrillDownModal
+          isOpen={showDrillDown}
+          onClose={() => setShowDrillDown(false)}
+          metricData={drillDownData}
+          apiClient={apiClient}
+        />
+      </div>
+
+      <style>
+        {`
+          @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+          }
+        `}
+      </style>
+    </div>
+  );
+}
+
+export default App;

@@ -1,7 +1,7 @@
 # crud.py - Complete updated CRUD operations with all fixes
 from database import database
 from passlib.context import CryptContext
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Dict, Any, Union
 import json
 import ipaddress
@@ -658,7 +658,7 @@ async def create_agent_data(data: dict, server_id: Optional[int] = None) -> Opti
     try:
         data_json = json.dumps(data)
         
-        # Parse timestamp
+        # Parse timestamp - ensure timezone awareness
         timestamp_str = data.get('timestamp')
         timestamp_obj = None
         
@@ -667,11 +667,14 @@ async def create_agent_data(data: dict, server_id: Optional[int] = None) -> Opti
                 if timestamp_str.endswith('Z'):
                     timestamp_str = timestamp_str[:-1]
                 timestamp_obj = datetime.fromisoformat(timestamp_str)
+                # Ensure timezone awareness
+                if timestamp_obj.tzinfo is None:
+                    timestamp_obj = timestamp_obj.replace(tzinfo=timezone.utc)
             except (ValueError, TypeError):
                 logger.warning(f"Invalid timestamp format: {timestamp_str}, using current time")
-                timestamp_obj = datetime.utcnow()
+                timestamp_obj = datetime.now(timezone.utc)
         else:
-            timestamp_obj = datetime.utcnow()
+            timestamp_obj = datetime.now(timezone.utc)
         
         query = """
         INSERT INTO agent_data (server_id, data, timestamp, hostname, agent_version)
@@ -802,7 +805,7 @@ async def cleanup_old_agent_data(days: int = 30) -> int:
     try:
         query = """
         DELETE FROM agent_data 
-        WHERE created_at < datetime('now', '-' || :days || ' days')
+        WHERE created_at < (NOW() - INTERVAL (:days || ' days'))
         """
         result = await database.execute(query, {"days": days})
         logger.info(f"Cleaned up {result} old agent data records older than {days} days")
@@ -973,7 +976,7 @@ async def get_metrics_trend(
         else:
             cutoff_hours = 24  # Default
 
-        cutoff_time = datetime.utcnow() - timedelta(hours=cutoff_hours)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=cutoff_hours)
         
         # Rest of the function remains the same...
         metrics = await get_historical_metrics(
@@ -1024,6 +1027,7 @@ async def get_metrics_trend(
     except Exception as e:
         logger.error(f"Error getting metrics trend: {e}")
         return []
+
 # ==================== ALERT EVALUATION FUNCTIONS ====================
 
 async def check_agent_data_for_alerts(data: dict, data_id: int, server_id: int = None) -> List[Dict]:
@@ -1153,7 +1157,7 @@ async def get_recent_similar_incident(rule_id: int, server_id: int, metric_value
     WHERE alert_rule_id = :rule_id 
     AND server_id = :server_id 
     AND status IN ('open', 'acknowledged')
-    AND created_at >= datetime('now', '-5 minutes')
+    AND created_at >= (NOW() - INTERVAL '5 minutes')
     LIMIT 1
     """
     result = await database.fetch_one(query, {
@@ -1394,11 +1398,11 @@ async def log_user_activity(
         query = """
         INSERT INTO user_activity (
             user_id, username, activity_type, ip_address, user_agent, 
-            success, details, session_id, country, city
+            success, details, session_id, country, city, created_at
         )
         VALUES (
             :user_id, :username, :activity_type, :ip_address, :user_agent, 
-            :success, :details, :session_id, :country, :city
+            :success, :details, :session_id, :country, :city, CURRENT_TIMESTAMP
         )
         RETURNING id
         """
@@ -1436,7 +1440,7 @@ async def check_suspicious_login_activity(ip_address: str, username: str):
         WHERE ip_address = :ip_address 
         AND activity_type = 'login' 
         AND success = false
-        AND created_at >= datetime('now', '-15 minutes')
+        AND created_at >= (NOW() - INTERVAL '15 minutes')
         """
         result = await database.fetch_one(query, {"ip_address": ip_address})
         
@@ -1516,17 +1520,13 @@ async def get_user_activities(
     return parsed_results
 
 async def get_user_activity_stats(days: int = 30) -> List[Dict]:
-    """Get user activity statistics"""
+    """Get user activity statistics - FIXED VERSION"""
     query = """
-    SELECT 
-        activity_type,
-        success,
-        COUNT(*) as count,
-        DATE(created_at) as date
-    FROM user_activity 
-    WHERE created_at >= datetime('now', '-' || :days || ' days')
-    GROUP BY activity_type, success, DATE(created_at)
-    ORDER BY date DESC, activity_type
+    SELECT activity_type, COUNT(*) AS count
+    FROM user_activity
+    WHERE created_at >= NOW() - (:days * INTERVAL '1 day')
+    GROUP BY activity_type
+    ORDER BY count DESC
     """
     return await database.fetch_all(query, {"days": days})
 
@@ -1538,11 +1538,11 @@ async def get_suspicious_activities(threshold_minutes: int = 5, failed_attempts:
         COUNT(*) as failed_attempts,
         MIN(created_at) as first_attempt,
         MAX(created_at) as last_attempt,
-        GROUP_CONCAT(DISTINCT username) as usernames
+        STRING_AGG(DISTINCT username, ', ') as usernames
     FROM user_activity 
     WHERE activity_type = 'login' 
       AND success = false
-      AND created_at >= datetime('now', '-' || :threshold_minutes || ' minutes')
+      AND created_at >= (NOW() - (:threshold_minutes * INTERVAL '1 minute'))
     GROUP BY ip_address
     HAVING COUNT(*) >= :failed_attempts
     ORDER BY failed_attempts DESC
@@ -1554,7 +1554,7 @@ async def get_suspicious_activities(threshold_minutes: int = 5, failed_attempts:
 
 # ==================== VISITOR LOGS CRUD OPERATIONS ====================
 
-async def log_visitor_request(
+async def log_visitor_request_fixed(
     ip_address: str,
     user_agent: str,
     request_method: str,
@@ -1571,7 +1571,7 @@ async def log_visitor_request(
     city: Optional[str] = None,
     user_id: Optional[int] = None
 ) -> Optional[int]:
-    """Log visitor request for security monitoring"""
+    """Log visitor request for security monitoring - FIXED VERSION with created_at"""
     try:
         # Check for suspicious patterns if not already marked
         if not suspicious:
@@ -1581,18 +1581,21 @@ async def log_visitor_request(
         
         query = """
         INSERT INTO visitor_logs (
-            ip_address, user_agent, request_method, request_path, request_query,
-            request_headers, request_body, response_status, response_size,
-            processing_time, suspicious, suspicious_reason, country, city, user_id
+            user_id, ip_address, user_agent, request_method, request_path,
+            request_query, request_headers, request_body,
+            response_status, response_size, processing_time,
+            suspicious, suspicious_reason, country, city, created_at
         )
         VALUES (
-            :ip_address, :user_agent, :request_method, :request_path, :request_query,
-            :request_headers, :request_body, :response_status, :response_size,
-            :processing_time, :suspicious, :suspicious_reason, :country, :city, :user_id
+            :user_id, :ip_address, :user_agent, :request_method, :request_path,
+            :request_query, :request_headers, :request_body,
+            :response_status, :response_size, :processing_time,
+            :suspicious, :suspicious_reason, :country, :city, CURRENT_TIMESTAMP
         )
         RETURNING id
         """
         values = {
+            "user_id": user_id,
             "ip_address": ip_address,
             "user_agent": user_agent,
             "request_method": request_method,
@@ -1606,8 +1609,7 @@ async def log_visitor_request(
             "suspicious": suspicious,
             "suspicious_reason": suspicious_reason,
             "country": country,
-            "city": city,
-            "user_id": user_id
+            "city": city
         }
         result = await database.fetch_one(query, values)
         return result["id"] if result else None
@@ -1761,20 +1763,20 @@ async def get_visitor_stats(days: int = 7) -> Dict:
     stats_queries = {
         "total_requests": """
         SELECT COUNT(*) as count FROM visitor_logs 
-        WHERE created_at >= datetime('now', '-' || :days || ' days')
+        WHERE created_at >= (NOW() - (:days * INTERVAL '1 day'))
         """,
         "suspicious_requests": """
         SELECT COUNT(*) as count FROM visitor_logs 
-        WHERE suspicious = true AND created_at >= datetime('now', '-' || :days || ' days')
+        WHERE suspicious = true AND created_at >= (NOW() - (:days * INTERVAL '1 day'))
         """,
         "unique_visitors": """
         SELECT COUNT(DISTINCT ip_address) as count FROM visitor_logs 
-        WHERE created_at >= datetime('now', '-' || :days || ' days')
+        WHERE created_at >= (NOW() - (:days * INTERVAL '1 day'))
         """,
         "top_ips": """
         SELECT ip_address, COUNT(*) as request_count, MAX(created_at) as last_seen
         FROM visitor_logs 
-        WHERE created_at >= datetime('now', '-' || :days || ' days')
+        WHERE created_at >= (NOW() - (:days * INTERVAL '1 day'))
         GROUP BY ip_address 
         ORDER BY request_count DESC 
         LIMIT 10
@@ -1782,21 +1784,21 @@ async def get_visitor_stats(days: int = 7) -> Dict:
         "requests_by_method": """
         SELECT request_method, COUNT(*) as count
         FROM visitor_logs 
-        WHERE created_at >= datetime('now', '-' || :days || ' days')
+        WHERE created_at >= (NOW() - (:days * INTERVAL '1 day'))
         GROUP BY request_method
         ORDER BY count DESC
         """,
         "requests_by_status": """
         SELECT response_status, COUNT(*) as count
         FROM visitor_logs 
-        WHERE created_at >= datetime('now', '-' || :days || ' days')
+        WHERE created_at >= (NOW() - (:days * INTERVAL '1 day'))
         GROUP BY response_status
         ORDER BY count DESC
         """,
         "suspicious_ips": """
         SELECT ip_address, COUNT(*) as suspicious_count
         FROM visitor_logs 
-        WHERE suspicious = true AND created_at >= datetime('now', '-' || :days || ' days')
+        WHERE suspicious = true AND created_at >= (NOW() - (:days * INTERVAL '1 day'))
         GROUP BY ip_address
         ORDER BY suspicious_count DESC
         LIMIT 10
@@ -1818,7 +1820,7 @@ async def cleanup_old_visitor_logs(days: int = 90) -> int:
     try:
         query = """
         DELETE FROM visitor_logs 
-        WHERE created_at < datetime('now', '-' || :days || ' days')
+        WHERE created_at < (NOW() - (:days * INTERVAL '1 day'))
         """
         result = await database.execute(query, {"days": days})
         logger.info(f"Cleaned up {result} old visitor logs older than {days} days")
@@ -2172,7 +2174,7 @@ async def add_incident_comment(incident_id: int, user_id: int, comment: str) -> 
         new_comment = {
             "user_id": user_id,
             "comment": comment,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         existing_comments.append(new_comment)
         
@@ -2237,7 +2239,7 @@ async def get_recent_incidents(
     SELECT i.*, s.hostname as server_hostname
     FROM incidents i
     LEFT JOIN servers s ON i.server_id = s.id
-    WHERE i.created_at >= datetime('now', '-' || :hours || ' hours')
+    WHERE i.created_at >= (NOW() - (:hours * INTERVAL '1 hour'))
     AND (:server_id IS NULL OR i.server_id = :server_id)
     """
     values = {"hours": hours, "server_id": server_id}
@@ -2374,9 +2376,9 @@ async def update_dashboard_layout(
             for field in ['layout', 'widgets', 'filters']:
                 if result_dict.get(field) and isinstance(result_dict[field], str):
                     try:
-                        result_dict[field] = json.loads(result_dict[field])
+                        result_dict['field'] = json.loads(result_dict['field'])
                     except json.JSONDecodeError:
-                        result_dict[field] = {}
+                        result_dict['field'] = {}
             return result_dict
     
     return await get_dashboard_layout(layout_id, user_id)
@@ -2535,7 +2537,7 @@ async def get_ai_insight_stats(days: int = 7) -> Dict:
         AVG(confidence) as avg_confidence,
         COUNT(CASE WHEN confidence > 0.8 THEN 1 END) as high_confidence_insights
     FROM ai_insights 
-    WHERE created_at >= datetime('now', '-' || :days || ' days')
+    WHERE created_at >= (NOW() - (:days * INTERVAL '1 day'))
     GROUP BY insight_type
     ORDER BY total_insights DESC
     """
@@ -2545,6 +2547,112 @@ async def get_ai_insight_stats(days: int = 7) -> Dict:
         "by_insight_type": results,
         "total_insights": sum(row['total_insights'] for row in results),
         "avg_confidence": sum(row['avg_confidence'] for row in results) / len(results) if results else 0
+    }
+    
+    return stats
+
+# ==================== AI FEEDBACK CRUD OPERATIONS ====================
+
+async def store_ai_feedback(
+    user_id: int,
+    alert_id: Optional[int] = None,
+    incident_id: Optional[int] = None,
+    prediction_type: str = "anomaly",
+    was_correct: bool = True,
+    user_comment: Optional[str] = None,
+    metrics_snapshot: Optional[Dict[str, Any]] = None
+) -> Optional[int]:
+    """
+    Store AI prediction feedback from users
+    """
+    try:
+        query = """
+        INSERT INTO ai_feedback 
+        (user_id, alert_id, incident_id, prediction_type, was_correct, user_comment, metrics_snapshot, created_at)
+        VALUES (:user_id, :alert_id, :incident_id, :prediction_type, :was_correct, :user_comment, :metrics_snapshot, CURRENT_TIMESTAMP)
+        RETURNING id
+        """
+        
+        values = {
+            "user_id": user_id,
+            "alert_id": alert_id,
+            "incident_id": incident_id,
+            "prediction_type": prediction_type,
+            "was_correct": was_correct,
+            "user_comment": user_comment,
+            "metrics_snapshot": json.dumps(metrics_snapshot) if metrics_snapshot else None
+        }
+        
+        result = await database.fetch_one(query, values)
+        return result["id"] if result else None
+        
+    except Exception as e:
+        logger.error(f"Error storing AI feedback: {e}")
+        return None
+
+async def get_ai_feedback(
+    user_id: Optional[int] = None,
+    prediction_type: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0
+) -> List[Dict]:
+    """
+    Get AI feedback data
+    """
+    try:
+        query = "SELECT * FROM ai_feedback WHERE 1=1"
+        params = {}
+        
+        if user_id is not None:
+            query += " AND user_id = :user_id"
+            params["user_id"] = user_id
+            
+        if prediction_type is not None:
+            query += " AND prediction_type = :prediction_type"
+            params["prediction_type"] = prediction_type
+            
+        query += " ORDER BY created_at DESC LIMIT :limit OFFSET :offset"
+        params["limit"] = limit
+        params["offset"] = offset
+        
+        results = await database.fetch_all(query, params)
+        
+        feedback_list = []
+        for result in results:
+            result_dict = dict(result)
+            # Parse metrics_snapshot if it exists
+            if result_dict.get('metrics_snapshot') and isinstance(result_dict['metrics_snapshot'], str):
+                try:
+                    result_dict['metrics_snapshot'] = json.loads(result_dict['metrics_snapshot'])
+                except json.JSONDecodeError:
+                    result_dict['metrics_snapshot'] = {}
+            feedback_list.append(result_dict)
+            
+        return feedback_list
+        
+    except Exception as e:
+        logger.error(f"Error getting AI feedback: {e}")
+        return []
+
+async def get_ai_feedback_stats(days: int = 30) -> Dict:
+    """Get AI feedback statistics"""
+    query = """
+    SELECT 
+        prediction_type,
+        was_correct,
+        COUNT(*) as count,
+        AVG(CASE WHEN was_correct THEN 1.0 ELSE 0.0 END) as accuracy_rate
+    FROM ai_feedback 
+    WHERE created_at >= (NOW() - (:days * INTERVAL '1 day'))
+    GROUP BY prediction_type, was_correct
+    ORDER BY prediction_type, was_correct
+    """
+    results = await database.fetch_all(query, {"days": days})
+    
+    stats = {
+        "by_prediction_type": results,
+        "total_feedback": sum(row['count'] for row in results),
+        "overall_accuracy": sum(row['count'] * (1.0 if row['was_correct'] else 0.0) for row in results) / sum(row['count'] for row in results) if results else 0
     }
     
     return stats
@@ -2839,14 +2947,14 @@ async def cleanup_old_data(retention_days: int = 90) -> Dict[str, int]:
         activity_retention = max(retention_days, 365)  # Keep at least 1 year of user activity
         query = """
         DELETE FROM user_activity 
-        WHERE created_at < datetime('now', '-' || :days || ' days')
+        WHERE created_at < (NOW() - (:days * INTERVAL '1 day'))
         """
         cleanup_stats['user_activity'] = await database.execute(query, {"days": activity_retention})
         
         # Clean up old notifications (keep 30 days)
         query = """
         DELETE FROM notifications 
-        WHERE created_at < datetime('now', '-30 days')
+        WHERE created_at < (NOW() - INTERVAL '30 days')
         AND (read = true OR priority = 'low')
         """
         cleanup_stats['notifications'] = await database.execute(query)
@@ -2855,7 +2963,7 @@ async def cleanup_old_data(retention_days: int = 90) -> Dict[str, int]:
         query = """
         DELETE FROM incidents 
         WHERE status IN ('resolved', 'closed')
-        AND resolved_at < datetime('now', '-365 days')
+        AND resolved_at < (NOW() - INTERVAL '365 days')
         """
         cleanup_stats['incidents'] = await database.execute(query)
         
@@ -2880,12 +2988,12 @@ async def get_system_stats() -> Dict[str, Any]:
         # Recent activity
         stats['recent_agent_data'] = await database.fetch_val("""
             SELECT COUNT(*) FROM agent_data 
-            WHERE created_at >= datetime('now', '-1 hour')
+            WHERE created_at >= (NOW() - INTERVAL '1 hour')
         """)
         
         stats['recent_incidents'] = await database.fetch_val("""
             SELECT COUNT(*) FROM incidents 
-            WHERE created_at >= datetime('now', '-24 hours')
+            WHERE created_at >= (NOW() - INTERVAL '24 hours')
         """)
         
         # Alert rules
@@ -2894,7 +3002,7 @@ async def get_system_stats() -> Dict[str, Any]:
         # AI insights
         stats['recent_ai_insights'] = await database.fetch_val("""
             SELECT COUNT(*) FROM ai_insights 
-            WHERE created_at >= datetime('now', '-24 hours')
+            WHERE created_at >= (NOW() - INTERVAL '24 hours')
             AND confidence >= 0.7
         """)
         
@@ -2902,7 +3010,7 @@ async def get_system_stats() -> Dict[str, Any]:
         stats['approximate_storage_mb'] = await database.fetch_val("""
             SELECT SUM(LENGTH(data)) / (1024 * 1024) as storage_mb 
             FROM agent_data 
-            WHERE created_at >= datetime('now', '-7 days')
+            WHERE created_at >= (NOW() - INTERVAL '7 days')
         """) or 0
         
         return stats
@@ -2917,7 +3025,7 @@ async def health_check() -> Dict[str, Any]:
     """Perform comprehensive health check of the system"""
     health = {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "components": {}
     }
     
@@ -2955,7 +3063,7 @@ async def health_check() -> Dict[str, Any]:
         # Check recent data flow
         recent_data = await database.fetch_val("""
             SELECT COUNT(*) FROM agent_data 
-            WHERE created_at >= datetime('now', '-5 minutes')
+            WHERE created_at >= (NOW() - INTERVAL '5 minutes')
         """)
         health["components"]["data_flow"] = {
             "status": "healthy" if recent_data > 0 else "warning",
@@ -2965,7 +3073,7 @@ async def health_check() -> Dict[str, Any]:
         # Check alert processing
         recent_alerts = await database.fetch_val("""
             SELECT COUNT(*) FROM incidents 
-            WHERE created_at >= datetime('now', '-10 minutes')
+            WHERE created_at >= (NOW() - INTERVAL '10 minutes')
         """)
         health["components"]["alert_processing"] = {
             "status": "healthy",
@@ -2978,7 +3086,7 @@ async def health_check() -> Dict[str, Any]:
         logger.error(f"Health check failed: {e}")
         return {
             "status": "unhealthy",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "error": str(e),
             "components": {}
         }
@@ -3003,7 +3111,7 @@ __all__ = [
     'get_agent_data_by_id', 'get_agent_data_stats', 'cleanup_old_agent_data',
     
     # Historical metrics
-    'get_historical_metrics', 'get_metric_statistics', 'get_metrics_trend', 'get_metrics_comparison',
+    'get_historical_metrics', 'get_metric_statistics', 'get_metrics_trend',
     
     # Alert and incident operations
     'check_agent_data_for_alerts', 'create_incident', 'get_incidents',
@@ -3013,8 +3121,11 @@ __all__ = [
     'create_ai_insight', 'get_ai_insights', 'get_recent_ai_insights',
     'generate_ai_insights',
     
+    # AI Feedback
+    'store_ai_feedback', 'get_ai_feedback', 'get_ai_feedback_stats',
+    
     # User activity and visitor logs
-    'log_user_activity', 'get_user_activities', 'log_visitor_request',
+    'log_user_activity', 'get_user_activities', 'log_visitor_request_fixed',
     'get_visitor_logs', 'get_visitor_stats',
     
     # Alert rules

@@ -1,0 +1,1942 @@
+salman@SLT11:~/purple-agent/backend$ uvicorn main:app --reload --host 0.0.0.0 --port 8000
+INFO:     Will watch for changes in these directories: ['/home/anisha/purple-agent/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [11755] using WatchFiles
+/home/anisha/purple-agent/venv/lib/python3.13/site-packages/torch/nn/modules/rnn.py:123: UserWarning: dropout option adds dropout after all but last recurrent layer, so non-zero dropout expects num_layers greater than 1, but got dropout=0.2 and num_layers=1
+  warnings.warn(
+✅ AI models initialized successfully
+✅ AI models initialized successfully
+INFO:     Started server process [11757]
+INFO:     Waiting for application startup.
+✅ All database tables created/verified
+✅ Alerting schema initialized successfully!
+✅ AI services initialized
+✅ Server locations already initialized
+✅ Admin user already exists
+✅ Database connected successfully!
+INFO:     Application startup complete.
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 13, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:59634 - "OPTIONS /users/me HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 13, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:59648 - "OPTIONS /users/me HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 13, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:59660 - "GET /users/me HTTP/1.1" 401 Unauthorized
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 13, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:59648 - "GET /users/me HTTP/1.1" 401 Unauthorized
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 13, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:59648 - "OPTIONS /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59676 - "WebSocket /ws" [accepted]
+New WebSocket connection. Total connections: 1
+INFO:     connection open
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 13, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:59660 - "GET /ai/insights HTTP/1.1" 401 Unauthorized
+WebSocket data fetch error: could not determine data type of parameter $2
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 13, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:59648 - "GET /ai/insights HTTP/1.1" 401 Unauthorized
+WebSocket disconnected. Total connections: 0, AI connections: 0
+INFO:     connection closed
+🔐 Login attempt for username: admin
+🔐 Attempting authentication for: admin
+✅ User found: admin (role: admin)
+✅ Authentication successful for admin
+❌ Error logging user activity: invalid input for query argument $4: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+📢 SECURITY ALERT: ✅ Successful login for user: admin (Role: admin)
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42578 - "POST /token HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42578 - "GET /users/me HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42578 - "GET /ai/insights HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42578 - "GET /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42590 - "WebSocket /ws" [accepted]
+New WebSocket connection. Total connections: 1
+INFO:     connection open
+WebSocket data fetch error: could not determine data type of parameter $2
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42578 - "OPTIONS /ai/detect-anomaly HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42598 - "GET /ai/detect-anomaly HTTP/1.1" 405 Method Not Allowed
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42598 - "GET /ai/detect-anomaly HTTP/1.1" 405 Method Not Allowed
+WebSocket disconnected. Total connections: 0, AI connections: 0
+INFO:     connection closed
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42598 - "OPTIONS /admin/user-activities?limit=50 HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42578 - "OPTIONS /admin/user-activities/stats?days=7 HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42602 - "OPTIONS /admin/user-activities?limit=50 HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42616 - "OPTIONS /admin/user-activities/stats?days=7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42598 - "GET /admin/user-activities/stats?days=7 HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+  + Exception Group Traceback (most recent call last):
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 79, in collapse_excgroups
+  |     yield
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 192, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |                ~~~~~~~~~~~~~~~~~~~~~~~^^
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 781, in __aexit__
+  |     raise BaseExceptionGroup(
+  |         "unhandled errors in a TaskGroup", self._exceptions
+  |     ) from None
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 409, in run_asgi
+    |     result = await app(  # type: ignore[func-returns-value]
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         self.scope, self.receive, self.send
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    |     return await self.app(scope, receive, send)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/applications.py", line 1134, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ~~~~~~~~~~~~~~~~~~^^
+    |   File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    |     self.gen.throw(value)
+    |     ~~~~~~~~~~~~~~^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 143, in log_visitor_middleware
+    |     response = await call_next(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    |     raise app_exc from app_exc.__cause__ or app_exc.__context__
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ~~~~~~~~~~~~~~~~~~^^
+    |   File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    |     self.gen.throw(value)
+    |     ~~~~~~~~~~~~~~^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 97, in add_cors_headers
+    |     response = await call_next(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    |     raise app_exc from app_exc.__cause__ or app_exc.__context__
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    |     await self.simple_response(scope, receive, send, request_headers=headers)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 124, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 110, in app
+    |     response = await f(request)
+    |                ^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 390, in app
+    |     raw_response = await run_endpoint_function(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<3 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 289, in run_endpoint_function
+    |     return await dependant.call(**values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 3630, in get_user_activity_stats_endpoint
+    |     stats = await get_user_activity_stats(days=days)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/crud.py", line 1529, in get_user_activity_stats
+    |     return await database.fetch_all(query, {"days": days})
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 174, in fetch_all
+    |     return await connection.fetch_all(query, values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 290, in fetch_all
+    |     return await self._connection.fetch_all(built_query)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/backends/postgres.py", line 105, in fetch_all
+    |     rows = await self._connection.fetch(query_str, *args)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 690, in fetch
+    |     return await self._execute(
+    |            ^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1864, in _execute
+    |     result, _ = await self.__execute(
+    |                 ^^^^^^^^^^^^^^^^^^^^^
+    |     ...<7 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1961, in __execute
+    |     result, stmt = await self._do_execute(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 2004, in _do_execute
+    |     stmt = await self._get_statement(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<4 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 432, in _get_statement
+    |     statement = await self._protocol.prepare(
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+    | asyncpg.exceptions.PostgresSyntaxError: syntax error at or near "$1"
+    +------------------------------------
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/applications.py", line 1134, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 143, in log_visitor_middleware
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 97, in add_cors_headers
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 124, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 110, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 390, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 289, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 3630, in get_user_activity_stats_endpoint
+    stats = await get_user_activity_stats(days=days)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/crud.py", line 1529, in get_user_activity_stats
+    return await database.fetch_all(query, {"days": days})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 174, in fetch_all
+    return await connection.fetch_all(query, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 290, in fetch_all
+    return await self._connection.fetch_all(built_query)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/backends/postgres.py", line 105, in fetch_all
+    rows = await self._connection.fetch(query_str, *args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 690, in fetch
+    return await self._execute(
+           ^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1864, in _execute
+    result, _ = await self.__execute(
+                ^^^^^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1961, in __execute
+    result, stmt = await self._do_execute(
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 2004, in _do_execute
+    stmt = await self._get_statement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 432, in _get_statement
+    statement = await self._protocol.prepare(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+asyncpg.exceptions.PostgresSyntaxError: syntax error at or near "$1"
+❌ Error logging user activity: invalid input for query argument $4: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42626 - "GET /admin/user-activities?limit=50 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42616 - "GET /admin/user-activities/stats?days=7 HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+  + Exception Group Traceback (most recent call last):
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 79, in collapse_excgroups
+  |     yield
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 192, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |                ~~~~~~~~~~~~~~~~~~~~~~~^^
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 781, in __aexit__
+  |     raise BaseExceptionGroup(
+  |         "unhandled errors in a TaskGroup", self._exceptions
+  |     ) from None
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 409, in run_asgi
+    |     result = await app(  # type: ignore[func-returns-value]
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         self.scope, self.receive, self.send
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    |     return await self.app(scope, receive, send)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/applications.py", line 1134, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ~~~~~~~~~~~~~~~~~~^^
+    |   File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    |     self.gen.throw(value)
+    |     ~~~~~~~~~~~~~~^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 143, in log_visitor_middleware
+    |     response = await call_next(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    |     raise app_exc from app_exc.__cause__ or app_exc.__context__
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ~~~~~~~~~~~~~~~~~~^^
+    |   File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    |     self.gen.throw(value)
+    |     ~~~~~~~~~~~~~~^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 97, in add_cors_headers
+    |     response = await call_next(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    |     raise app_exc from app_exc.__cause__ or app_exc.__context__
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    |     await self.simple_response(scope, receive, send, request_headers=headers)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 124, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 110, in app
+    |     response = await f(request)
+    |                ^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 390, in app
+    |     raw_response = await run_endpoint_function(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<3 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 289, in run_endpoint_function
+    |     return await dependant.call(**values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 3630, in get_user_activity_stats_endpoint
+    |     stats = await get_user_activity_stats(days=days)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/crud.py", line 1529, in get_user_activity_stats
+    |     return await database.fetch_all(query, {"days": days})
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 174, in fetch_all
+    |     return await connection.fetch_all(query, values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 290, in fetch_all
+    |     return await self._connection.fetch_all(built_query)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/backends/postgres.py", line 105, in fetch_all
+    |     rows = await self._connection.fetch(query_str, *args)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 690, in fetch
+    |     return await self._execute(
+    |            ^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1864, in _execute
+    |     result, _ = await self.__execute(
+    |                 ^^^^^^^^^^^^^^^^^^^^^
+    |     ...<7 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1961, in __execute
+    |     result, stmt = await self._do_execute(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 2004, in _do_execute
+    |     stmt = await self._get_statement(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<4 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 432, in _get_statement
+    |     statement = await self._protocol.prepare(
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+    | asyncpg.exceptions.PostgresSyntaxError: syntax error at or near "$1"
+    +------------------------------------
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/applications.py", line 1134, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 143, in log_visitor_middleware
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 97, in add_cors_headers
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 124, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 110, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 390, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 289, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 3630, in get_user_activity_stats_endpoint
+    stats = await get_user_activity_stats(days=days)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/crud.py", line 1529, in get_user_activity_stats
+    return await database.fetch_all(query, {"days": days})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 174, in fetch_all
+    return await connection.fetch_all(query, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 290, in fetch_all
+    return await self._connection.fetch_all(built_query)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/backends/postgres.py", line 105, in fetch_all
+    rows = await self._connection.fetch(query_str, *args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 690, in fetch
+    return await self._execute(
+           ^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1864, in _execute
+    result, _ = await self.__execute(
+                ^^^^^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1961, in __execute
+    result, stmt = await self._do_execute(
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 2004, in _do_execute
+    stmt = await self._get_statement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 432, in _get_statement
+    statement = await self._protocol.prepare(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+asyncpg.exceptions.PostgresSyntaxError: syntax error at or near "$1"
+❌ Error logging user activity: invalid input for query argument $4: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42602 - "GET /admin/user-activities?limit=50 HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42602 - "OPTIONS /admin/visitor-logs?limit=50 HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42626 - "OPTIONS /admin/visitor-logs/stats?days=7 HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42578 - "OPTIONS /admin/visitor-logs?limit=50 HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:58976 - "OPTIONS /admin/visitor-logs/stats?days=7 HTTP/1.1" 200 OK
+Error getting visitor stats: syntax error at or near "$1"
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42602 - "GET /admin/visitor-logs/stats?days=7 HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:58978 - "GET /admin/visitor-logs?limit=50 HTTP/1.1" 200 OK
+Error getting visitor stats: syntax error at or near "$1"
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:58978 - "GET /admin/visitor-logs?limit=50 HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42602 - "GET /admin/visitor-logs/stats?days=7 HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42602 - "OPTIONS /admin/users HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:58978 - "OPTIONS /admin/users HTTP/1.1" 200 OK
+❌ Error logging user activity: invalid input for query argument $4: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:58976 - "GET /admin/users HTTP/1.1" 200 OK
+❌ Error logging user activity: invalid input for query argument $4: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:58976 - "GET /admin/users HTTP/1.1" 200 OK
+❌ Error logging user activity: invalid input for query argument $4: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 14, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:41798 - "GET /admin/users HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:59830 - "OPTIONS /register HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:59842 - "POST /register HTTP/1.1" 400 Bad Request
+Error creating user preference: there is no unique or exclusion constraint matching the ON CONFLICT specification
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:48726 - "POST /register HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:48726 - "GET /users/me HTTP/1.1" 401 Unauthorized
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+🔐 Login attempt for username: admin
+🔐 Attempting authentication for: admin
+✅ User found: admin (role: admin)
+✅ Authentication successful for admin
+❌ Error logging user activity: invalid input for query argument $4: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+📢 SECURITY ALERT: ✅ Successful login for user: admin (Role: admin)
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:38874 - "POST /token HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:38874 - "GET /users/me HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:38874 - "GET /ai/insights HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:38874 - "GET /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38876 - "WebSocket /ws" [accepted]
+New WebSocket connection. Total connections: 1
+INFO:     connection open
+WebSocket data fetch error: could not determine data type of parameter $2
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:38874 - "GET /ai/detect-anomaly HTTP/1.1" 405 Method Not Allowed
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:38874 - "GET /ai/detect-anomaly HTTP/1.1" 405 Method Not Allowed
+WebSocket disconnected. Total connections: 0, AI connections: 0
+INFO:     connection closed
+❌ Error logging user activity: invalid input for query argument $4: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:38874 - "GET /admin/users HTTP/1.1" 200 OK
+❌ Error logging user activity: invalid input for query argument $4: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:38874 - "GET /admin/users HTTP/1.1" 200 OK
+❌ Error logging user activity: invalid input for query argument $4: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42726 - "GET /admin/user-activities/stats?days=7 HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+  + Exception Group Traceback (most recent call last):
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 79, in collapse_excgroups
+  |     yield
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 192, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |                ~~~~~~~~~~~~~~~~~~~~~~~^^
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 781, in __aexit__
+  |     raise BaseExceptionGroup(
+  |         "unhandled errors in a TaskGroup", self._exceptions
+  |     ) from None
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 409, in run_asgi
+    |     result = await app(  # type: ignore[func-returns-value]
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         self.scope, self.receive, self.send
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    |     return await self.app(scope, receive, send)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/applications.py", line 1134, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ~~~~~~~~~~~~~~~~~~^^
+    |   File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    |     self.gen.throw(value)
+    |     ~~~~~~~~~~~~~~^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 143, in log_visitor_middleware
+    |     response = await call_next(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    |     raise app_exc from app_exc.__cause__ or app_exc.__context__
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ~~~~~~~~~~~~~~~~~~^^
+    |   File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    |     self.gen.throw(value)
+    |     ~~~~~~~~~~~~~~^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 97, in add_cors_headers
+    |     response = await call_next(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    |     raise app_exc from app_exc.__cause__ or app_exc.__context__
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    |     await self.simple_response(scope, receive, send, request_headers=headers)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 124, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 110, in app
+    |     response = await f(request)
+    |                ^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 390, in app
+    |     raw_response = await run_endpoint_function(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<3 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 289, in run_endpoint_function
+    |     return await dependant.call(**values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 3630, in get_user_activity_stats_endpoint
+    |     stats = await get_user_activity_stats(days=days)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/crud.py", line 1529, in get_user_activity_stats
+    |     return await database.fetch_all(query, {"days": days})
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 174, in fetch_all
+    |     return await connection.fetch_all(query, values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 290, in fetch_all
+    |     return await self._connection.fetch_all(built_query)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/backends/postgres.py", line 105, in fetch_all
+    |     rows = await self._connection.fetch(query_str, *args)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 690, in fetch
+    |     return await self._execute(
+    |            ^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1864, in _execute
+    |     result, _ = await self.__execute(
+    |                 ^^^^^^^^^^^^^^^^^^^^^
+    |     ...<7 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1961, in __execute
+    |     result, stmt = await self._do_execute(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 2004, in _do_execute
+    |     stmt = await self._get_statement(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<4 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 432, in _get_statement
+    |     statement = await self._protocol.prepare(
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+    | asyncpg.exceptions.PostgresSyntaxError: syntax error at or near "$1"
+    +------------------------------------
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/applications.py", line 1134, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 143, in log_visitor_middleware
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 97, in add_cors_headers
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 124, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 110, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 390, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 289, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 3630, in get_user_activity_stats_endpoint
+    stats = await get_user_activity_stats(days=days)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/crud.py", line 1529, in get_user_activity_stats
+    return await database.fetch_all(query, {"days": days})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 174, in fetch_all
+    return await connection.fetch_all(query, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 290, in fetch_all
+    return await self._connection.fetch_all(built_query)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/backends/postgres.py", line 105, in fetch_all
+    rows = await self._connection.fetch(query_str, *args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 690, in fetch
+    return await self._execute(
+           ^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1864, in _execute
+    result, _ = await self.__execute(
+                ^^^^^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1961, in __execute
+    result, stmt = await self._do_execute(
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 2004, in _do_execute
+    stmt = await self._get_statement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 432, in _get_statement
+    statement = await self._protocol.prepare(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+asyncpg.exceptions.PostgresSyntaxError: syntax error at or near "$1"
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42722 - "GET /admin/user-activities?limit=50 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42732 - "GET /admin/user-activities/stats?days=7 HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+  + Exception Group Traceback (most recent call last):
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 79, in collapse_excgroups
+  |     yield
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 192, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |                ~~~~~~~~~~~~~~~~~~~~~~~^^
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 781, in __aexit__
+  |     raise BaseExceptionGroup(
+  |         "unhandled errors in a TaskGroup", self._exceptions
+  |     ) from None
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 409, in run_asgi
+    |     result = await app(  # type: ignore[func-returns-value]
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         self.scope, self.receive, self.send
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    |     return await self.app(scope, receive, send)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/applications.py", line 1134, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ~~~~~~~~~~~~~~~~~~^^
+    |   File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    |     self.gen.throw(value)
+    |     ~~~~~~~~~~~~~~^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 143, in log_visitor_middleware
+    |     response = await call_next(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    |     raise app_exc from app_exc.__cause__ or app_exc.__context__
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ~~~~~~~~~~~~~~~~~~^^
+    |   File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    |     self.gen.throw(value)
+    |     ~~~~~~~~~~~~~~^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 97, in add_cors_headers
+    |     response = await call_next(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    |     raise app_exc from app_exc.__cause__ or app_exc.__context__
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    |     await self.simple_response(scope, receive, send, request_headers=headers)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 124, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 110, in app
+    |     response = await f(request)
+    |                ^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 390, in app
+    |     raw_response = await run_endpoint_function(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<3 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 289, in run_endpoint_function
+    |     return await dependant.call(**values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 3630, in get_user_activity_stats_endpoint
+    |     stats = await get_user_activity_stats(days=days)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/crud.py", line 1529, in get_user_activity_stats
+    |     return await database.fetch_all(query, {"days": days})
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 174, in fetch_all
+    |     return await connection.fetch_all(query, values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 290, in fetch_all
+    |     return await self._connection.fetch_all(built_query)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/backends/postgres.py", line 105, in fetch_all
+    |     rows = await self._connection.fetch(query_str, *args)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 690, in fetch
+    |     return await self._execute(
+    |            ^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1864, in _execute
+    |     result, _ = await self.__execute(
+    |                 ^^^^^^^^^^^^^^^^^^^^^
+    |     ...<7 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1961, in __execute
+    |     result, stmt = await self._do_execute(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 2004, in _do_execute
+    |     stmt = await self._get_statement(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<4 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 432, in _get_statement
+    |     statement = await self._protocol.prepare(
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+    | asyncpg.exceptions.PostgresSyntaxError: syntax error at or near "$1"
+    +------------------------------------
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/applications.py", line 1134, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 143, in log_visitor_middleware
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 97, in add_cors_headers
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 124, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 110, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 390, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 289, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 3630, in get_user_activity_stats_endpoint
+    stats = await get_user_activity_stats(days=days)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/crud.py", line 1529, in get_user_activity_stats
+    return await database.fetch_all(query, {"days": days})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 174, in fetch_all
+    return await connection.fetch_all(query, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 290, in fetch_all
+    return await self._connection.fetch_all(built_query)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/backends/postgres.py", line 105, in fetch_all
+    rows = await self._connection.fetch(query_str, *args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 690, in fetch
+    return await self._execute(
+           ^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1864, in _execute
+    result, _ = await self.__execute(
+                ^^^^^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1961, in __execute
+    result, stmt = await self._do_execute(
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 2004, in _do_execute
+    stmt = await self._get_statement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 432, in _get_statement
+    statement = await self._protocol.prepare(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+asyncpg.exceptions.PostgresSyntaxError: syntax error at or near "$1"
+❌ Error logging user activity: invalid input for query argument $4: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42722 - "GET /admin/user-activities?limit=50 HTTP/1.1" 200 OK
+Error getting visitor stats: syntax error at or near "$1"
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42722 - "GET /admin/visitor-logs?limit=50 HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42748 - "GET /admin/visitor-logs/stats?days=7 HTTP/1.1" 200 OK
+Error getting visitor stats: syntax error at or near "$1"
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42722 - "GET /admin/visitor-logs?limit=50 HTTP/1.1" 200 OK
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 15, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:42748 - "GET /admin/visitor-logs/stats?days=7 HTTP/1.1" 200 OK
+❌ Error logging user activity: invalid input for query argument $4: datetime.datetime(2025, 11, 21, 11, 23, ... (can't subtract offset-naive and offset-aware datetimes)
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 23, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:43288 - "GET /admin/user-activities?limit=50 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43294 - "GET /admin/user-activities/stats?days=7 HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+  + Exception Group Traceback (most recent call last):
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 79, in collapse_excgroups
+  |     yield
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 192, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |                ~~~~~~~~~~~~~~~~~~~~~~~^^
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 781, in __aexit__
+  |     raise BaseExceptionGroup(
+  |         "unhandled errors in a TaskGroup", self._exceptions
+  |     ) from None
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 409, in run_asgi
+    |     result = await app(  # type: ignore[func-returns-value]
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         self.scope, self.receive, self.send
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    |     return await self.app(scope, receive, send)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/applications.py", line 1134, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ~~~~~~~~~~~~~~~~~~^^
+    |   File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    |     self.gen.throw(value)
+    |     ~~~~~~~~~~~~~~^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 143, in log_visitor_middleware
+    |     response = await call_next(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    |     raise app_exc from app_exc.__cause__ or app_exc.__context__
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ~~~~~~~~~~~~~~~~~~^^
+    |   File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    |     self.gen.throw(value)
+    |     ~~~~~~~~~~~~~~^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 97, in add_cors_headers
+    |     response = await call_next(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    |     raise app_exc from app_exc.__cause__ or app_exc.__context__
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    |     await self.simple_response(scope, receive, send, request_headers=headers)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 124, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 110, in app
+    |     response = await f(request)
+    |                ^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 390, in app
+    |     raw_response = await run_endpoint_function(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<3 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 289, in run_endpoint_function
+    |     return await dependant.call(**values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 3630, in get_user_activity_stats_endpoint
+    |     stats = await get_user_activity_stats(days=days)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/crud.py", line 1529, in get_user_activity_stats
+    |     return await database.fetch_all(query, {"days": days})
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 174, in fetch_all
+    |     return await connection.fetch_all(query, values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 290, in fetch_all
+    |     return await self._connection.fetch_all(built_query)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/backends/postgres.py", line 105, in fetch_all
+    |     rows = await self._connection.fetch(query_str, *args)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 690, in fetch
+    |     return await self._execute(
+    |            ^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1864, in _execute
+    |     result, _ = await self.__execute(
+    |                 ^^^^^^^^^^^^^^^^^^^^^
+    |     ...<7 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1961, in __execute
+    |     result, stmt = await self._do_execute(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 2004, in _do_execute
+    |     stmt = await self._get_statement(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<4 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 432, in _get_statement
+    |     statement = await self._protocol.prepare(
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+    | asyncpg.exceptions.PostgresSyntaxError: syntax error at or near "$1"
+    +------------------------------------
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/applications.py", line 1134, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 143, in log_visitor_middleware
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 97, in add_cors_headers
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 124, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 110, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 390, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 289, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 3630, in get_user_activity_stats_endpoint
+    stats = await get_user_activity_stats(days=days)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/crud.py", line 1529, in get_user_activity_stats
+    return await database.fetch_all(query, {"days": days})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 174, in fetch_all
+    return await connection.fetch_all(query, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 290, in fetch_all
+    return await self._connection.fetch_all(built_query)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/backends/postgres.py", line 105, in fetch_all
+    rows = await self._connection.fetch(query_str, *args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 690, in fetch
+    return await self._execute(
+           ^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1864, in _execute
+    result, _ = await self.__execute(
+                ^^^^^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1961, in __execute
+    result, stmt = await self._do_execute(
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 2004, in _do_execute
+    stmt = await self._get_statement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 432, in _get_statement
+    statement = await self._protocol.prepare(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+asyncpg.exceptions.PostgresSyntaxError: syntax error at or near "$1"
+❌ Error logging user activity: invalid input for query argument $4: datetime.datetime(2025, 11, 21, 11, 23, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:43288 - "GET /admin/user-activities/stats?days=7 HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+  + Exception Group Traceback (most recent call last):
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 79, in collapse_excgroups
+  |     yield
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 192, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |                ~~~~~~~~~~~~~~~~~~~~~~~^^
+  |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 781, in __aexit__
+  |     raise BaseExceptionGroup(
+  |         "unhandled errors in a TaskGroup", self._exceptions
+  |     ) from None
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 409, in run_asgi
+    |     result = await app(  # type: ignore[func-returns-value]
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         self.scope, self.receive, self.send
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    |     return await self.app(scope, receive, send)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/applications.py", line 1134, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ~~~~~~~~~~~~~~~~~~^^
+    |   File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    |     self.gen.throw(value)
+    |     ~~~~~~~~~~~~~~^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 143, in log_visitor_middleware
+    |     response = await call_next(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    |     raise app_exc from app_exc.__cause__ or app_exc.__context__
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |                                    ~~~~~~~~~~~~~~~~~~^^
+    |   File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    |     self.gen.throw(value)
+    |     ~~~~~~~~~~~~~~^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 97, in add_cors_headers
+    |     response = await call_next(request)
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    |     raise app_exc from app_exc.__cause__ or app_exc.__context__
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    |     await self.simple_response(scope, receive, send, request_headers=headers)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 124, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 110, in app
+    |     response = await f(request)
+    |                ^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 390, in app
+    |     raw_response = await run_endpoint_function(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<3 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 289, in run_endpoint_function
+    |     return await dependant.call(**values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/main.py", line 3630, in get_user_activity_stats_endpoint
+    |     stats = await get_user_activity_stats(days=days)
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/backend/crud.py", line 1529, in get_user_activity_stats
+    |     return await database.fetch_all(query, {"days": days})
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 174, in fetch_all
+    |     return await connection.fetch_all(query, values)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 290, in fetch_all
+    |     return await self._connection.fetch_all(built_query)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/backends/postgres.py", line 105, in fetch_all
+    |     rows = await self._connection.fetch(query_str, *args)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 690, in fetch
+    |     return await self._execute(
+    |            ^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1864, in _execute
+    |     result, _ = await self.__execute(
+    |                 ^^^^^^^^^^^^^^^^^^^^^
+    |     ...<7 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1961, in __execute
+    |     result, stmt = await self._do_execute(
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 2004, in _do_execute
+    |     stmt = await self._get_statement(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<4 lines>...
+    |     )
+    |     ^
+    |   File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 432, in _get_statement
+    |     statement = await self._protocol.prepare(
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<5 lines>...
+    |     )
+    |     ^
+    |   File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+    | asyncpg.exceptions.PostgresSyntaxError: syntax error at or near "$1"
+    +------------------------------------
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 409, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/applications.py", line 1134, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 143, in log_visitor_middleware
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 97, in add_cors_headers
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 124, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 110, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 390, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/fastapi/routing.py", line 289, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/main.py", line 3630, in get_user_activity_stats_endpoint
+    stats = await get_user_activity_stats(days=days)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/backend/crud.py", line 1529, in get_user_activity_stats
+    return await database.fetch_all(query, {"days": days})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 174, in fetch_all
+    return await connection.fetch_all(query, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/core.py", line 290, in fetch_all
+    return await self._connection.fetch_all(built_query)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/databases/backends/postgres.py", line 105, in fetch_all
+    rows = await self._connection.fetch(query_str, *args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 690, in fetch
+    return await self._execute(
+           ^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1864, in _execute
+    result, _ = await self.__execute(
+                ^^^^^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 1961, in __execute
+    result, stmt = await self._do_execute(
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 2004, in _do_execute
+    stmt = await self._get_statement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/home/anisha/purple-agent/venv/lib/python3.13/site-packages/asyncpg/connection.py", line 432, in _get_statement
+    statement = await self._protocol.prepare(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    )
+    ^
+  File "asyncpg/protocol/protocol.pyx", line 165, in prepare
+asyncpg.exceptions.PostgresSyntaxError: syntax error at or near "$1"
+❌ Error logging visitor request: invalid input for query argument $3: datetime.datetime(2025, 11, 21, 11, 23, ... (can't subtract offset-naive and offset-aware datetimes)
+INFO:     127.0.0.1:43310 - "GET /admin/user-activities?limit=50 HTTP/1.1" 200 OK
+^CINFO:     Shutting down
+INFO:     Waiting for application shutdown.
+✅ Database disconnected successfully!
+INFO:     Application shutdown complete.
+INFO:     Finished server process [11757]
+INFO:     Stopping reloader process [11755]
+salman@SLT11:~/purple-agent/backend$ 
+
