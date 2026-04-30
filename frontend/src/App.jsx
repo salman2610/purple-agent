@@ -6,27 +6,237 @@ import { TailSpin } from 'react-loader-spinner';
 
 const API_BASE = `http://${window.location.hostname}:8000`;
 
-// Enhanced Red and black theme colors with glass morphism
 const DARK_THEME = {
-  background: "linear-gradient(135deg, #0a0a0a 0%, #1a0000 50%, #0a0000 100%)",
-  cardBackground: "rgba(17, 17, 17, 0.85)",
-  cardBackgroundSolid: "#111",
-  border: "rgba(51, 51, 51, 0.6)",
-  text: "#fff",
-  textMuted: "#888",
-  primary: "#dc2626",
-  success: "#16a34a",
-  danger: "#dc2626",
-  warning: "#d97706",
-  info: "#9333ea",
-  secondary: "#6b7280",
-  glass: "rgba(255, 255, 255, 0.08)",
-  glassBorder: "rgba(255, 255, 255, 0.15)",
-  accentGradient: "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)"
+  background: "transparent",
+  cardBackground: "rgba(255,255,255,0.042)",
+  cardBackgroundSolid: "#080000",
+  border: "rgba(255,255,255,0.07)",
+  text: "#f5f5f5",
+  textMuted: "rgba(255,255,255,0.38)",
+  primary: "#e53e3e",
+  success: "#22c55e",
+  danger: "#e53e3e",
+  warning: "#f59e0b",
+  info: "#a78bfa",
+  secondary: "rgba(255,255,255,0.5)",
+  glass: "rgba(255,255,255,0.042)",
+  glassBorder: "rgba(255,255,255,0.08)",
+  accentGradient: "linear-gradient(135deg,#e53e3e 0%,#7f1d1d 100%)"
 };
+const COLORS = ["#e53e3e","#22c55e","#f59e0b","#a78bfa","rgba(255,255,255,0.4)"];
 
-// Colors for charts (adjusted for dark background)
-const COLORS = ["#dc2626", "#16a34a", "#d97706", "#9333ea", "#6b7280"];
+// ── Global glass override injected into DOM ───────────────────────────────
+function GlobalGlass() {
+  return (
+    <style>{`
+      *,*::before,*::after { box-sizing:border-box; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+      
+      html, body {
+        margin:0; padding:0;
+        font-family:-apple-system,"SF Pro Display","Helvetica Neue",sans-serif;
+        overflow:hidden;
+        background:#050000 !important;
+      }
+
+      /* ====================================================
+         SCROLLBARS
+      ==================================================== */
+      ::-webkit-scrollbar { width:4px; height:4px; }
+      ::-webkit-scrollbar-track { background:transparent; }
+      ::-webkit-scrollbar-thumb { background:rgba(229,62,62,0.4); border-radius:8px; }
+      ::-webkit-scrollbar-thumb:hover { background:rgba(229,62,62,0.7); }
+
+      /* ====================================================
+         BUTTONS — micro interactions
+      ==================================================== */
+      button {
+        font-family:inherit !important;
+        letter-spacing:-0.01em !important;
+        transition:all 0.22s cubic-bezier(0.25,0.46,0.45,0.94) !important;
+      }
+      button:hover { transform:translateY(-1px) scale(1.01) !important; }
+      button:active { transform:scale(0.97) translateY(0) !important; }
+
+      /* ====================================================
+         INPUTS
+      ==================================================== */
+      input, select, textarea {
+        font-family:inherit !important;
+        transition:all 0.25s ease !important;
+      }
+      input:focus, select:focus, textarea:focus {
+        border-color:rgba(229,62,62,0.6) !important;
+        box-shadow:0 0 0 3px rgba(229,62,62,0.15), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+        outline:none !important;
+      }
+
+      /* ====================================================
+         RECHARTS
+      ==================================================== */
+      .recharts-cartesian-grid line { stroke:rgba(255,255,255,0.05) !important; }
+      .recharts-default-tooltip {
+        background:rgba(10,0,0,0.94) !important;
+        border:1px solid rgba(229,62,62,0.3) !important;
+        border-radius:14px !important;
+        backdrop-filter:blur(30px) !important;
+        box-shadow:0 8px 32px rgba(0,0,0,0.7) !important;
+        color:#f5f5f5 !important;
+        font-family:inherit !important;
+      }
+      .recharts-legend-item-text { color:rgba(255,255,255,0.7) !important; }
+
+      /* ====================================================
+         TABLE rows hover
+      ==================================================== */
+      tr:hover td { background:rgba(229,62,62,0.05) !important; transition:background 0.15s; }
+      th {
+        text-transform:uppercase !important;
+        letter-spacing:0.08em !important;
+        font-size:10.5px !important;
+        font-weight:700 !important;
+      }
+
+      /* ====================================================
+         CARD ENTRANCE ANIMATIONS — stagger on mount
+      ==================================================== */
+      @keyframes cardIn {
+        from { opacity:0; transform:translateY(20px) scale(0.98); }
+        to   { opacity:1; transform:translateY(0) scale(1); }
+      }
+      @keyframes fadeUp {
+        from { opacity:0; transform:translateY(12px); }
+        to   { opacity:1; transform:translateY(0); }
+      }
+      @keyframes sidebarIn {
+        from { opacity:0; transform:translateX(-20px); }
+        to   { opacity:1; transform:translateX(0); }
+      }
+
+      /* ====================================================
+         ORB DRIFT ANIMATIONS
+      ==================================================== */
+      @keyframes orbA {
+        0%   { transform:translate(0px, 0px) scale(1); }
+        33%  { transform:translate(-60px, 40px) scale(1.1); }
+        66%  { transform:translate(40px, -30px) scale(0.95); }
+        100% { transform:translate(-30px, 60px) scale(1.05); }
+      }
+      @keyframes orbB {
+        0%   { transform:translate(0px, 0px) scale(1); }
+        33%  { transform:translate(50px, -40px) scale(1.08); }
+        66%  { transform:translate(-40px, 30px) scale(0.9); }
+        100% { transform:translate(20px, -50px) scale(1.12); }
+      }
+      @keyframes orbC {
+        0%   { transform:translate(0,0) scale(1); opacity:0.8; }
+        50%  { transform:translate(-30px,-40px) scale(1.2); opacity:1; }
+        100% { transform:translate(30px,20px) scale(0.9); opacity:0.7; }
+      }
+      @keyframes orbD {
+        0%   { transform:translate(0,0) scale(1); }
+        100% { transform:translate(60px,-80px) scale(1.3); }
+      }
+
+      /* ====================================================
+         PRESERVED ORIGINAL ANIMATIONS (used by app internally)
+      ==================================================== */
+      @keyframes pulse {
+        0%   { transform:translate(-50%,-50%) scale(1); box-shadow:0 0 0 0 rgba(229,62,62,0.5); }
+        70%  { transform:translate(-50%,-50%) scale(1); box-shadow:0 0 0 12px rgba(229,62,62,0); }
+        100% { transform:translate(-50%,-50%) scale(1); box-shadow:0 0 0 0 rgba(229,62,62,0); }
+      }
+      @keyframes pulseSimple {
+        0%,100% { transform:scale(1); opacity:1; }
+        50%     { transform:scale(1.08); opacity:0.7; }
+      }
+      @keyframes float {
+        0%,100% { transform:translateY(0) rotate(0deg); }
+        50%     { transform:translateY(-20px) rotate(180deg); }
+      }
+      @keyframes shimmer {
+        0%   { transform:translateX(-100%); }
+        100% { transform:translateX(200%); }
+      }
+      @keyframes ripple {
+        0%   { width:0; height:0; opacity:0.5; }
+        100% { width:300px; height:300px; opacity:0; }
+      }
+      @keyframes slideInDown {
+        from { opacity:0; transform:translateY(-10px); }
+        to   { opacity:1; transform:translateY(0); }
+      }
+      @keyframes bounce {
+        0%,80%,100% { transform:scale(0); }
+        40%         { transform:scale(1); }
+      }
+      @keyframes scanLine {
+        0%   { top:-2%; opacity:0; }
+        5%   { opacity:0.6; }
+        95%  { opacity:0.6; }
+        100% { top:102%; opacity:0; }
+      }
+    `}</style>
+  );
+}
+
+// ── Background orbs — rendered as divs WITH INLINE STYLES so they actually work ──
+function BackgroundOrbs() {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      pointerEvents: 'none',
+      zIndex: 0,
+      overflow: 'hidden'
+    }}>
+      {/* Main red orb — top right */}
+      <div style={{
+        position: 'absolute',
+        width: '800px', height: '800px',
+        top: '-200px', right: '-200px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle at 40% 40%, rgba(229,62,62,0.38) 0%, rgba(140,0,0,0.15) 40%, transparent 70%)',
+        filter: 'blur(60px)',
+        animation: 'orbA 22s ease-in-out infinite alternate',
+      }} />
+      {/* Deep crimson orb — bottom left */}
+      <div style={{
+        position: 'absolute',
+        width: '600px', height: '600px',
+        bottom: '-150px', left: '-150px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle at 60% 60%, rgba(150,10,10,0.35) 0%, rgba(80,0,0,0.12) 45%, transparent 70%)',
+        filter: 'blur(70px)',
+        animation: 'orbB 28s ease-in-out infinite alternate',
+      }} />
+      {/* Accent orb — center */}
+      <div style={{
+        position: 'absolute',
+        width: '400px', height: '400px',
+        top: '30%', left: '35%',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(229,62,62,0.12) 0%, rgba(120,0,0,0.06) 55%, transparent 70%)',
+        filter: 'blur(50px)',
+        animation: 'orbC 18s ease-in-out infinite alternate',
+      }} />
+      {/* Small bright accent — sidebar area */}
+      <div style={{
+        position: 'absolute',
+        width: '250px', height: '250px',
+        top: '20%', left: '-50px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(229,62,62,0.18) 0%, transparent 70%)',
+        filter: 'blur(40px)',
+        animation: 'orbD 15s ease-in-out infinite alternate',
+      }} />
+      {/* Subtle full-page gradient overlay */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(145deg, #080000 0%, #0d0000 40%, #150000 70%, #080000 100%)',
+        zIndex: -1,
+      }} />
+    </div>
+  );
+}
 
 // Utility function to convert to Indian Standard Time (IST) - FIXED NULL HANDLING
 function toIST(dateString) {
@@ -174,10 +384,9 @@ const ThumbsDownIcon = () => (
   </svg>
 );
 
-// Enhanced Dark theme styles with Glass Morphism
 const darkStyles = {
   container: {
-    background: DARK_THEME.background,
+    background: "transparent",
     color: DARK_THEME.text,
     minHeight: "100vh",
     width: "100vw",
@@ -185,26 +394,35 @@ const darkStyles = {
     padding: "0",
     boxSizing: "border-box",
     overflow: "hidden",
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+    fontFamily: "-apple-system,'SF Pro Display','Helvetica Neue',sans-serif",
+    position: "relative",
+    zIndex: 1,
   },
   sidebar: {
-    width: "320px",
-    background: "rgba(17, 17, 17, 0.9)",
-    backdropFilter: "blur(20px)",
-    borderRight: `1px solid ${DARK_THEME.glassBorder}`,
-    padding: "25px 20px",
+    width: "275px",
+    minWidth: "275px",
+    background: "rgba(5,0,0,0.75)",
+    backdropFilter: "blur(48px) saturate(180%)",
+    WebkitBackdropFilter: "blur(48px) saturate(180%)",
+    borderRight: "1px solid rgba(229,62,62,0.18)",
+    padding: "24px 16px",
     overflowY: "auto",
     height: "100vh",
     position: "sticky",
-    top: 0
+    top: 0,
+    boxShadow: "4px 0 32px rgba(0,0,0,0.6)",
+    zIndex: 2,
   },
   mainContent: {
     flex: 1,
-    padding: "25px",
+    padding: "28px 28px 48px",
     overflowY: "auto",
     height: "100vh",
     display: "flex",
-    flexDirection: "column"
+    flexDirection: "column",
+    scrollBehavior: "smooth",
+    zIndex: 2,
+    position: "relative",
   },
   loginContainer: {
     display: "flex",
@@ -212,76 +430,93 @@ const darkStyles = {
     alignItems: "center",
     justifyContent: "center",
     minHeight: "100vh",
-    background: "linear-gradient(135deg, #000000 0%, #1a0000 50%, #0a0000 100%)",
+    background: "transparent",
     position: "relative",
     overflow: "hidden",
-    width: "100%"
+    width: "100%",
+    zIndex: 2,
   },
   card: {
-    background: DARK_THEME.cardBackground,
-    backdropFilter: "blur(20px)",
-    border: `1px solid ${DARK_THEME.glassBorder}`,
-    padding: "25px",
+    background: "rgba(255,255,255,0.07)",
+    backdropFilter: "blur(48px) saturate(160%)",
+    WebkitBackdropFilter: "blur(48px) saturate(160%)",
+    border: "1px solid rgba(255,255,255,0.12)",
+    borderTop: "1px solid rgba(255,255,255,0.2)",
+    padding: "24px",
     borderRadius: "20px",
     width: "100%",
     textAlign: "center",
     boxSizing: "border-box",
     marginBottom: "20px",
-    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
-    transition: "all 0.3s ease"
+    boxShadow: "0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
+    transition: "all 0.4s cubic-bezier(0.25,0.46,0.45,0.94)",
+    position: "relative",
+    zIndex: 2,
   },
   gridCard: {
-    background: DARK_THEME.cardBackground,
-    backdropFilter: "blur(20px)",
-    border: `1px solid ${DARK_THEME.glassBorder}`,
-    padding: "25px",
+    background: "rgba(255,255,255,0.07)",
+    backdropFilter: "blur(48px) saturate(160%)",
+    WebkitBackdropFilter: "blur(48px) saturate(160%)",
+    border: "1px solid rgba(255,255,255,0.12)",
+    borderTop: "1px solid rgba(255,255,255,0.2)",
+    padding: "24px",
     borderRadius: "20px",
     width: "100%",
     textAlign: "center",
     boxSizing: "border-box",
     height: "100%",
-    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
-    transition: "all 0.3s ease"
+    boxShadow: "0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
+    transition: "all 0.4s cubic-bezier(0.25,0.46,0.45,0.94)",
+    position: "relative",
+    zIndex: 2,
   },
   input: {
     width: "100%",
-    padding: "15px 20px",
-    marginBottom: "15px",
-    background: "rgba(34, 34, 34, 0.8)",
-    backdropFilter: "blur(10px)",
+    padding: "13px 18px",
+    marginBottom: "13px",
+    background: "rgba(255,255,255,0.08)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
     color: DARK_THEME.text,
-    border: `1px solid ${DARK_THEME.glassBorder}`,
-    borderRadius: "12px",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: "13px",
     fontSize: "14px",
     boxSizing: "border-box",
-    transition: "all 0.3s ease"
+    transition: "all 0.25s ease",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)"
   },
   select: {
     width: "100%",
-    padding: "15px 20px",
-    marginBottom: "15px",
-    background: "rgba(34, 34, 34, 0.8)",
-    backdropFilter: "blur(10px)",
+    padding: "13px 18px",
+    marginBottom: "13px",
+    background: "rgba(255,255,255,0.08)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
     color: DARK_THEME.text,
-    border: `1px solid ${DARK_THEME.glassBorder}`,
-    borderRadius: "12px",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: "13px",
     fontSize: "14px",
-    boxSizing: "border-box"
+    boxSizing: "border-box",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)"
   },
   button: {
-    padding: "12px 24px",
-    border: "none",
+    padding: "11px 20px",
+    border: "1px solid rgba(255,255,255,0.08)",
     borderRadius: "12px",
     cursor: "pointer",
-    color: "white",
-    fontSize: "14px",
+    color: "rgba(255,255,255,0.92)",
+    fontSize: "13.5px",
     fontWeight: "500",
-    margin: "5px",
+    margin: "4px",
     display: "flex",
     alignItems: "center",
-    gap: "8px",
-    transition: "all 0.3s ease",
-    backdropFilter: "blur(10px)"
+    gap: "7px",
+    transition: "all 0.22s cubic-bezier(0.25,0.46,0.45,0.94)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    background: "rgba(255,255,255,0.08)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 2px 8px rgba(0,0,0,0.3)",
+    letterSpacing: "-0.01em"
   },
   gridContainer: {
     display: "grid",
@@ -294,31 +529,35 @@ const darkStyles = {
     borderCollapse: "collapse"
   },
   tableHeader: {
-    background: "rgba(34, 34, 34, 0.8)",
-    color: DARK_THEME.text,
-    padding: "12px",
+    background: "rgba(229,62,62,0.06)",
+    color: "rgba(255,255,255,0.45)",
+    padding: "11px 14px",
     textAlign: "left",
     cursor: "pointer",
-    borderBottom: `1px solid ${DARK_THEME.glassBorder}`,
-    fontSize: "12px",
-    fontWeight: "600"
+    borderBottom: "1px solid rgba(229,62,62,0.15)",
+    fontSize: "10.5px",
+    fontWeight: "700",
+    letterSpacing: "0.08em",
+    textTransform: "uppercase"
   },
   tableCell: {
-    padding: "12px",
-    borderBottom: `1px solid ${DARK_THEME.glassBorder}`,
-    fontSize: "12px"
+    padding: "12px 14px",
+    borderBottom: "1px solid rgba(255,255,255,0.04)",
+    fontSize: "12.5px",
+    color: "rgba(255,255,255,0.82)"
   },
   pre: {
-    background: "rgba(34, 34, 34, 0.8)",
+    background: "rgba(0,0,0,0.5)",
     color: DARK_THEME.text,
-    padding: "15px",
-    borderRadius: "12px",
+    padding: "14px",
+    borderRadius: "13px",
     overflow: "auto",
-    fontFamily: "monospace",
-    fontSize: "12px",
+    fontFamily: "'SF Mono','Fira Code','Cascadia Code',monospace",
+    fontSize: "11.5px",
     maxHeight: "200px",
     textAlign: "left",
-    backdropFilter: "blur(10px)"
+    border: "1px solid rgba(255,255,255,0.06)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)"
   },
   message: {
     padding: "15px 20px",
@@ -330,88 +569,107 @@ const darkStyles = {
   },
   quickActions: {
     display: "flex",
-    gap: "10px",
+    gap: "8px",
     flexWrap: "wrap",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     width: "100%"
   },
   tabContainer: {
     display: "flex",
-    gap: "10px",
+    gap: "4px",
     marginBottom: "20px",
     justifyContent: "flex-start",
-    flexWrap: "wrap"
+    flexWrap: "wrap",
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: "16px",
+    padding: "5px",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)"
   },
   tab: {
-    padding: "12px 24px",
-    border: "none",
-    borderRadius: "12px",
+    padding: "10px 18px",
+    border: "1px solid transparent",
+    borderRadius: "11px",
     cursor: "pointer",
-    fontSize: "14px",
+    fontSize: "13px",
     fontWeight: "500",
     display: "flex",
     alignItems: "center",
-    gap: "8px",
-    transition: "all 0.3s ease",
-    backdropFilter: "blur(10px)"
+    gap: "7px",
+    transition: "all 0.25s cubic-bezier(0.25,0.46,0.45,0.94)",
+    backdropFilter: "blur(10px)",
+    color: "rgba(255,255,255,0.6)",
+    background: "transparent",
+    letterSpacing: "-0.01em"
   },
   sidebarSection: {
-    marginBottom: "25px",
-    padding: "20px",
-    background: "rgba(26, 26, 26, 0.7)",
+    marginBottom: "14px",
+    padding: "16px",
+    background: "rgba(255,255,255,0.05)",
     borderRadius: "16px",
-    border: `1px solid ${DARK_THEME.glassBorder}`,
-    backdropFilter: "blur(10px)"
+    border: "1px solid rgba(255,255,255,0.09)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    boxShadow: "0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)"
   },
   sidebarHeader: {
     display: "flex",
     alignItems: "center",
-    gap: "10px",
-    marginBottom: "15px",
-    color: DARK_THEME.text,
-    fontSize: "16px",
-    fontWeight: "600"
+    gap: "8px",
+    marginBottom: "12px",
+    color: "rgba(255,255,255,0.35)",
+    fontSize: "10px",
+    fontWeight: "700",
+    letterSpacing: "0.1em",
+    textTransform: "uppercase"
   },
   filterGroup: {
     marginBottom: "15px"
   },
   filterLabel: {
     display: "block",
-    marginBottom: "8px",
-    color: DARK_THEME.textMuted,
-    fontSize: "12px",
-    fontWeight: "500"
+    marginBottom: "6px",
+    color: "rgba(255,255,255,0.38)",
+    fontSize: "11px",
+    fontWeight: "500",
+    letterSpacing: "0.02em"
   },
   exportOption: {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    padding: "12px 15px",
-    marginBottom: "8px",
-    background: "rgba(34, 34, 34, 0.8)",
-    borderRadius: "8px",
+    padding: "11px 14px",
+    marginBottom: "6px",
+    background: "rgba(255,255,255,0.04)",
+    borderRadius: "11px",
     cursor: "pointer",
-    transition: "all 0.3s ease",
-    border: `1px solid ${DARK_THEME.glassBorder}`,
-    backdropFilter: "blur(10px)"
+    transition: "all 0.22s ease",
+    border: "1px solid rgba(255,255,255,0.07)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)"
   },
   navMenu: {
     display: "flex",
     flexDirection: "column",
-    gap: "8px",
-    marginBottom: "20px"
+    gap: "3px",
+    marginBottom: "14px"
   },
   navItem: {
     display: "flex",
     alignItems: "center",
-    gap: "12px",
-    padding: "15px 20px",
-    color: DARK_THEME.text,
+    gap: "11px",
+    padding: "12px 16px",
+    color: "rgba(255,255,255,0.58)",
     textDecoration: "none",
     borderRadius: "12px",
-    transition: "all 0.3s ease",
+    transition: "all 0.22s cubic-bezier(0.25,0.46,0.45,0.94)",
     cursor: "pointer",
-    backdropFilter: "blur(10px)"
+    fontSize: "13.5px",
+    fontWeight: "450",
+    letterSpacing: "-0.01em",
+    border: "1px solid transparent"
   }
 };
 
@@ -556,8 +814,11 @@ function AISmartInsights({ metrics, apiClient }) {
   return (
     <div style={{
       ...darkStyles.card,
-      background: "rgba(17, 17, 17, 0.9)",
-      backdropFilter: "blur(25px)",
+      background: "rgba(255,255,255,0.07)",
+      backdropFilter: "blur(48px) saturate(160%)",
+      WebkitBackdropFilter: "blur(48px) saturate(160%)",
+      position: "relative",
+      zIndex: 2,
       border: `1px solid ${DARK_THEME.glassBorder}`,
       textAlign: 'left'
     }}>
@@ -627,7 +888,7 @@ function AISmartInsights({ metrics, apiClient }) {
           {/* AI Explanation Modal */}
           {explanationData && (
             <div style={{
-              background: 'rgba(34, 34, 34, 0.9)',
+              background: 'rgba(255,255,255,0.05)',
               padding: '20px',
               borderRadius: '12px',
               border: `1px solid ${DARK_THEME.info}`,
@@ -700,8 +961,8 @@ function AISmartInsights({ metrics, apiClient }) {
                         onClick={() => handleInsightAction(insight.action, insight.id)}
                         style={{
                           padding: '6px 12px',
-                          background: 'rgba(220, 38, 38, 0.2)',
-                          border: `1px solid rgba(220, 38, 38, 0.3)`,
+                          background: 'rgba(229,62,62,0.18)',
+                          border: `1px solid rgba(229,62,62,0.32)`,
                           borderRadius: '6px',
                           color: DARK_THEME.text,
                           fontSize: '11px',
@@ -733,8 +994,8 @@ function AISmartInsights({ metrics, apiClient }) {
                       onClick={() => handleInsightFeedback(insight.id, true)}
                       style={{
                         padding: '4px 8px',
-                        background: 'rgba(22, 163, 74, 0.2)',
-                        border: `1px solid rgba(22, 163, 74, 0.3)`,
+                        background: 'rgba(34,197,94,0.15)',
+                        border: `1px solid rgba(34,197,94,0.3)`,
                         borderRadius: '4px',
                         color: DARK_THEME.text,
                         fontSize: '10px',
@@ -748,8 +1009,8 @@ function AISmartInsights({ metrics, apiClient }) {
                       onClick={() => handleInsightFeedback(insight.id, false)}
                       style={{
                         padding: '4px 8px',
-                        background: 'rgba(220, 38, 38, 0.2)',
-                        border: `1px solid rgba(220, 38, 38, 0.3)`,
+                        background: 'rgba(229,62,62,0.18)',
+                        border: `1px solid rgba(229,62,62,0.32)`,
                         borderRadius: '4px',
                         color: DARK_THEME.text,
                         fontSize: '10px',
@@ -801,10 +1062,12 @@ function ServerWorldMap({ servers, onServerClick }) {
   return (
     <div style={{
       ...darkStyles.card,
-      background: "rgba(17, 17, 17, 0.9)",
-      backdropFilter: "blur(25px)",
+      background: "rgba(255,255,255,0.07)",
+      backdropFilter: "blur(48px) saturate(160%)",
+      WebkitBackdropFilter: "blur(48px) saturate(160%)",
+      position: "relative",
+      zIndex: 2,
       border: `1px solid ${DARK_THEME.glassBorder}`,
-      position: 'relative',
       overflow: 'hidden'
     }}>
       <div style={{
@@ -838,7 +1101,7 @@ function ServerWorldMap({ servers, onServerClick }) {
       <div style={{
         width: '100%',
         height: '300px',
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+        background: 'linear-gradient(145deg,#0a0000 0%,#1a0000 100%)',
         borderRadius: '16px',
         position: 'relative',
         border: `1px solid ${DARK_THEME.glassBorder}`,
@@ -902,7 +1165,7 @@ function ServerWorldMap({ servers, onServerClick }) {
                 y1={`${((90 - server.lat) / 180) * 100}%`}
                 x2={`${((targetServer.lng + 180) / 360) * 100}%`}
                 y2={`${((90 - targetServer.lat) / 180) * 100}%`}
-                stroke="rgba(220, 38, 38, 0.2)"
+                stroke="rgba(229,62,62,0.18)"
                 strokeWidth="1"
                 strokeDasharray="4 4"
               />
@@ -989,9 +1252,9 @@ function ServerWorldMap({ servers, onServerClick }) {
       <style>
         {`
           @keyframes pulse {
-            0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
-            70% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
-            100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+            0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(229,62,62,0.45); }
+            70% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 10px rgba(229,62,62,0); }
+            100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(229,62,62,0); }
           }
         `}
       </style>
@@ -1052,7 +1315,7 @@ function EmotionalAIAssistant({ metrics, onSuggestion }) {
       case 'concerned': return '#f59e0b';
       case 'excited': return '#8b5cf6';
       case 'analytical': return '#3b82f6';
-      default: return '#6b7280';
+      default: return 'rgba(255,255,255,0.45)';
     }
   };
 
@@ -1171,8 +1434,11 @@ function EmotionalAIAssistant({ metrics, onSuggestion }) {
   return (
     <div style={{
       ...darkStyles.card,
-      background: "rgba(17, 17, 17, 0.9)",
-      backdropFilter: "blur(25px)",
+      background: "rgba(255,255,255,0.07)",
+      backdropFilter: "blur(48px) saturate(160%)",
+      WebkitBackdropFilter: "blur(48px) saturate(160%)",
+      position: "relative",
+      zIndex: 2,
       border: `1px solid ${DARK_THEME.glassBorder}`,
       textAlign: 'left'
     }}>
@@ -1284,7 +1550,7 @@ function EmotionalAIAssistant({ metrics, onSuggestion }) {
           style={{
             flex: 1,
             padding: '12px 15px',
-            background: 'rgba(34, 34, 34, 0.8)',
+            background: 'rgba(255,255,255,0.05)',
             border: `1px solid ${DARK_THEME.glassBorder}`,
             borderRadius: '8px',
             color: DARK_THEME.text,
@@ -1518,7 +1784,7 @@ const PasswordInput = memo(({
         padding: "15px 20px",
         paddingRight: '45px',
         marginBottom: 0,
-        background: "rgba(34, 34, 34, 0.8)",
+        background: "rgba(255,255,255,0.05)",
         backdropFilter: "blur(10px)",
         color: "#fff",
         border: `1px solid ${DARK_THEME.glassBorder}`,
@@ -1530,8 +1796,8 @@ const PasswordInput = memo(({
       required
       autoComplete={autoComplete}
       onFocus={(e) => {
-        e.target.style.borderColor = "#dc2626";
-        e.target.style.boxShadow = `0 0 0 3px rgba(220, 38, 38, 0.2)`;
+        e.target.style.borderColor = "#e53e3e";
+        e.target.style.boxShadow = `0 0 0 3px rgba(229,62,62,0.18)`;
       }}
       onBlur={(e) => {
         e.target.style.borderColor = DARK_THEME.glassBorder;
@@ -1548,14 +1814,14 @@ const PasswordInput = memo(({
         transform: 'translateY(-50%)',
         background: 'none',
         border: 'none',
-        color: '#888',
+        color: 'rgba(255,255,255,0.4)',
         cursor: 'pointer',
         padding: '4px',
         borderRadius: '4px',
         transition: 'all 0.2s ease'
       }}
       onMouseEnter={(e) => {
-        e.target.style.color = '#dc2626';
+        e.target.style.color = '#e53e3e';
         e.target.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
       }}
       onMouseLeave={(e) => {
@@ -1835,7 +2101,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
       {/* Enhanced Login Card */}
       <div 
         style={{
-          background: 'rgba(34, 34, 34, 0.9)',
+          background: 'rgba(255,255,255,0.05)',
           backdropFilter: 'blur(25px)',
           border: `1px solid ${DARK_THEME.glassBorder}`,
           padding: "40px 35px",
@@ -1846,7 +2112,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
           boxSizing: "border-box",
           boxShadow: `
             0 25px 50px -12px rgba(0, 0, 0, 0.5),
-            0 1.5px 8px 0 rgba(220, 38, 38, 0.15),
+            0 1.5px 8px 0 rgba(229,62,62,0.15),
             inset 0 1px 0 rgba(255, 255, 255, 0.1)
           `,
           zIndex: 1,
@@ -1854,8 +2120,8 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
           transform: isHovered ? 'translateY(-8px) scale(1.01)' : 'translateY(0) scale(1)',
           transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
           margin: '20px',
-          borderLeft: `1px solid rgba(220, 38, 38, 0.2)`,
-          borderRight: `1px solid rgba(220, 38, 38, 0.2)`
+          borderLeft: `1px solid rgba(229,62,62,0.18)`,
+          borderRight: `1px solid rgba(229,62,62,0.18)`
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -1865,7 +2131,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
           <div style={{
             width: '70px',
             height: '70px',
-            background: 'linear-gradient(135deg, #dc2626, #991b1b, #7f1d1d)',
+            background: 'linear-gradient(135deg, #e53e3e, #7f1d1d, #7f1d1d)',
             borderRadius: '20px',
             margin: '0 auto 18px',
             display: 'flex',
@@ -1875,8 +2141,8 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
             fontWeight: 'bold',
             color: 'white',
             boxShadow: avatarGlow 
-              ? '0 0 30px rgba(220, 38, 38, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-              : '0 0 15px rgba(220, 38, 38, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+              ? '0 0 30px rgba(229,62,62,0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+              : '0 0 15px rgba(229,62,62,0.18), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
             transform: avatarGlow ? 'scale(1.05)' : 'scale(1)',
             transition: 'all 0.6s ease',
             position: 'relative',
@@ -1899,7 +2165,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
             marginBottom: "10px",
             fontSize: '30px',
             fontWeight: '800',
-            background: 'linear-gradient(135deg, #dc2626, #ef4444, #991b1b)',
+            background: 'linear-gradient(135deg, #e53e3e, #fc4f4f, #7f1d1d)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             letterSpacing: '-0.5px'
@@ -1907,7 +2173,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
             {authMode === "login" ? "Welcome Back" : "Create Account"}
           </h2>
           <p style={{ 
-            color: '#888', 
+            color: 'rgba(255,255,255,0.4)', 
             fontSize: "15px",
             margin: 0,
             fontWeight: '400'
@@ -1925,12 +2191,12 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
             width: "100%",
             boxSizing: "border-box",
             backgroundColor: message.includes("failed") || message.includes("error") || message.includes("Incorrect") 
-              ? 'rgba(220, 38, 38, 0.12)' 
-              : 'rgba(22, 163, 74, 0.12)',
+              ? 'rgba(229,62,62,0.12)' 
+              : 'rgba(34,197,94,0.12)',
             border: `1px solid ${
               message.includes("failed") || message.includes("error") || message.includes("Incorrect") 
-                ? 'rgba(220, 38, 38, 0.3)' 
-                : 'rgba(22, 163, 74, 0.3)'
+                ? 'rgba(229,62,62,0.32)' 
+                : 'rgba(34,197,94,0.3)'
             }`,
             color: message.includes("failed") || message.includes("error") || message.includes("Incorrect") 
               ? '#fca5a5' 
@@ -1957,7 +2223,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
             <label htmlFor="username" style={{
               display: 'block',
               textAlign: 'left',
-              color: '#888',
+              color: 'rgba(255,255,255,0.4)',
               fontSize: '13px',
               fontWeight: '500',
               marginBottom: '6px',
@@ -1976,7 +2242,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
                 width: "100%",
                 padding: "15px 20px",
                 marginBottom: 0,
-                background: "rgba(34, 34, 34, 0.8)",
+                background: "rgba(255,255,255,0.05)",
                 backdropFilter: "blur(10px)",
                 color: "#fff",
                 border: `1px solid ${DARK_THEME.glassBorder}`,
@@ -1988,8 +2254,8 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
               required
               autoComplete="username"
               onFocus={(e) => {
-                e.target.style.borderColor = "#dc2626";
-                e.target.style.boxShadow = `0 0 0 3px rgba(220, 38, 38, 0.15)`;
+                e.target.style.borderColor = "#e53e3e";
+                e.target.style.boxShadow = `0 0 0 3px rgba(229,62,62,0.15)`;
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = DARK_THEME.glassBorder;
@@ -2005,7 +2271,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
                 <label htmlFor="email" style={{
                   display: 'block',
                   textAlign: 'left',
-                  color: '#888',
+                  color: 'rgba(255,255,255,0.4)',
                   fontSize: '13px',
                   fontWeight: '500',
                   marginBottom: '6px',
@@ -2024,7 +2290,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
                     width: "100%",
                     padding: "15px 20px",
                     marginBottom: 0,
-                    background: "rgba(34, 34, 34, 0.8)",
+                    background: "rgba(255,255,255,0.05)",
                     backdropFilter: "blur(10px)",
                     color: "#fff",
                     border: `1px solid ${DARK_THEME.glassBorder}`,
@@ -2036,8 +2302,8 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
                   required
                   autoComplete="email"
                   onFocus={(e) => {
-                    e.target.style.borderColor = "#dc2626";
-                    e.target.style.boxShadow = `0 0 0 3px rgba(220, 38, 38, 0.15)`;
+                    e.target.style.borderColor = "#e53e3e";
+                    e.target.style.boxShadow = `0 0 0 3px rgba(229,62,62,0.15)`;
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = DARK_THEME.glassBorder;
@@ -2051,7 +2317,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
                 <label htmlFor="role" style={{
                   display: 'block',
                   textAlign: 'left',
-                  color: '#888',
+                  color: 'rgba(255,255,255,0.4)',
                   fontSize: '13px',
                   fontWeight: '500',
                   marginBottom: '6px',
@@ -2068,7 +2334,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
                     width: "100%",
                     padding: "15px 20px",
                     marginBottom: 0,
-                    background: "rgba(34, 34, 34, 0.8)",
+                    background: "rgba(255,255,255,0.05)",
                     backdropFilter: "blur(10px)",
                     color: "#fff",
                     border: `1px solid ${DARK_THEME.glassBorder}`,
@@ -2089,7 +2355,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
             <label htmlFor="password" style={{
               display: 'block',
               textAlign: 'left',
-              color: '#888',
+              color: 'rgba(255,255,255,0.4)',
               fontSize: '13px',
               fontWeight: '500',
               marginBottom: '6px',
@@ -2113,7 +2379,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
               <label htmlFor="confirmPassword" style={{
                 display: 'block',
                 textAlign: 'left',
-                color: '#888',
+                color: 'rgba(255,255,255,0.4)',
                 fontSize: '13px',
                 fontWeight: '500',
                 marginBottom: '6px',
@@ -2158,12 +2424,11 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
                 marginBottom: '18px',
                 background: authLoading 
                   ? 'rgba(68, 68, 68, 0.8)'
-                  : 'linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #dc2626 100%)',
+                  : 'linear-gradient(135deg, #e53e3e 0%, #fc4f4f 50%, #e53e3e 100%)',
                 boxShadow: authLoading 
                   ? 'none' 
-                  : '0 8px 25px rgba(220, 38, 38, 0.35), 0 2px 4px rgba(220, 38, 38, 0.1)',
+                  : '0 8px 25px rgba(229, 62, 62, 0.35), 0 2px 4px rgba(229, 62, 62, 0.1)',
                 transform: authLoading ? 'none' : 'translateY(0)',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 letterSpacing: '0.5px',
                 position: 'relative',
                 overflow: 'hidden'
@@ -2203,7 +2468,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
             style={{
               background: "none",
               border: "none",
-              color: "#dc2626",
+              color: "#e53e3e",
               cursor: "pointer",
               textDecoration: "none",
               fontSize: "14px",
@@ -2227,7 +2492,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
           borderTop: `1px solid rgba(255, 255, 255, 0.1)` 
         }}>
           <p style={{ 
-            color: '#888', 
+            color: 'rgba(255,255,255,0.4)', 
             marginBottom: "18px", 
             fontSize: "14px",
             fontWeight: '500'
@@ -2268,7 +2533,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
         left: 0,
         right: 0,
         textAlign: 'center',
-        color: '#888',
+        color: 'rgba(255,255,255,0.4)',
         fontSize: '12px',
         zIndex: 1,
         padding: '0 20px'
@@ -2356,8 +2621,11 @@ function MetricsChart({ cpu, memory, disk, onMetricClick }) {
   return (
     <div style={{
       ...darkStyles.gridCard,
-      background: "rgba(17, 17, 17, 0.9)",
-      backdropFilter: "blur(25px)"
+      background: "rgba(255,255,255,0.07)",
+      backdropFilter: "blur(48px) saturate(160%)",
+      WebkitBackdropFilter: "blur(48px) saturate(160%)",
+      position: "relative",
+      zIndex: 2
     }}>
       <h3 style={{ color: DARK_THEME.text, marginBottom: "20px", fontSize: '18px' }}>System Metrics</h3>
       <ResponsiveContainer width="100%" height={300}>
@@ -2457,8 +2725,11 @@ function NetworkChart({ networkData }) {
   return (
     <div style={{
       ...darkStyles.gridCard,
-      background: "rgba(17, 17, 17, 0.9)",
-      backdropFilter: "blur(25px)"
+      background: "rgba(255,255,255,0.07)",
+      backdropFilter: "blur(48px) saturate(160%)",
+      WebkitBackdropFilter: "blur(48px) saturate(160%)",
+      position: "relative",
+      zIndex: 2
     }}>
       <h3 style={{ color: DARK_THEME.text, marginBottom: "20px", fontSize: '18px' }}>Network Activity</h3>
       <ResponsiveContainer width="100%" height={300}>
@@ -2502,8 +2773,11 @@ function ProcessList({ processes }) {
   return (
     <div style={{
       ...darkStyles.gridCard,
-      background: "rgba(17, 17, 17, 0.9)",
-      backdropFilter: "blur(25px)"
+      background: "rgba(255,255,255,0.07)",
+      backdropFilter: "blur(48px) saturate(160%)",
+      WebkitBackdropFilter: "blur(48px) saturate(160%)",
+      position: "relative",
+      zIndex: 2
     }}>
       <h3 style={{ color: DARK_THEME.text, marginBottom: "20px", fontSize: '18px' }}>Running Processes ({processes?.length || 0})</h3>
       <div style={{ maxHeight: '400px', overflow: 'auto' }}>
@@ -2520,7 +2794,7 @@ function ProcessList({ processes }) {
             <tbody>
               {processes.map((process, index) => (
                 <tr key={index} style={{ 
-                  backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.05)'
+                  backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.04)'
                 }}>
                   <td style={{ ...darkStyles.tableCell, fontFamily: 'monospace' }}>{process.pid}</td>
                   <td style={{ ...darkStyles.tableCell, color: DARK_THEME.primary }}>{process.name}</td>
@@ -2554,7 +2828,7 @@ function ProcessList({ processes }) {
 
 // AlertBanner Component with Glass Morphism
 function AlertBanner({ message, type = 'info' }) {
-  const bgColor = type === 'error' ? 'rgba(45, 26, 26, 0.8)' : type === 'warning' ? 'rgba(45, 42, 26, 0.8)' : 'rgba(26, 45, 26, 0.8)';
+  const bgColor = type === 'error' ? 'rgba(229,62,62,0.1)' : type === 'warning' ? 'rgba(245,158,11,0.1)' : 'rgba(34,197,94,0.1)';
   const borderColor = type === 'error' ? DARK_THEME.danger : type === 'warning' ? DARK_THEME.warning : DARK_THEME.success;
   const textColor = type === 'error' ? '#f87171' : type === 'warning' ? '#fbbf24' : '#4ade80';
   
@@ -2603,8 +2877,11 @@ function LiveDashboard({ token }) {
   return (
     <div style={{
       ...darkStyles.card,
-      background: "rgba(17, 17, 17, 0.9)",
-      backdropFilter: "blur(25px)"
+      background: "rgba(255,255,255,0.07)",
+      backdropFilter: "blur(48px) saturate(160%)",
+      WebkitBackdropFilter: "blur(48px) saturate(160%)",
+      position: "relative",
+      zIndex: 2
     }}>
       <h3 style={{ color: DARK_THEME.text, marginBottom: "20px", fontSize: '18px' }}>Live Dashboard</h3>
       <div style={{ 
@@ -2613,7 +2890,7 @@ function LiveDashboard({ token }) {
         alignItems: 'center',
         marginBottom: '15px',
         padding: '15px',
-        background: readyState === 1 ? 'rgba(26, 45, 26, 0.8)' : 'rgba(45, 26, 26, 0.8)',
+        background: readyState === 1 ? 'rgba(34,197,94,0.1)' : 'rgba(229,62,62,0.1)',
         border: `1px solid ${readyState === 1 ? DARK_THEME.success : DARK_THEME.danger}`,
         borderRadius: '12px',
         backdropFilter: 'blur(10px)'
@@ -2646,7 +2923,7 @@ function LiveDashboard({ token }) {
                 borderBottom: index < messages.length - 1 ? `1px solid ${DARK_THEME.glassBorder}` : 'none',
                 fontSize: '12px',
                 color: DARK_THEME.textMuted,
-                backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.05)',
+                backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.04)',
                 borderRadius: index === 0 ? '8px 8px 0 0' : index === messages.length - 1 ? '0 0 8px 8px' : '0',
                 transition: 'all 0.3s ease'
               }}
@@ -2758,8 +3035,8 @@ function DrillDownModal({ isOpen, onClose, metricData, apiClient }) {
             onClick={onClose}
             style={{
               ...darkStyles.button,
-              background: 'rgba(220, 38, 38, 0.2)',
-              border: `1px solid rgba(220, 38, 38, 0.3)`,
+              background: 'rgba(229,62,62,0.18)',
+              border: `1px solid rgba(229,62,62,0.32)`,
               padding: '8px 16px',
               fontSize: '12px'
             }}
@@ -2772,7 +3049,7 @@ function DrillDownModal({ isOpen, onClose, metricData, apiClient }) {
           <div style={{ 
             marginBottom: '15px', 
             padding: '15px', 
-            background: 'rgba(26, 26, 26, 0.8)',
+            background: 'rgba(255,255,255,0.04)',
             borderRadius: '12px',
             border: `1px solid ${DARK_THEME.glassBorder}`
           }}>
@@ -2802,7 +3079,7 @@ function DrillDownModal({ isOpen, onClose, metricData, apiClient }) {
                 <tbody>
                   {details.map((item, index) => (
                     <tr key={index} style={{
-                      backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.05)'
+                      backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.04)'
                     }}>
                       <td style={darkStyles.tableCell}>
                         {toIST(item.timestamp)}
@@ -2850,7 +3127,7 @@ function DrillDownModal({ isOpen, onClose, metricData, apiClient }) {
         <div style={{ 
           marginTop: '20px', 
           padding: '20px', 
-          background: 'rgba(26, 26, 26, 0.8)', 
+          background: 'rgba(255,255,255,0.04)', 
           borderRadius: '12px',
           border: `1px solid ${DARK_THEME.glassBorder}`
         }}>
@@ -3008,8 +3285,8 @@ function FilterPanel({ onFilterChange, filters, loading }) {
           disabled={loading}
           style={{
             ...darkStyles.button,
-            background: loading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.2)',
-            border: `1px solid ${loading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.3)'}`,
+            background: loading ? DARK_THEME.glassBorder : 'rgba(229,62,62,0.18)',
+            border: `1px solid ${loading ? DARK_THEME.glassBorder : 'rgba(229,62,62,0.32)'}`,
             flex: 1
           }}
         >
@@ -3116,7 +3393,7 @@ function ExportPanel({ filters, apiClient }) {
           key={option.format}
           style={{
             ...darkStyles.exportOption,
-            background: exportLoading ? DARK_THEME.glassBorder : 'rgba(34, 34, 34, 0.8)'
+            background: exportLoading ? DARK_THEME.glassBorder : 'rgba(255,255,255,0.05)'
           }}
           onClick={() => !exportLoading && handleExport(option.format)}
         >
@@ -3221,8 +3498,11 @@ function DashboardLayouts({ apiClient, currentUser }) {
   return (
     <div style={{
       ...darkStyles.card,
-      background: "rgba(17, 17, 17, 0.9)",
-      backdropFilter: "blur(25px)"
+      background: "rgba(255,255,255,0.07)",
+      backdropFilter: "blur(48px) saturate(160%)",
+      WebkitBackdropFilter: "blur(48px) saturate(160%)",
+      position: "relative",
+      zIndex: 2
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <h3 style={{ color: DARK_THEME.text, margin: 0, fontSize: '20px' }}>Dashboard Layouts</h3>
@@ -3230,8 +3510,8 @@ function DashboardLayouts({ apiClient, currentUser }) {
           onClick={() => setShowCreateModal(true)}
           style={{ 
             ...darkStyles.button, 
-            background: 'rgba(22, 163, 74, 0.2)',
-            border: `1px solid rgba(22, 163, 74, 0.3)`
+            background: 'rgba(34,197,94,0.15)',
+            border: `1px solid rgba(34,197,94,0.3)`
           }}
         >
           <LayoutIcon />
@@ -3242,7 +3522,7 @@ function DashboardLayouts({ apiClient, currentUser }) {
       {message && (
         <div style={{
           ...darkStyles.message,
-          background: message.includes("Failed") ? 'rgba(45, 26, 26, 0.8)' : 'rgba(26, 45, 26, 0.8)',
+          background: message.includes("Failed") ? 'rgba(229,62,62,0.1)' : 'rgba(34,197,94,0.1)',
           border: `1px solid ${message.includes("Failed") ? DARK_THEME.danger : DARK_THEME.success}`,
           color: message.includes("Failed") ? '#f87171' : '#86efac',
           marginBottom: "15px"
@@ -3292,8 +3572,8 @@ function DashboardLayouts({ apiClient, currentUser }) {
                             onClick={() => setDefaultLayout(layout.id)}
                             style={{
                               ...darkStyles.button,
-                              background: 'rgba(220, 38, 38, 0.2)',
-                              border: `1px solid rgba(220, 38, 38, 0.3)`,
+                              background: 'rgba(229,62,62,0.18)',
+                              border: `1px solid rgba(229,62,62,0.32)`,
                               padding: "8px 16px",
                               fontSize: "12px"
                             }}
@@ -3304,8 +3584,8 @@ function DashboardLayouts({ apiClient, currentUser }) {
                             onClick={() => deleteLayout(layout.id)}
                             style={{
                               ...darkStyles.button,
-                              background: 'rgba(220, 38, 38, 0.2)',
-                              border: `1px solid rgba(220, 38, 38, 0.3)`,
+                              background: 'rgba(229,62,62,0.18)',
+                              border: `1px solid rgba(229,62,62,0.32)`,
                               padding: "8px 16px",
                               fontSize: "12px"
                             }}
@@ -3368,8 +3648,8 @@ function DashboardLayouts({ apiClient, currentUser }) {
                 onClick={createLayout}
                 style={{
                   ...darkStyles.button,
-                  background: 'rgba(22, 163, 74, 0.2)',
-                  border: `1px solid rgba(22, 163, 74, 0.3)`,
+                  background: 'rgba(34,197,94,0.15)',
+                  border: `1px solid rgba(34,197,94,0.3)`,
                   flex: 1
                 }}
               >
@@ -3420,9 +3700,11 @@ function NavigationMenu({ activeTab, setActiveTab, currentUser }) {
               key={item.id}
               style={{
                 ...darkStyles.navItem,
-                background: activeTab === item.id ? 'rgba(220, 38, 38, 0.2)' : 'transparent',
-                border: activeTab === item.id ? `1px solid rgba(220, 38, 38, 0.3)` : `1px solid transparent`,
-                color: activeTab === item.id ? '#fff' : DARK_THEME.text
+                background: activeTab === item.id ? 'rgba(229,62,62,0.14)' : 'transparent',
+                border: activeTab === item.id ? '1px solid rgba(229,62,62,0.28)' : '1px solid transparent',
+                color: activeTab === item.id ? '#fff' : 'rgba(255,255,255,0.58)',
+                fontWeight: activeTab === item.id ? '600' : '450',
+                boxShadow: activeTab === item.id ? '0 2px 12px rgba(229,62,62,0.15)' : 'none'
               }}
               onClick={() => setActiveTab(item.id)}
             >
@@ -3525,7 +3807,7 @@ function UserManagement({ apiClient, currentUser }) {
     return (
       <div style={{
         ...darkStyles.card,
-        background: "rgba(17, 17, 17, 0.9)",
+        background: "rgba(255,255,255,0.042)",
         backdropFilter: "blur(25px)"
       }}>
         <h3 style={{ color: DARK_THEME.text, fontSize: '20px' }}>User Management</h3>
@@ -3537,8 +3819,11 @@ function UserManagement({ apiClient, currentUser }) {
   return (
     <div style={{
       ...darkStyles.card,
-      background: "rgba(17, 17, 17, 0.9)",
-      backdropFilter: "blur(25px)"
+      background: "rgba(255,255,255,0.07)",
+      backdropFilter: "blur(48px) saturate(160%)",
+      WebkitBackdropFilter: "blur(48px) saturate(160%)",
+      position: "relative",
+      zIndex: 2
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <h3 style={{ color: DARK_THEME.text, margin: 0, fontSize: '20px' }}>User Management</h3>
@@ -3557,7 +3842,7 @@ function UserManagement({ apiClient, currentUser }) {
       {message && (
         <div style={{
           ...darkStyles.message,
-          background: message.includes("Failed") ? 'rgba(45, 26, 26, 0.8)' : 'rgba(26, 45, 26, 0.8)',
+          background: message.includes("Failed") ? 'rgba(229,62,62,0.1)' : 'rgba(34,197,94,0.1)',
           border: `1px solid ${message.includes("Failed") ? DARK_THEME.danger : DARK_THEME.success}`,
           color: message.includes("Failed") ? '#f87171' : '#86efac',
           marginBottom: "15px"
@@ -3609,7 +3894,7 @@ function UserManagement({ apiClient, currentUser }) {
                         onChange={(e) => updateUserRole(user.id, e.target.value)}
                         style={{
                           ...darkStyles.select,
-                          background: 'rgba(34, 34, 34, 0.8)',
+                          background: 'rgba(255,255,255,0.05)',
                           border: `1px solid ${DARK_THEME.glassBorder}`,
                           marginBottom: 0
                         }}
@@ -3634,8 +3919,8 @@ function UserManagement({ apiClient, currentUser }) {
                           onClick={() => toggleUserStatus(user.id, user.disabled)}
                           style={{
                             ...darkStyles.button,
-                            background: user.disabled ? 'rgba(22, 163, 74, 0.2)' : 'rgba(217, 119, 6, 0.2)',
-                            border: `1px solid ${user.disabled ? 'rgba(22, 163, 74, 0.3)' : 'rgba(217, 119, 6, 0.3)'}`,
+                            background: user.disabled ? 'rgba(34,197,94,0.15)' : 'rgba(217, 119, 6, 0.2)',
+                            border: `1px solid ${user.disabled ? 'rgba(34,197,94,0.3)' : 'rgba(217, 119, 6, 0.3)'}`,
                             padding: "8px 16px",
                             fontSize: "12px"
                           }}
@@ -3648,8 +3933,8 @@ function UserManagement({ apiClient, currentUser }) {
                             onClick={() => deleteUser(user.id, user.username)}
                             style={{
                               ...darkStyles.button,
-                              background: 'rgba(220, 38, 38, 0.2)',
-                              border: `1px solid rgba(220, 38, 38, 0.3)`,
+                              background: 'rgba(229,62,62,0.18)',
+                              border: `1px solid rgba(229,62,62,0.32)`,
                               padding: "8px 16px",
                               fontSize: "12px",
                               marginLeft: "5px"
@@ -3746,7 +4031,7 @@ function AlertsManagement({ apiClient, currentUser }) {
     return (
       <div style={{
         ...darkStyles.card,
-        background: "rgba(17, 17, 17, 0.9)",
+        background: "rgba(255,255,255,0.042)",
         backdropFilter: "blur(25px)"
       }}>
         <h3 style={{ color: DARK_THEME.text, fontSize: '20px' }}>Alerts & Incidents Management</h3>
@@ -3758,8 +4043,11 @@ function AlertsManagement({ apiClient, currentUser }) {
   return (
     <div style={{
       ...darkStyles.card,
-      background: "rgba(17, 17, 17, 0.9)",
-      backdropFilter: "blur(25px)"
+      background: "rgba(255,255,255,0.07)",
+      backdropFilter: "blur(48px) saturate(160%)",
+      WebkitBackdropFilter: "blur(48px) saturate(160%)",
+      position: "relative",
+      zIndex: 2
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h3 style={{ color: DARK_THEME.text, margin: 0, fontSize: '20px' }}>Alerts & Incidents Management</h3>
@@ -3768,8 +4056,8 @@ function AlertsManagement({ apiClient, currentUser }) {
             onClick={() => setActiveSubTab("rules")}
             style={{
               ...darkStyles.tab,
-              background: activeSubTab === "rules" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
-              border: `1px solid ${activeSubTab === "rules" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+              background: activeSubTab === "rules" ? 'rgba(229,62,62,0.18)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${activeSubTab === "rules" ? 'rgba(229,62,62,0.32)' : DARK_THEME.glassBorder}`,
               color: activeSubTab === "rules" ? "#fff" : DARK_THEME.text
             }}
           >
@@ -3779,8 +4067,8 @@ function AlertsManagement({ apiClient, currentUser }) {
             onClick={() => setActiveSubTab("incidents")}
             style={{
               ...darkStyles.tab,
-              background: activeSubTab === "incidents" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
-              border: `1px solid ${activeSubTab === "incidents" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+              background: activeSubTab === "incidents" ? 'rgba(229,62,62,0.18)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${activeSubTab === "incidents" ? 'rgba(229,62,62,0.32)' : DARK_THEME.glassBorder}`,
               color: activeSubTab === "incidents" ? "#fff" : DARK_THEME.text
             }}
           >
@@ -3841,8 +4129,8 @@ function AlertsManagement({ apiClient, currentUser }) {
                       onClick={() => toggleAlertRule(rule.id, rule.active)}
                       style={{
                         ...darkStyles.button,
-                        background: rule.active ? 'rgba(217, 119, 6, 0.2)' : 'rgba(22, 163, 74, 0.2)',
-                        border: `1px solid ${rule.active ? 'rgba(217, 119, 6, 0.3)' : 'rgba(22, 163, 74, 0.3)'}`,
+                        background: rule.active ? 'rgba(217, 119, 6, 0.2)' : 'rgba(34,197,94,0.15)',
+                        border: `1px solid ${rule.active ? 'rgba(217, 119, 6, 0.3)' : 'rgba(34,197,94,0.3)'}`,
                         padding: "8px 16px",
                         fontSize: "12px"
                       }}
@@ -3917,8 +4205,8 @@ function AlertsManagement({ apiClient, currentUser }) {
                           onClick={() => updateIncidentStatus(incident.id, 'resolved')}
                           style={{
                             ...darkStyles.button,
-                            background: 'rgba(22, 163, 74, 0.2)',
-                            border: `1px solid rgba(22, 163, 74, 0.3)`,
+                            background: 'rgba(34,197,94,0.15)',
+                            border: `1px solid rgba(34,197,94,0.3)`,
                             padding: "6px 12px",
                             fontSize: "11px"
                           }}
@@ -3992,15 +4280,18 @@ function PasswordChange({ apiClient }) {
   return (
     <div style={{
       ...darkStyles.card,
-      background: "rgba(17, 17, 17, 0.9)",
-      backdropFilter: "blur(25px)"
+      background: "rgba(255,255,255,0.07)",
+      backdropFilter: "blur(48px) saturate(160%)",
+      WebkitBackdropFilter: "blur(48px) saturate(160%)",
+      position: "relative",
+      zIndex: 2
     }}>
       <h3 style={{ color: DARK_THEME.text, marginBottom: "20px", fontSize: '20px' }}>Change Password</h3>
       
       {message && (
         <div style={{
           ...darkStyles.message,
-          background: message.includes("Failed") ? 'rgba(45, 26, 26, 0.8)' : 'rgba(26, 45, 26, 0.8)',
+          background: message.includes("Failed") ? 'rgba(229,62,62,0.1)' : 'rgba(34,197,94,0.1)',
           border: `1px solid ${message.includes("Failed") ? DARK_THEME.danger : DARK_THEME.success}`,
           color: message.includes("Failed") ? '#f87171' : '#86efac',
           marginBottom: "15px"
@@ -4053,8 +4344,8 @@ function PasswordChange({ apiClient }) {
           disabled={loading}
           style={{ 
             ...darkStyles.button, 
-            background: loading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.2)',
-            border: `1px solid ${loading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.3)'}`,
+            background: loading ? DARK_THEME.glassBorder : 'rgba(229,62,62,0.18)',
+            border: `1px solid ${loading ? DARK_THEME.glassBorder : 'rgba(229,62,62,0.32)'}`,
             width: "100%"
           }}
         >
@@ -4100,7 +4391,7 @@ function ServerSelector({ servers, selectedServer, onServerChange, loading }) {
         <div style={{ 
           marginTop: '10px', 
           padding: '15px', 
-          background: 'rgba(26, 26, 26, 0.8)', 
+          background: 'rgba(255,255,255,0.04)', 
           borderRadius: '12px',
           border: `1px solid ${DARK_THEME.glassBorder}`
         }}>
@@ -4167,7 +4458,7 @@ function UserActivityMonitor({ apiClient, currentUser }) {
     return (
       <div style={{
         ...darkStyles.card,
-        background: "rgba(17, 17, 17, 0.9)",
+        background: "rgba(255,255,255,0.042)",
         backdropFilter: "blur(25px)"
       }}>
         <h3 style={{ color: DARK_THEME.text, fontSize: '20px' }}>User Activity Monitor</h3>
@@ -4179,8 +4470,11 @@ function UserActivityMonitor({ apiClient, currentUser }) {
   return (
     <div style={{
       ...darkStyles.card,
-      background: "rgba(17, 17, 17, 0.9)",
-      backdropFilter: "blur(25px)"
+      background: "rgba(255,255,255,0.07)",
+      backdropFilter: "blur(48px) saturate(160%)",
+      WebkitBackdropFilter: "blur(48px) saturate(160%)",
+      position: "relative",
+      zIndex: 2
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h3 style={{ color: DARK_THEME.text, margin: 0, fontSize: '20px' }}>User Activity Monitor</h3>
@@ -4350,7 +4644,7 @@ function VisitorLogs({ apiClient, currentUser }) {
     return (
       <div style={{
         ...darkStyles.card,
-        background: "rgba(17, 17, 17, 0.9)",
+        background: "rgba(255,255,255,0.042)",
         backdropFilter: "blur(25px)"
       }}>
         <h3 style={{ color: DARK_THEME.text, fontSize: '20px' }}>Visitor Logs</h3>
@@ -4362,8 +4656,11 @@ function VisitorLogs({ apiClient, currentUser }) {
   return (
     <div style={{
       ...darkStyles.card,
-      background: "rgba(17, 17, 17, 0.9)",
-      backdropFilter: "blur(25px)"
+      background: "rgba(255,255,255,0.07)",
+      backdropFilter: "blur(48px) saturate(160%)",
+      WebkitBackdropFilter: "blur(48px) saturate(160%)",
+      position: "relative",
+      zIndex: 2
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h3 style={{ color: DARK_THEME.text, margin: 0, fontSize: '20px' }}>Visitor Logs & Security</h3>
@@ -4762,7 +5059,7 @@ function App() {
           ...darkStyles.card, 
           textAlign: "center", 
           padding: "40px",
-          background: "rgba(17, 17, 17, 0.9)",
+          background: "rgba(255,255,255,0.042)",
           backdropFilter: "blur(25px)"
         }}>
           <TailSpin height={40} width={40} />
@@ -4825,7 +5122,7 @@ function App() {
         ...darkStyles.card, 
         textAlign: "center", 
         padding: "40px",
-        background: "rgba(17, 17, 17, 0.9)",
+        background: "rgba(255,255,255,0.042)",
         backdropFilter: "blur(25px)"
       }}>
         <p style={{ color: DARK_THEME.textMuted }}>No agent data available. Submit sample data to get started.</p>
@@ -4842,7 +5139,7 @@ function App() {
             {/* Quick Actions */}
             <div style={{
               ...darkStyles.card,
-              background: "rgba(17, 17, 17, 0.9)",
+              background: "rgba(255,255,255,0.042)",
               backdropFilter: "blur(25px)"
             }}>
               <h3 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", fontSize: '18px' }}>Quick Actions</h3>
@@ -4856,16 +5153,16 @@ function App() {
                 </button>
                 <button onClick={fetchLatestAgentData} disabled={dashboardLoading} style={{
                   ...darkStyles.button,
-                  background: dashboardLoading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.2)',
-                  border: `1px solid ${dashboardLoading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.3)'}`
+                  background: dashboardLoading ? DARK_THEME.glassBorder : 'rgba(229,62,62,0.18)',
+                  border: `1px solid ${dashboardLoading ? DARK_THEME.glassBorder : 'rgba(229,62,62,0.32)'}`
                 }}>
                   {dashboardLoading ? <TailSpin height={20} width={20} /> : "Refresh Agent Data"}
                 </button>
                 {(currentUser?.role === 'agent' || currentUser?.role === 'admin') && (
                   <button onClick={submitSampleAgentData} disabled={dashboardLoading} style={{ 
                     ...darkStyles.button, 
-                    background: dashboardLoading ? DARK_THEME.glassBorder : 'rgba(22, 163, 74, 0.2)',
-                    border: `1px solid ${dashboardLoading ? DARK_THEME.glassBorder : 'rgba(22, 163, 74, 0.3)'}`
+                    background: dashboardLoading ? DARK_THEME.glassBorder : 'rgba(34,197,94,0.15)',
+                    border: `1px solid ${dashboardLoading ? DARK_THEME.glassBorder : 'rgba(34,197,94,0.3)'}`
                   }}>
                     {dashboardLoading ? <TailSpin height={20} width={20} /> : "Submit Sample Data"}
                   </button>
@@ -4905,6 +5202,8 @@ function App() {
   if (!token) {
     return (
       <div style={darkStyles.container}>
+        <GlobalGlass />
+        <BackgroundOrbs />
         <LoginForm 
           onLogin={handleLogin}
           loading={loading}
@@ -4917,33 +5216,58 @@ function App() {
 
   return (
     <div style={darkStyles.container}>
+      <GlobalGlass />
+      <BackgroundOrbs />
       {/* Sidebar with Navigation, Filters and Export */}
       <div style={darkStyles.sidebar}>
-        <div style={{ marginBottom: '30px', textAlign: 'center' }}>
+        <div style={{ marginBottom: '24px', textAlign: 'center', position: 'relative' }}>
+          {/* Red shimmer line at top */}
           <div style={{
-            width: '60px',
-            height: '60px',
-            background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
+            height: '1px',
+            background: 'linear-gradient(90deg,transparent,rgba(229,62,62,0.6),transparent)',
+            marginBottom: '22px',
+            marginLeft: '-16px',
+            marginRight: '-16px'
+          }} />
+          {/* Logo */}
+          <div style={{
+            width: '52px',
+            height: '52px',
+            background: 'linear-gradient(145deg,#e53e3e 0%,#7f1d1d 100%)',
             borderRadius: '16px',
-            margin: '0 auto 15px',
+            margin: '0 auto 14px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '24px',
-            fontWeight: 'bold',
+            fontSize: '17px',
+            fontWeight: '800',
             color: 'white',
-            boxShadow: '0 8px 32px rgba(220, 38, 38, 0.3)'
+            letterSpacing: '-1px',
+            boxShadow: '0 8px 28px rgba(229,62,62,0.45), 0 2px 8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.25)'
           }}>
             SM
           </div>
-          <h2 style={{ color: DARK_THEME.text, margin: '0 0 5px 0', fontSize: '20px' }}>AI System Monitor</h2>
-          <p style={{ color: DARK_THEME.textMuted, margin: 0, fontSize: '14px' }}>
-            Welcome, {currentUser?.username || 'User'}
+          <h2 style={{ color: DARK_THEME.text, margin: '0 0 4px 0', fontSize: '16px', fontWeight: '600', letterSpacing: '-0.03em' }}>
+            AI System Monitor
+          </h2>
+          <p style={{ color: DARK_THEME.textMuted, margin: '0 0 10px 0', fontSize: '12px' }}>
+            {currentUser?.username || 'User'}
           </p>
           {currentUser && (
-            <p style={{ color: DARK_THEME.primary, margin: '5px 0 0 0', fontSize: '12px', fontWeight: '500' }}>
-              Role: {currentUser.role}
-            </p>
+            <span style={{
+              display: 'inline-block',
+              padding: '3px 10px',
+              background: 'rgba(229,62,62,0.12)',
+              border: '1px solid rgba(229,62,62,0.28)',
+              borderRadius: '20px',
+              color: '#fc4f4f',
+              fontSize: '10px',
+              fontWeight: '700',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase'
+            }}>
+              {currentUser.role}
+            </span>
           )}
         </div>
 
@@ -4990,8 +5314,8 @@ function App() {
             style={{
               ...darkStyles.button,
               width: '100%',
-              background: dashboardLoading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.2)',
-              border: `1px solid ${dashboardLoading ? DARK_THEME.glassBorder : 'rgba(220, 38, 38, 0.3)'}`,
+              background: dashboardLoading ? DARK_THEME.glassBorder : 'rgba(229,62,62,0.18)',
+              border: `1px solid ${dashboardLoading ? DARK_THEME.glassBorder : 'rgba(229,62,62,0.32)'}`,
               marginBottom: '10px',
               justifyContent: 'center'
             }}
@@ -5004,13 +5328,16 @@ function App() {
             style={{
               ...darkStyles.button,
               width: '100%',
-              background: 'rgba(220, 38, 38, 0.2)',
-              border: `1px solid rgba(220, 38, 38, 0.3)`,
+              background: 'rgba(229,62,62,0.08)',
+              border: '1px solid rgba(229,62,62,0.28)',
+              color: '#fc4f4f',
               marginTop: '10px',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              fontWeight: '600',
+              letterSpacing: '0.01em'
             }}
           >
-            Logout
+            🔴 Logout
           </button>
         </div>
       </div>
@@ -5020,12 +5347,13 @@ function App() {
         <div style={{ marginBottom: '30px' }}>
           <h1 style={{ 
             color: DARK_THEME.text, 
-            margin: '0 0 10px 0',
-            fontSize: '32px',
+            margin: '0 0 6px 0',
+            fontSize: '26px',
             fontWeight: '700',
-            background: 'linear-gradient(135deg, #fff 0%, #ccc 100%)',
+            background: 'linear-gradient(135deg,#ffffff 0%,rgba(255,255,255,0.6) 100%)',
             WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
+            WebkitTextFillColor: 'transparent',
+            letterSpacing: '-0.04em'
           }}>
             {activeTab === "dashboard" && "AI Dashboard Overview"}
             {activeTab === "layouts" && "Dashboard Layouts"}
@@ -5052,9 +5380,10 @@ function App() {
             onClick={() => setActiveTab("dashboard")}
             style={{
               ...darkStyles.tab,
-              background: activeTab === "dashboard" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
-              border: `1px solid ${activeTab === "dashboard" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
-              color: activeTab === "dashboard" ? "#fff" : DARK_THEME.text
+              background: activeTab === "dashboard" ? 'rgba(229,62,62,0.16)' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${activeTab === "dashboard" ? 'rgba(229,62,62,0.32)' : 'rgba(255,255,255,0.07)'}`,
+              color: activeTab === "dashboard" ? '#fff' : 'rgba(255,255,255,0.5)',
+              fontWeight: activeTab === "dashboard" ? '600' : '450',
             }}
           >
             <DashboardIcon />
@@ -5065,8 +5394,8 @@ function App() {
             onClick={() => setActiveTab("layouts")}
             style={{
               ...darkStyles.tab,
-              background: activeTab === "layouts" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
-              border: `1px solid ${activeTab === "layouts" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+              background: activeTab === "layouts" ? 'rgba(229,62,62,0.18)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${activeTab === "layouts" ? 'rgba(229,62,62,0.32)' : DARK_THEME.glassBorder}`,
               color: activeTab === "layouts" ? "#fff" : DARK_THEME.text
             }}
           >
@@ -5078,8 +5407,8 @@ function App() {
             onClick={() => setActiveTab("account")}
             style={{
               ...darkStyles.tab,
-              background: activeTab === "account" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
-              border: `1px solid ${activeTab === "account" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+              background: activeTab === "account" ? 'rgba(229,62,62,0.18)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${activeTab === "account" ? 'rgba(229,62,62,0.32)' : DARK_THEME.glassBorder}`,
               color: activeTab === "account" ? "#fff" : DARK_THEME.text
             }}
           >
@@ -5093,8 +5422,8 @@ function App() {
                 onClick={() => setActiveTab("users")}
                 style={{
                   ...darkStyles.tab,
-                  background: activeTab === "users" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
-                  border: `1px solid ${activeTab === "users" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+                  background: activeTab === "users" ? 'rgba(229,62,62,0.18)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${activeTab === "users" ? 'rgba(229,62,62,0.32)' : DARK_THEME.glassBorder}`,
                   color: activeTab === "users" ? "#fff" : DARK_THEME.text
                 }}
               >
@@ -5106,8 +5435,8 @@ function App() {
                 onClick={() => setActiveTab("alerts")}
                 style={{
                   ...darkStyles.tab,
-                  background: activeTab === "alerts" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
-                  border: `1px solid ${activeTab === "alerts" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+                  background: activeTab === "alerts" ? 'rgba(229,62,62,0.18)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${activeTab === "alerts" ? 'rgba(229,62,62,0.32)' : DARK_THEME.glassBorder}`,
                   color: activeTab === "alerts" ? "#fff" : DARK_THEME.text
                 }}
               >
@@ -5119,8 +5448,8 @@ function App() {
                 onClick={() => setActiveTab("user-activity")}
                 style={{
                   ...darkStyles.tab,
-                  background: activeTab === "user-activity" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
-                  border: `1px solid ${activeTab === "user-activity" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+                  background: activeTab === "user-activity" ? 'rgba(229,62,62,0.18)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${activeTab === "user-activity" ? 'rgba(229,62,62,0.32)' : DARK_THEME.glassBorder}`,
                   color: activeTab === "user-activity" ? "#fff" : DARK_THEME.text
                 }}
               >
@@ -5132,8 +5461,8 @@ function App() {
                 onClick={() => setActiveTab("visitor-logs")}
                 style={{
                   ...darkStyles.tab,
-                  background: activeTab === "visitor-logs" ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 34, 34, 0.8)',
-                  border: `1px solid ${activeTab === "visitor-logs" ? 'rgba(220, 38, 38, 0.3)' : DARK_THEME.glassBorder}`,
+                  background: activeTab === "visitor-logs" ? 'rgba(229,62,62,0.18)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${activeTab === "visitor-logs" ? 'rgba(229,62,62,0.32)' : DARK_THEME.glassBorder}`,
                   color: activeTab === "visitor-logs" ? "#fff" : DARK_THEME.text
                 }}
               >
@@ -5156,15 +5485,7 @@ function App() {
         />
       </div>
 
-      <style>
-        {`
-          @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
-          }
-        `}
-      </style>
+      {/* GlobalGlass handles all CSS */}
     </div>
   );
 }
