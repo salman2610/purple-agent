@@ -1,67 +1,150 @@
-🟣 Purple Agent
+<div align="center">
 
-Python Modular Server Monitoring Agent for AI-Powered Threat Detection and Security Analytics
+# 🟣 Purple Agent
 
-🧩 Overview
+### AI SRE Agent — Monitor your servers. Understand what's wrong. Fix it faster.
 
-Purple Agent collects real-time system metrics, monitors critical logs, tracks network activity, and securely sends collected data to a centralized dashboard for threat detection and anomaly analysis.
-It’s built with a modular architecture for scalability and ease of maintenance.
+[![Python](https://img.shields.io/badge/Python-3.8+-blue?style=flat-square&logo=python)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-18+-61DAFB?style=flat-square&logo=react)](https://react.dev)
+[![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker)](docker-compose.yml)
 
-🚀 Features
+**Purple Agent is an AI-powered server monitoring agent that doesn't just show you graphs — it tells you exactly what's wrong and why.**
 
-CPU, memory, disk usage, process listing, and uptime monitoring
+[🚀 Quick Start](#-quick-start) · [✨ Features](#-features) · [📸 Screenshots](#-screenshots) · [🧠 How It Works](#-how-it-works) · [🤝 Contributing](#-contributing)
 
-Real-time log file monitoring for failed/successful login detection
+</div>
 
-Network connection tracking to identify suspicious activity
+---
 
-Secure authenticated communication using JWT tokens
+## 🧠 What Makes This Different
 
-Modularized codebase enabling easy extension
+Most monitoring tools show you a spike in CPU and leave you to figure it out. Purple Agent's AI engine analyzes your system in real time, correlates events across metrics, and tells you in plain English what's happening — before it becomes an outage.
 
-Designed for deployment as a systemd service for persistence
+> *"It's like having a junior sysadmin that never sleeps."*
 
-🧰 Getting Started
-Prerequisites
+---
 
-Python 3.8+
+## ✨ Features
 
-Linux server (Ubuntu/Debian/CentOS recommended)
+### 🤖 AI-Powered Intelligence
+- **Smart Insights** — real-time analysis of CPU, memory, disk, and network patterns
+- **Predictive Alerts** — predicts CPU peaks and memory pressure before they hit
+- **Plain-English Diagnostics** — no more staring at graphs, get actionable recommendations
+- **AI Assistant** — chat interface to ask questions about your system
 
-Access to install system packages and configure services
+### 📊 Real-Time Monitoring
+- CPU, memory, disk usage with live charts
+- Running process table with per-process CPU and memory breakdown
+- Network activity (bytes sent/received) with historical view
+- WebSocket-powered live dashboard — zero page refresh needed
 
-Installation
+### 🔐 Security & Access Control
+- JWT-based authentication with role-based access (admin / user)
+- Visitor log tracking — see every IP that hits your backend
+- User activity monitor — full audit trail of logins and actions
+- Suspicious request detection
 
-1. Clone the repository
+### 🚨 Alerts & Incidents
+- Configurable alert rules (CPU > 80%, Memory > 90%, Disk > 85%)
+- Severity levels: LOW / MEDIUM / HIGH / CRITICAL
+- Incident tracking and history
+- Active/inactive rule toggling
 
-git clone https://github.com/yourusername/purple-agent.git
+### 🎛️ Dashboard
+- Multiple layout modes (Default, Analytics View, Compact)
+- Global server distribution map
+- System metrics pie chart
+- Business mode / focus mode toggle
+- Fully customizable via Dashboard Layouts
+
+### 🧩 Agent Architecture
+- Lightweight Python agent deployable as a `systemd` service
+- Monitors: system metrics, log files, network connections, file integrity
+- Secure JWT-authenticated communication to backend
+- Designed for multi-server deployments
+
+---
+
+## 📸 Screenshots
+
+> Dashboard overview with AI Smart Insights and real-time WebSocket feed
+
+| Dashboard | Alerts | Visitor Logs |
+|---|---|---|
+| AI insights, process table, network chart | Alert rules with severity levels | Real-time IP tracking |
+
+---
+
+## 🚀 Quick Start
+
+### Option 1 — Docker (Recommended)
+
+```bash
+git clone https://github.com/salman2610/purple-agent.git
 cd purple-agent
+docker-compose up -d
+```
 
+Frontend: http://localhost:5173  
+Backend API: http://localhost:8000  
+Default login: `admin` / `admin` *(change immediately)*
 
-2. Create and activate a virtual environment
+---
 
+### Option 2 — Manual Setup
+
+**Backend**
+```bash
+cd backend
 python3 -m venv venv
 source venv/bin/activate
-
-
-3. Install dependencies
-
 pip install -r requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
 
+**Frontend**
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-4. Configure the agent
-Edit config/config.json with your dashboard API URL, agent ID, authentication token, scan interval, and monitored log/file paths.
-
-▶️ Running the Agent
-
-Start the agent manually with:
-
+**Agent** (on the server you want to monitor)
+```bash
+cd agent
+pip install -r requirements.txt
+# Edit config/config.json with your backend URL and token
 python -m agent.main
+```
 
-🧠 Deployment as a systemd Service
+---
 
-Create a service file at /etc/systemd/system/purple-agent.service:
+## ⚙️ Agent Configuration
 
+Edit `config/config.json`:
+
+```json
+{
+  "server_url": "https://your-backend.example.com/api/agent",
+  "agent_id": "server-001",
+  "auth_token": "your-jwt-token-here",
+  "scan_interval": 60,
+  "log_paths": ["/var/log/auth.log", "/var/log/syslog"],
+  "integrity_dirs": ["/etc", "/var/www", "/usr/bin"]
+}
+```
+
+---
+
+## 🧩 Deploy Agent as a Service
+
+```bash
+sudo nano /etc/systemd/system/purple-agent.service
+```
+
+```ini
 [Unit]
 Description=Purple Agent Monitoring Service
 After=network.target
@@ -71,70 +154,96 @@ User=root
 WorkingDirectory=/path/to/purple-agent
 ExecStart=/path/to/purple-agent/venv/bin/python -m agent.main
 Restart=always
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
+```
 
-
-Then reload and enable the service:
-
+```bash
 sudo systemctl daemon-reload
 sudo systemctl enable purple-agent
 sudo systemctl start purple-agent
-
-
-Check service status:
-
 sudo systemctl status purple-agent
+```
 
-⚙️ Configuration
+---
 
-Example config/config.json:
+## 🏗️ Architecture
 
-{
-  "server_url": "https://your-dashboard-api.example.com/api/agent",
-  "agent_id": "agent-001",
-  "auth_token": "securetokenhere",
-  "scan_interval": 60,
-  "log_paths": ["/var/log/auth.log", "/var/log/syslog"],
-  "integrity_dirs": ["/etc", "/var/www", "/usr/bin"]
-}
+```
+┌─────────────────┐     WebSocket/REST      ┌──────────────────┐
+│   React Frontend │ ◄──────────────────────► │  FastAPI Backend  │
+│   (Vite + JS)   │                          │  (Python 3.8+)   │
+└─────────────────┘                          └────────┬─────────┘
+                                                      │
+                                             ┌────────▼─────────┐
+                                             │   PostgreSQL DB   │
+                                             └────────┬─────────┘
+                                                      │
+                                             ┌────────▼─────────┐
+                                             │  Purple Agent(s)  │
+                                             │  (systemd service)│
+                                             │  per monitored    │
+                                             │  server           │
+                                             └──────────────────┘
+```
 
+**Stack:** React 18 · FastAPI · PostgreSQL · WebSockets · JWT · PyTorch (LSTM) · Docker
 
-Configuration Options
+---
 
-server_url: URL of the dashboard API endpoint
+## 🗺️ Roadmap
 
-agent_id: Unique ID for this agent instance
+- [ ] One-line agent install script (`curl | bash`)
+- [ ] Email & SMS alerts
+- [ ] Windows agent support
+- [ ] Docker container monitoring
+- [ ] Multi-tenant / team support
+- [ ] Mobile-responsive UI
+- [ ] Stripe billing for hosted version
+- [ ] Kubernetes pod monitoring
 
-auth_token: JWT secret token for agent authentication
+---
 
-scan_interval: Seconds between metric scans
+## 🤝 Contributing
 
-log_paths: List of log files to watch in real-time
+Contributions are welcome! Please open an issue before submitting a PR so we can discuss the change.
 
-integrity_dirs: Directories for file integrity monitoring
+```bash
+git checkout -b feature/your-feature
+git commit -m "feat: add your feature"
+git push origin feature/your-feature
+# Open a Pull Request
+```
 
-🧩 Contribution
+---
 
-Contributions are welcome!
-Please open issues or pull requests for bug fixes, features, or enhancements.
+## 🩺 Troubleshooting
 
-🩺 Troubleshooting
+**Agent not connecting?**
+- Check `config/config.json` — verify `server_url` and `auth_token`
+- Ensure backend is reachable from the agent server
+- Check logs: `journalctl -u purple-agent -f`
 
-Ensure dependencies are installed and the Python environment is activated.
+**CORS errors in browser?**
+- Add your frontend origin to `ALLOWED_ORIGINS` in `backend/main.py`
 
-Confirm the agent has permission to read specified log files.
+**Database warnings?**
+- Run `ALTER DATABASE purpleteam_db REFRESH COLLATION VERSION;` in psql
 
-Check systemd logs:
+---
 
-journalctl -u purple-agent -f
+## 📜 License
 
+MIT License — use it, fork it, build on it.
 
-Verify dashboard URL and authentication tokens in the config.
+---
 
-Enable debug logging in source for detailed output if needed.
+<div align="center">
 
-📜 License
+Built with 💜 by [salman2610](https://github.com/salman2610)
 
-MIT License
+⭐ **Star this repo if you find it useful** — it helps more people discover it!
+
+</div>
