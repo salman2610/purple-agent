@@ -49,11 +49,11 @@ submit_data "📊 High CPU data" '{
     "memory_usage": 45.2,
     "disk_usage": 32.7,
     "network_activity": {
-        "bytes_sent": 23456789,
-        "bytes_received": 98765432
+        "bytes_sent": 2345678988,
+        "bytes_received": 9876543245887
     },
     "processes": [
-        {"pid": 1, "name": "systemd", "cpu": 0.1, "memory": 0.5},
+        {"pid": 1, "name": "systemd", "cpu": 85.1, "memory": 89.5},
         {"pid": 101, "name": "stress_test", "cpu": 85.2, "memory": 2.1}
     ]
 }'

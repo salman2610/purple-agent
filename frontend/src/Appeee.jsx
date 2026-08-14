@@ -8,351 +8,252 @@ const API_BASE = `http://${window.location.hostname}:8000`;
 
 const DARK_THEME = {
   background: "transparent",
-  cardBackground: "rgba(255,255,255,0.03)",
-  cardBackgroundSolid: "#07071a",
-  border: "rgba(255,255,255,0.06)",
-  text: "#e8e6ff",
-  textMuted: "rgba(180,170,255,0.45)",
-  primary: "#8b5cf6",
+  cardBackground: "rgba(139,92,246,0.04)",
+  cardBackgroundSolid: "#04020f",
+  border: "rgba(139,92,246,0.12)",
+  text: "#f0eeff",
+  textMuted: "rgba(200,190,255,0.38)",
+  primary: "#7c3aed",
   success: "#2dd4bf",
   danger: "#f43f5e",
   warning: "#f59e0b",
   info: "#818cf8",
-  secondary: "rgba(180,170,255,0.5)",
-  glass: "rgba(139,92,246,0.05)",
-  glassBorder: "rgba(139,92,246,0.14)",
-  accentGradient: "linear-gradient(135deg,#8b5cf6 0%,#2dd4bf 100%)"
+  secondary: "rgba(200,190,255,0.5)",
+  glass: "rgba(139,92,246,0.06)",
+  glassBorder: "rgba(139,92,246,0.15)",
+  accentGradient: "linear-gradient(135deg,#7c3aed 0%,#2dd4bf 100%)"
 };
-const COLORS = ["#8b5cf6","#2dd4bf","#f59e0b","#818cf8","rgba(45,212,191,0.3)"];
+const COLORS = ["#7c3aed","#2dd4bf","#f59e0b","#818cf8","rgba(200,190,255,0.3)"];
 
 // ── Global glass override injected into DOM ───────────────────────────────
 function GlobalGlass() {
   return (
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-      *, *::before, *::after { box-sizing:border-box; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
-
+      *,*::before,*::after { box-sizing:border-box; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+      
       html, body {
         margin:0; padding:0;
-        font-family:'Inter',-apple-system,sans-serif;
+        font-family:'Plus Jakarta Sans',-apple-system,"SF Pro Display","Helvetica Neue",sans-serif;
         overflow:hidden;
-        background:#07071a !important;
-        color:#e8e6ff;
+        background:#04020f !important;
       }
 
-      /* ── Typography scale ── */
-      .t-label  { font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:rgba(180,170,255,0.45); }
-      .t-mono   { font-family:'JetBrains Mono',monospace; }
-      .t-num    { font-family:'JetBrains Mono',monospace; font-feature-settings:'tnum'; }
-
-      /* ── Scrollbars ── */
-      ::-webkit-scrollbar { width:3px; height:3px; }
+      /* ====================================================
+         SCROLLBARS
+      ==================================================== */
+      ::-webkit-scrollbar { width:4px; height:4px; }
       ::-webkit-scrollbar-track { background:transparent; }
-      ::-webkit-scrollbar-thumb { background:rgba(139,92,246,0.35); border-radius:4px; }
-      ::-webkit-scrollbar-thumb:hover { background:rgba(139,92,246,0.6); }
+      ::-webkit-scrollbar-thumb { background:rgba(124,58,237,0.4); border-radius:8px; }
+      ::-webkit-scrollbar-thumb:hover { background:rgba(124,58,237,0.7); }
 
-      /* ── Buttons ── */
+      /* ====================================================
+         BUTTONS — micro interactions
+      ==================================================== */
       button {
         font-family:inherit !important;
         letter-spacing:-0.01em !important;
-        transition:all 0.18s cubic-bezier(0.25,0.46,0.45,0.94) !important;
+        transition:all 0.22s cubic-bezier(0.25,0.46,0.45,0.94) !important;
       }
-      button:hover:not(:disabled) { transform:translateY(-1px) !important; }
-      button:active:not(:disabled) { transform:scale(0.98) translateY(0) !important; }
+      button:hover { transform:translateY(-1px) scale(1.01) !important; }
+      button:active { transform:scale(0.97) translateY(0) !important; }
 
-      /* ── Inputs ── */
-      input, select, textarea { font-family:inherit !important; transition:border-color 0.2s,box-shadow 0.2s !important; }
+      /* ====================================================
+         INPUTS
+      ==================================================== */
+      input, select, textarea {
+        font-family:inherit !important;
+        transition:all 0.25s ease !important;
+      }
       input:focus, select:focus, textarea:focus {
-        border-color:rgba(139,92,246,0.6) !important;
-        box-shadow:0 0 0 3px rgba(139,92,246,0.15) !important;
+        border-color:rgba(124,58,237,0.7) !important;
+        box-shadow:0 0 0 3px rgba(124,58,237,0.18), 0 0 0 1px rgba(45,212,191,0.12), inset 0 1px 0 rgba(255,255,255,0.06) !important;
         outline:none !important;
       }
-      input::placeholder { color:rgba(180,170,255,0.3) !important; }
-      select option { background:#0d0d2b; color:#e8e6ff; }
 
-      /* ── Recharts ── */
-      .recharts-cartesian-grid line { stroke:rgba(139,92,246,0.07) !important; }
+      /* ====================================================
+         RECHARTS
+      ==================================================== */
+      .recharts-cartesian-grid line { stroke:rgba(139,92,246,0.08) !important; }
       .recharts-default-tooltip {
-        background:rgba(10,9,30,0.97) !important;
-        border:1px solid rgba(139,92,246,0.25) !important;
-        border-radius:12px !important;
-        backdrop-filter:blur(24px) !important;
-        box-shadow:0 8px 32px rgba(0,0,0,0.6) !important;
-        color:#e8e6ff !important;
-        font-family:'Inter',sans-serif !important;
-        font-size:13px !important;
+        background:rgba(8,4,28,0.96) !important;
+        border:1px solid rgba(124,58,237,0.35) !important;
+        border-radius:14px !important;
+        backdrop-filter:blur(30px) !important;
+        box-shadow:0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px rgba(45,212,191,0.08) !important;
+        color:#f0eeff !important;
+        font-family:inherit !important;
       }
-      .recharts-legend-item-text { color:rgba(180,170,255,0.7) !important; font-size:12px !important; }
-      .recharts-text { fill:rgba(180,170,255,0.5) !important; font-size:11px !important; font-family:'Inter',sans-serif !important; }
+      .recharts-legend-item-text { color:rgba(200,190,255,0.7) !important; }
 
-      /* ── Tables ── */
-      tr:hover td { background:rgba(139,92,246,0.05) !important; transition:background 0.12s; }
-      th { text-transform:uppercase !important; letter-spacing:0.08em !important; font-size:10px !important; font-weight:600 !important; }
-
-      /* ── Severity badges ── */
-      .badge-critical { background:rgba(244,63,94,0.12); color:#fb7185; border:1px solid rgba(244,63,94,0.25); padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600; letter-spacing:0.06em; }
-      .badge-warning  { background:rgba(245,158,11,0.12); color:#fbbf24; border:1px solid rgba(245,158,11,0.22); padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600; letter-spacing:0.06em; }
-      .badge-info     { background:rgba(139,92,246,0.12); color:#a78bfa; border:1px solid rgba(139,92,246,0.22); padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600; letter-spacing:0.06em; }
-      .badge-ok       { background:rgba(45,212,191,0.10); color:#2dd4bf; border:1px solid rgba(45,212,191,0.22); padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600; letter-spacing:0.06em; }
-
-      /* ── Stat card metric colour classes ── */
-      .metric-danger  { color:#f43f5e !important; }
-      .metric-warning { color:#f59e0b !important; }
-      .metric-ok      { color:#2dd4bf !important; }
-      .metric-default { color:#e8e6ff !important; }
-
-      /* ── Login split layout ── */
-      .login-split { display:flex; height:100vh; width:100vw; }
-      .login-left  {
-        flex:0 0 48%;
-        background:linear-gradient(145deg,#0a0820 0%,#0d0b2b 50%,#080618 100%);
-        border-right:1px solid rgba(139,92,246,0.12);
-        display:flex; flex-direction:column;
-        position:relative; overflow:hidden;
-        padding:48px;
-      }
-      .login-right {
-        flex:1; display:flex; align-items:center; justify-content:center;
-        background:#07071a; padding:48px;
-      }
-      @media(max-width:768px) {
-        .login-split { flex-direction:column; }
-        .login-left  { flex:0 0 220px; padding:32px 24px; border-right:none; border-bottom:1px solid rgba(139,92,246,0.12); }
-        .login-right { padding:24px; }
+      /* ====================================================
+         TABLE rows hover
+      ==================================================== */
+      tr:hover td { background:rgba(124,58,237,0.06) !important; transition:background 0.15s; }
+      th {
+        text-transform:uppercase !important;
+        letter-spacing:0.08em !important;
+        font-size:10.5px !important;
+        font-weight:700 !important;
       }
 
-      /* ── Login grid pattern ── */
-      .login-grid {
-        position:absolute; inset:0;
-        background-image:
-          linear-gradient(rgba(139,92,246,0.06) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(139,92,246,0.06) 1px, transparent 1px);
-        background-size:40px 40px;
-        mask-image:radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+      /* ====================================================
+         CARD ENTRANCE ANIMATIONS — stagger on mount
+      ==================================================== */
+      @keyframes cardIn {
+        from { opacity:0; transform:translateY(20px) scale(0.98); }
+        to   { opacity:1; transform:translateY(0) scale(1); }
+      }
+      @keyframes fadeUp {
+        from { opacity:0; transform:translateY(12px); }
+        to   { opacity:1; transform:translateY(0); }
+      }
+      @keyframes sidebarIn {
+        from { opacity:0; transform:translateX(-20px); }
+        to   { opacity:1; transform:translateX(0); }
       }
 
-      /* ── Sidebar v2 ── */
-      .sidebar-v2 {
-        width:240px; min-width:240px;
-        background:rgba(7,7,26,0.9);
-        backdrop-filter:blur(40px);
-        border-right:1px solid rgba(139,92,246,0.1);
-        display:flex; flex-direction:column;
-        height:100vh; position:sticky; top:0;
+      /* ====================================================
+         ORB DRIFT ANIMATIONS
+      ==================================================== */
+      @keyframes orbA {
+        0%   { transform:translate(0px, 0px) scale(1); }
+        33%  { transform:translate(-60px, 40px) scale(1.1); }
+        66%  { transform:translate(40px, -30px) scale(0.95); }
+        100% { transform:translate(-30px, 60px) scale(1.05); }
       }
-      .sidebar-logo {
-        padding:20px 20px 16px;
-        border-bottom:1px solid rgba(139,92,246,0.08);
-        display:flex; align-items:center; gap:12px;
+      @keyframes orbB {
+        0%   { transform:translate(0px, 0px) scale(1); }
+        33%  { transform:translate(50px, -40px) scale(1.08); }
+        66%  { transform:translate(-40px, 30px) scale(0.9); }
+        100% { transform:translate(20px, -50px) scale(1.12); }
       }
-      .sidebar-logo-icon {
-        width:36px; height:36px; border-radius:10px;
-        background:linear-gradient(135deg,#8b5cf6,#2dd4bf);
-        display:flex; align-items:center; justify-content:center;
-        flex-shrink:0;
-        box-shadow:0 4px 16px rgba(139,92,246,0.4);
+      @keyframes orbC {
+        0%   { transform:translate(0,0) scale(1); opacity:0.8; }
+        50%  { transform:translate(-30px,-40px) scale(1.2); opacity:1; }
+        100% { transform:translate(30px,20px) scale(0.9); opacity:0.7; }
       }
-      .sidebar-logo-text { font-size:15px; font-weight:600; color:#e8e6ff; letter-spacing:-0.02em; }
-      .sidebar-logo-sub  { font-size:10px; color:rgba(180,170,255,0.4); letter-spacing:0.04em; }
-      .sidebar-nav { flex:1; padding:12px 12px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; }
-      .nav-section-label { font-size:9px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:rgba(180,170,255,0.3); padding:12px 10px 6px; }
-      .nav-item {
-        display:flex; align-items:center; gap:10px;
-        padding:9px 12px; border-radius:8px;
-        cursor:pointer; font-size:13px; font-weight:450;
-        color:rgba(180,170,255,0.55);
-        border:1px solid transparent;
-        transition:all 0.15s ease;
-        position:relative;
-      }
-      .nav-item:hover { background:rgba(139,92,246,0.08); color:rgba(220,210,255,0.9); }
-      .nav-item.active {
-        background:rgba(139,92,246,0.14);
-        border-color:rgba(139,92,246,0.22);
-        color:#e8e6ff;
-        font-weight:550;
-      }
-      .nav-item.active::before {
-        content:''; position:absolute; left:-12px; top:50%; transform:translateY(-50%);
-        width:3px; height:60%; background:linear-gradient(#8b5cf6,#2dd4bf);
-        border-radius:0 2px 2px 0;
-      }
-      .sidebar-footer {
-        padding:16px 20px;
-        border-top:1px solid rgba(139,92,246,0.08);
-      }
-      .user-chip {
-        display:flex; align-items:center; gap:10px;
-        padding:10px 12px; border-radius:10px;
-        background:rgba(139,92,246,0.07);
-        border:1px solid rgba(139,92,246,0.12);
-      }
-      .user-avatar {
-        width:32px; height:32px; border-radius:8px;
-        background:linear-gradient(135deg,#6d28d9,#2dd4bf);
-        display:flex; align-items:center; justify-content:center;
-        font-size:12px; font-weight:700; color:white; flex-shrink:0;
-      }
-      .user-name  { font-size:12px; font-weight:500; color:#e8e6ff; }
-      .user-role  { font-size:10px; color:rgba(180,170,255,0.45); }
-
-      /* ── Dashboard header ── */
-      .dash-header {
-        display:flex; align-items:center; justify-content:space-between;
-        padding:20px 28px 0;
-        border-bottom:1px solid rgba(139,92,246,0.07);
-        margin-bottom:0;
-        flex-shrink:0;
-      }
-      .dash-title { font-size:20px; font-weight:650; color:#e8e6ff; letter-spacing:-0.03em; }
-      .dash-sub   { font-size:13px; color:rgba(180,170,255,0.45); margin-top:3px; }
-
-      /* ── Top tabs ── */
-      .tab-rail {
-        display:flex; gap:1px; padding:0 28px;
-        border-bottom:1px solid rgba(139,92,246,0.08);
-        background:transparent; flex-shrink:0;
-      }
-      .tab-btn {
-        padding:12px 16px; border:none; border-bottom:2px solid transparent;
-        background:transparent; color:rgba(180,170,255,0.45);
-        cursor:pointer; font-size:13px; font-weight:500;
-        display:flex; align-items:center; gap:7px;
-        transition:all 0.15s;
-        white-space:nowrap;
-      }
-      .tab-btn:hover { color:rgba(220,210,255,0.8); background:transparent !important; transform:none !important; }
-      .tab-btn.active { color:#c4b5fd; border-bottom-color:#8b5cf6; }
-
-      /* ── Metric cards ── */
-      .metric-card {
-        background:rgba(255,255,255,0.03);
-        border:1px solid rgba(139,92,246,0.1);
-        border-radius:14px;
-        padding:18px 20px;
-        position:relative; overflow:hidden;
-        transition:border-color 0.2s, transform 0.2s;
-        cursor:default;
-      }
-      .metric-card:hover { border-color:rgba(139,92,246,0.22); transform:translateY(-1px); }
-      .metric-card-accent { position:absolute; top:0; left:0; right:0; height:2px; }
-      .metric-card-label { font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:rgba(180,170,255,0.4); margin-bottom:8px; }
-      .metric-card-value { font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:600; letter-spacing:-0.03em; line-height:1; }
-      .metric-card-sub   { font-size:11px; color:rgba(180,170,255,0.4); margin-top:8px; display:flex; align-items:center; gap:6px; }
-
-      /* ── Glass cards (general) ── */
-      .glass-card {
-        background:rgba(255,255,255,0.03);
-        backdrop-filter:blur(32px);
-        -webkit-backdrop-filter:blur(32px);
-        border:1px solid rgba(139,92,246,0.1);
-        border-radius:16px;
-        padding:22px;
-        position:relative;
-      }
-      .glass-card-title {
-        font-size:13px; font-weight:600; color:rgba(180,170,255,0.65);
-        letter-spacing:0.02em; margin-bottom:16px;
-        display:flex; align-items:center; gap:8px;
+      @keyframes orbD {
+        0%   { transform:translate(0,0) scale(1); }
+        100% { transform:translate(60px,-80px) scale(1.3); }
       }
 
-      /* ── Progress bar ── */
-      .progress-track { background:rgba(139,92,246,0.1); border-radius:4px; height:5px; overflow:hidden; margin-top:8px; }
-      .progress-fill  { height:100%; border-radius:4px; transition:width 0.6s cubic-bezier(0.34,1.56,0.64,1); }
-
-      /* ── Alert severity rows ── */
-      .alert-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; border-left:3px solid; margin-bottom:4px; font-size:12px; }
-      .alert-row-critical { background:rgba(244,63,94,0.06);  border-left-color:#f43f5e; }
-      .alert-row-warning  { background:rgba(245,158,11,0.06); border-left-color:#f59e0b; }
-      .alert-row-info     { background:rgba(139,92,246,0.05); border-left-color:#8b5cf6; }
-
-      /* ── Animations ── */
-      @keyframes cardIn   { from{opacity:0;transform:translateY(16px) scale(0.99)} to{opacity:1;transform:none} }
-      @keyframes fadeUp   { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
-      @keyframes sidebarIn{ from{opacity:0;transform:translateX(-16px)} to{opacity:1;transform:none} }
-      @keyframes pulse    { 0%{transform:translate(-50%,-50%) scale(1);box-shadow:0 0 0 0 rgba(139,92,246,0.5)} 70%{transform:translate(-50%,-50%) scale(1);box-shadow:0 0 0 12px rgba(139,92,246,0)} 100%{transform:translate(-50%,-50%) scale(1);box-shadow:0 0 0 0 rgba(139,92,246,0)} }
-      @keyframes pulseSimple { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.06);opacity:0.7} }
-      @keyframes float    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
-      @keyframes shimmer  { 0%{transform:translateX(-100%)} 100%{transform:translateX(200%)} }
-      @keyframes ripple   { 0%{width:0;height:0;opacity:0.4} 100%{width:300px;height:300px;opacity:0} }
-      @keyframes slideInDown{ from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:none} }
-      @keyframes bounce   { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }
-      @keyframes scanLine { 0%{top:-2%;opacity:0} 5%{opacity:0.5} 95%{opacity:0.5} 100%{top:102%;opacity:0} }
-      @keyframes orbA     { 0%{transform:translate(0,0) scale(1)} 33%{transform:translate(-40px,30px) scale(1.08)} 66%{transform:translate(30px,-20px) scale(0.95)} 100%{transform:translate(-20px,50px) scale(1.04)} }
-      @keyframes orbB     { 0%{transform:translate(0,0) scale(1)} 33%{transform:translate(40px,-30px) scale(1.06)} 66%{transform:translate(-30px,20px) scale(0.92)} 100%{transform:translate(20px,-40px) scale(1.1)} }
-      @keyframes orbC     { 0%{transform:translate(0,0) scale(1);opacity:0.7} 50%{transform:translate(-20px,-30px) scale(1.15);opacity:1} 100%{transform:translate(20px,15px) scale(0.9);opacity:0.6} }
-      @keyframes orbD     { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(50px,-60px) scale(1.2)} }
-      @keyframes loginPing { 0%{opacity:1;transform:scale(1)} 75%,100%{opacity:0;transform:scale(2)} }
-
-      /* ── Login left panel live stats ── */
-      .login-stat {
-        background:rgba(139,92,246,0.07);
-        border:1px solid rgba(139,92,246,0.14);
-        border-radius:10px; padding:12px 16px;
-        display:flex; flex-direction:column; gap:2px;
+      /* ====================================================
+         PRESERVED ORIGINAL ANIMATIONS (used by app internally)
+      ==================================================== */
+      @keyframes pulse {
+        0%   { transform:translate(-50%,-50%) scale(1); box-shadow:0 0 0 0 rgba(124,58,237,0.5); }
+        70%  { transform:translate(-50%,-50%) scale(1); box-shadow:0 0 0 12px rgba(124,58,237,0); }
+        100% { transform:translate(-50%,-50%) scale(1); box-shadow:0 0 0 0 rgba(124,58,237,0); }
       }
-      .login-stat-val { font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:600; color:#e8e6ff; }
-      .login-stat-label { font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:rgba(180,170,255,0.4); }
-
-      /* ── Form fields ── */
-      .field-wrap { position:relative; margin-bottom:12px; }
-      .field-label { font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:rgba(180,170,255,0.5); margin-bottom:5px; display:block; }
-      .field-input {
-        width:100%; padding:11px 16px;
-        background:rgba(139,92,246,0.06);
-        border:1px solid rgba(139,92,246,0.15);
-        border-radius:10px; color:#e8e6ff;
-        font-size:14px; font-family:'Inter',sans-serif;
-        transition:all 0.2s; box-sizing:border-box;
+      @keyframes pulseSimple {
+        0%,100% { transform:scale(1); opacity:1; }
+        50%     { transform:scale(1.08); opacity:0.7; }
       }
-      .field-input:focus { border-color:rgba(139,92,246,0.6); box-shadow:0 0 0 3px rgba(139,92,246,0.12); outline:none; }
-      .btn-primary {
-        width:100%; padding:13px 20px;
-        background:linear-gradient(135deg,#7c3aed,#4f46e5 60%,#2dd4bf);
-        border:none; border-radius:10px;
-        color:white; font-size:14px; font-weight:600;
-        cursor:pointer; letter-spacing:0.01em;
-        box-shadow:0 4px 20px rgba(124,58,237,0.4);
-        transition:all 0.2s !important;
-        position:relative; overflow:hidden;
+      @keyframes float {
+        0%,100% { transform:translateY(0) rotate(0deg); }
+        50%     { transform:translateY(-20px) rotate(180deg); }
       }
-      .btn-primary:hover:not(:disabled) { box-shadow:0 6px 28px rgba(124,58,237,0.55) !important; transform:translateY(-1px) !important; }
-      .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
+      @keyframes shimmer {
+        0%   { transform:translateX(-100%); }
+        100% { transform:translateX(200%); }
+      }
+      @keyframes ripple {
+        0%   { width:0; height:0; opacity:0.5; }
+        100% { width:300px; height:300px; opacity:0; }
+      }
+      @keyframes slideInDown {
+        from { opacity:0; transform:translateY(-10px); }
+        to   { opacity:1; transform:translateY(0); }
+      }
+      @keyframes bounce {
+        0%,80%,100% { transform:scale(0); }
+        40%         { transform:scale(1); }
+      }
+      @keyframes scanLine {
+        0%   { top:-2%; opacity:0; }
+        5%   { opacity:0.6; }
+        95%  { opacity:0.6; }
+        100% { top:102%; opacity:0; }
+      }
     `}</style>
   );
 }
 
-// ── Background — static deep space, minimal orbs ──────────────────────────────
+// ── Background orbs — purple/teal cyber premium ──────────────────────────────
 function BackgroundOrbs() {
   return (
-    <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden' }}>
+    <div style={{
+      position: 'fixed', inset: 0,
+      pointerEvents: 'none',
+      zIndex: 0,
+      overflow: 'hidden'
+    }}>
+      {/* Base page gradient */}
       <div style={{
-        position:'absolute', inset:0,
-        background:'linear-gradient(145deg,#07071a 0%,#090720 40%,#06061a 70%,#07071a 100%)',
-        zIndex:-1
-      }}/>
-      {/* Purple bloom — top right */}
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(145deg, #04020f 0%, #080418 35%, #06021a 65%, #04020f 100%)',
+        zIndex: -1,
+      }} />
+      {/* Primary purple orb — top right */}
       <div style={{
-        position:'absolute', width:'700px', height:'700px',
-        top:'-180px', right:'-160px', borderRadius:'50%',
-        background:'radial-gradient(circle at 38% 38%, rgba(109,40,217,0.28) 0%, rgba(76,29,149,0.09) 45%, transparent 70%)',
-        filter:'blur(70px)', animation:'orbA 28s ease-in-out infinite alternate'
-      }}/>
-      {/* Teal bloom — bottom left */}
+        position: 'absolute',
+        width: '900px', height: '900px',
+        top: '-280px', right: '-220px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle at 38% 38%, rgba(124,58,237,0.32) 0%, rgba(88,28,180,0.12) 42%, transparent 70%)',
+        filter: 'blur(70px)',
+        animation: 'orbA 26s ease-in-out infinite alternate',
+      }} />
+      {/* Teal accent orb — bottom left */}
       <div style={{
-        position:'absolute', width:'600px', height:'600px',
-        bottom:'-140px', left:'-120px', borderRadius:'50%',
-        background:'radial-gradient(circle at 58% 58%, rgba(20,184,166,0.18) 0%, rgba(15,118,110,0.07) 48%, transparent 70%)',
-        filter:'blur(80px)', animation:'orbB 35s ease-in-out infinite alternate'
-      }}/>
-      {/* Indigo mid — center */}
+        position: 'absolute',
+        width: '700px', height: '700px',
+        bottom: '-180px', left: '-160px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle at 58% 58%, rgba(45,212,191,0.22) 0%, rgba(20,148,132,0.08) 45%, transparent 70%)',
+        filter: 'blur(80px)',
+        animation: 'orbB 32s ease-in-out infinite alternate',
+      }} />
+      {/* Deep violet orb — center */}
       <div style={{
-        position:'absolute', width:'400px', height:'400px',
-        top:'35%', left:'38%', borderRadius:'50%',
-        background:'radial-gradient(circle, rgba(99,51,220,0.10) 0%, transparent 70%)',
-        filter:'blur(55px)', animation:'orbC 22s ease-in-out infinite alternate'
-      }}/>
+        position: 'absolute',
+        width: '500px', height: '500px',
+        top: '28%', left: '33%',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(99,51,220,0.14) 0%, rgba(67,24,168,0.06) 55%, transparent 70%)',
+        filter: 'blur(55px)',
+        animation: 'orbC 20s ease-in-out infinite alternate',
+      }} />
+      {/* Teal micro orb — sidebar glow */}
+      <div style={{
+        position: 'absolute',
+        width: '300px', height: '300px',
+        top: '15%', left: '-60px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(45,212,191,0.16) 0%, transparent 70%)',
+        filter: 'blur(45px)',
+        animation: 'orbD 17s ease-in-out infinite alternate',
+      }} />
+      {/* Indigo highlight — top left corner */}
+      <div style={{
+        position: 'absolute',
+        width: '400px', height: '400px',
+        top: '-100px', left: '20%',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(129,140,248,0.10) 0%, transparent 70%)',
+        filter: 'blur(60px)',
+        animation: 'orbA 38s ease-in-out infinite alternate-reverse',
+      }} />
+      {/* Noise overlay for texture */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'0.035\'/%3E%3C/svg%3E")',
+        backgroundSize: '200px 200px',
+        opacity: 0.4,
+        zIndex: 0,
+      }} />
     </div>
   );
 }
@@ -513,29 +414,28 @@ const darkStyles = {
     padding: "0",
     boxSizing: "border-box",
     overflow: "hidden",
-    fontFamily: "'Inter',-apple-system,sans-serif",
+    fontFamily: "-apple-system,'SF Pro Display','Helvetica Neue',sans-serif",
     position: "relative",
     zIndex: 1,
   },
   sidebar: {
-    width: "240px",
-    minWidth: "240px",
-    background: "rgba(7,7,26,0.92)",
-    backdropFilter: "blur(40px)",
-    WebkitBackdropFilter: "blur(40px)",
-    borderRight: "1px solid rgba(139,92,246,0.1)",
-    padding: "0",
+    width: "275px",
+    minWidth: "275px",
+    background: "rgba(6,3,22,0.82)",
+    backdropFilter: "blur(48px) saturate(180%)",
+    WebkitBackdropFilter: "blur(48px) saturate(180%)",
+    borderRight: "1px solid rgba(124,58,237,0.2)",
+    padding: "24px 16px",
     overflowY: "auto",
     height: "100vh",
     position: "sticky",
     top: 0,
-    boxShadow: "4px 0 24px rgba(0,0,0,0.5)",
-    zIndex: 10,
-    display: "flex",
-    flexDirection: "column",
+    boxShadow: "4px 0 32px rgba(0,0,0,0.6)",
+    zIndex: 2,
   },
   mainContent: {
     flex: 1,
+    padding: "28px 28px 48px",
     overflowY: "auto",
     height: "100vh",
     display: "flex",
@@ -543,230 +443,254 @@ const darkStyles = {
     scrollBehavior: "smooth",
     zIndex: 2,
     position: "relative",
-    background: "transparent",
   },
   loginContainer: {
     display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: "100vh",
+    background: "transparent",
+    position: "relative",
+    overflow: "hidden",
     width: "100%",
     zIndex: 2,
-    position: "relative",
   },
   card: {
-    background: "rgba(255,255,255,0.03)",
-    backdropFilter: "blur(32px)",
-    WebkitBackdropFilter: "blur(32px)",
-    border: "1px solid rgba(139,92,246,0.1)",
-    padding: "22px",
-    borderRadius: "16px",
+    background: "rgba(255,255,255,0.07)",
+    backdropFilter: "blur(48px) saturate(160%)",
+    WebkitBackdropFilter: "blur(48px) saturate(160%)",
+    border: "1px solid rgba(255,255,255,0.12)",
+    borderTop: "1px solid rgba(255,255,255,0.2)",
+    padding: "24px",
+    borderRadius: "20px",
     width: "100%",
+    textAlign: "center",
     boxSizing: "border-box",
-    marginBottom: "16px",
-    boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+    marginBottom: "20px",
+    boxShadow: "0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
+    transition: "all 0.4s cubic-bezier(0.25,0.46,0.45,0.94)",
     position: "relative",
     zIndex: 2,
-    textAlign: "left",
   },
   gridCard: {
-    background: "rgba(255,255,255,0.03)",
-    backdropFilter: "blur(32px)",
-    WebkitBackdropFilter: "blur(32px)",
-    border: "1px solid rgba(139,92,246,0.1)",
-    padding: "22px",
-    borderRadius: "16px",
+    background: "rgba(255,255,255,0.07)",
+    backdropFilter: "blur(48px) saturate(160%)",
+    WebkitBackdropFilter: "blur(48px) saturate(160%)",
+    border: "1px solid rgba(255,255,255,0.12)",
+    borderTop: "1px solid rgba(255,255,255,0.2)",
+    padding: "24px",
+    borderRadius: "20px",
     width: "100%",
+    textAlign: "center",
     boxSizing: "border-box",
     height: "100%",
-    boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
+    boxShadow: "0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
+    transition: "all 0.4s cubic-bezier(0.25,0.46,0.45,0.94)",
     position: "relative",
     zIndex: 2,
-    textAlign: "left",
   },
   input: {
     width: "100%",
-    padding: "10px 14px",
-    marginBottom: "10px",
-    background: "rgba(139,92,246,0.06)",
+    padding: "13px 18px",
+    marginBottom: "13px",
+    background: "rgba(255,255,255,0.08)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
     color: DARK_THEME.text,
-    border: "1px solid rgba(139,92,246,0.15)",
-    borderRadius: "10px",
-    fontSize: "13px",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: "13px",
+    fontSize: "14px",
     boxSizing: "border-box",
-    transition: "all 0.2s ease",
+    transition: "all 0.25s ease",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)"
   },
   select: {
     width: "100%",
-    padding: "10px 14px",
-    marginBottom: "10px",
-    background: "rgba(139,92,246,0.06)",
+    padding: "13px 18px",
+    marginBottom: "13px",
+    background: "rgba(255,255,255,0.08)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
     color: DARK_THEME.text,
-    border: "1px solid rgba(139,92,246,0.15)",
-    borderRadius: "10px",
-    fontSize: "13px",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: "13px",
+    fontSize: "14px",
     boxSizing: "border-box",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)"
   },
   button: {
-    padding: "9px 18px",
-    border: "1px solid rgba(139,92,246,0.2)",
-    borderRadius: "10px",
+    padding: "11px 20px",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: "12px",
     cursor: "pointer",
-    color: "rgba(200,190,255,0.9)",
-    fontSize: "13px",
+    color: "rgba(255,255,255,0.92)",
+    fontSize: "13.5px",
     fontWeight: "500",
-    margin: "3px",
-    display: "inline-flex",
+    margin: "4px",
+    display: "flex",
     alignItems: "center",
-    gap: "6px",
-    transition: "all 0.18s ease",
-    background: "rgba(139,92,246,0.08)",
-    letterSpacing: "-0.01em",
+    gap: "7px",
+    transition: "all 0.22s cubic-bezier(0.25,0.46,0.45,0.94)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    background: "rgba(255,255,255,0.08)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 2px 8px rgba(0,0,0,0.3)",
+    letterSpacing: "-0.01em"
   },
   gridContainer: {
     display: "grid",
-    gap: "16px",
+    gap: "20px",
     gridTemplateColumns: "1fr 1fr",
-    width: "100%",
+    width: "100%"
   },
   table: {
     width: "100%",
-    borderCollapse: "collapse",
+    borderCollapse: "collapse"
   },
   tableHeader: {
-    background: "rgba(139,92,246,0.07)",
-    color: "rgba(180,170,255,0.5)",
-    padding: "10px 14px",
+    background: "rgba(124,58,237,0.07)",
+    color: "rgba(200,190,255,0.5)",
+    padding: "11px 14px",
     textAlign: "left",
     cursor: "pointer",
-    borderBottom: "1px solid rgba(139,92,246,0.12)",
-    fontSize: "10px",
-    fontWeight: "600",
-    letterSpacing: "0.09em",
-    textTransform: "uppercase",
-    whiteSpace: "nowrap",
+    borderBottom: "1px solid rgba(124,58,237,0.15)",
+    fontSize: "10.5px",
+    fontWeight: "700",
+    letterSpacing: "0.08em",
+    textTransform: "uppercase"
   },
   tableCell: {
-    padding: "11px 14px",
-    borderBottom: "1px solid rgba(139,92,246,0.06)",
+    padding: "12px 14px",
+    borderBottom: "1px solid rgba(255,255,255,0.04)",
     fontSize: "12.5px",
-    color: "rgba(220,215,255,0.8)",
+    color: "rgba(255,255,255,0.82)"
   },
   pre: {
-    background: "rgba(0,0,0,0.45)",
-    color: "#a5f3fc",
+    background: "rgba(0,0,0,0.5)",
+    color: DARK_THEME.text,
     padding: "14px",
-    borderRadius: "10px",
+    borderRadius: "13px",
     overflow: "auto",
-    fontFamily: "'JetBrains Mono',monospace",
+    fontFamily: "'SF Mono','Fira Code','Cascadia Code',monospace",
     fontSize: "11.5px",
     maxHeight: "200px",
     textAlign: "left",
-    border: "1px solid rgba(139,92,246,0.1)",
+    border: "1px solid rgba(255,255,255,0.06)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)"
   },
   message: {
-    padding: "12px 18px",
-    borderRadius: "10px",
+    padding: "15px 20px",
+    borderRadius: "12px",
     textAlign: "center",
     width: "100%",
     boxSizing: "border-box",
-    fontSize: "13px",
+    backdropFilter: "blur(10px)"
   },
   quickActions: {
     display: "flex",
     gap: "8px",
     flexWrap: "wrap",
     justifyContent: "flex-start",
-    width: "100%",
+    width: "100%"
   },
-  // Tabs moved to top rail — tabContainer/tab kept for compat
   tabContainer: {
     display: "flex",
-    gap: "0",
-    marginBottom: "0",
+    gap: "4px",
+    marginBottom: "20px",
     justifyContent: "flex-start",
-    flexWrap: "nowrap",
-    overflowX: "auto",
-    background: "transparent",
-    border: "none",
-    borderBottom: "1px solid rgba(139,92,246,0.08)",
-    padding: "0 28px",
+    flexWrap: "wrap",
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: "16px",
+    padding: "5px",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)"
   },
   tab: {
-    padding: "12px 16px",
-    border: "none",
-    borderBottom: "2px solid transparent",
-    borderRadius: "0",
+    padding: "10px 18px",
+    border: "1px solid transparent",
+    borderRadius: "11px",
     cursor: "pointer",
     fontSize: "13px",
     fontWeight: "500",
-    display: "inline-flex",
+    display: "flex",
     alignItems: "center",
     gap: "7px",
-    color: "rgba(180,170,255,0.45)",
+    transition: "all 0.25s cubic-bezier(0.25,0.46,0.45,0.94)",
+    backdropFilter: "blur(10px)",
+    color: "rgba(255,255,255,0.6)",
     background: "transparent",
-    letterSpacing: "-0.01em",
-    whiteSpace: "nowrap",
-    transition: "all 0.15s",
+    letterSpacing: "-0.01em"
   },
   sidebarSection: {
-    marginBottom: "8px",
-    padding: "0 12px",
+    marginBottom: "14px",
+    padding: "16px",
+    background: "rgba(255,255,255,0.05)",
+    borderRadius: "16px",
+    border: "1px solid rgba(255,255,255,0.09)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    boxShadow: "0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)"
   },
   sidebarHeader: {
     display: "flex",
     alignItems: "center",
-    gap: "6px",
-    padding: "12px 10px 6px",
-    color: "rgba(180,170,255,0.3)",
-    fontSize: "9px",
+    gap: "8px",
+    marginBottom: "12px",
+    color: "rgba(255,255,255,0.35)",
+    fontSize: "10px",
     fontWeight: "700",
-    letterSpacing: "0.12em",
-    textTransform: "uppercase",
+    letterSpacing: "0.1em",
+    textTransform: "uppercase"
   },
   filterGroup: {
-    marginBottom: "14px",
+    marginBottom: "15px"
   },
   filterLabel: {
     display: "block",
-    marginBottom: "5px",
-    color: "rgba(180,170,255,0.45)",
+    marginBottom: "6px",
+    color: "rgba(255,255,255,0.38)",
     fontSize: "11px",
     fontWeight: "500",
-    letterSpacing: "0.02em",
+    letterSpacing: "0.02em"
   },
   exportOption: {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    padding: "10px 12px",
-    marginBottom: "5px",
-    background: "rgba(139,92,246,0.05)",
-    borderRadius: "10px",
+    padding: "11px 14px",
+    marginBottom: "6px",
+    background: "rgba(255,255,255,0.04)",
+    borderRadius: "11px",
     cursor: "pointer",
-    transition: "all 0.18s ease",
-    border: "1px solid rgba(139,92,246,0.1)",
+    transition: "all 0.22s ease",
+    border: "1px solid rgba(255,255,255,0.07)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)"
   },
   navMenu: {
     display: "flex",
     flexDirection: "column",
-    gap: "2px",
-    padding: "0 12px",
+    gap: "3px",
+    marginBottom: "14px"
   },
   navItem: {
     display: "flex",
     alignItems: "center",
-    gap: "10px",
-    padding: "9px 12px",
-    color: "rgba(180,170,255,0.55)",
+    gap: "11px",
+    padding: "12px 16px",
+    color: "rgba(255,255,255,0.58)",
     textDecoration: "none",
-    borderRadius: "8px",
-    transition: "all 0.15s ease",
+    borderRadius: "12px",
+    transition: "all 0.22s cubic-bezier(0.25,0.46,0.45,0.94)",
     cursor: "pointer",
-    fontSize: "13px",
+    fontSize: "13.5px",
     fontWeight: "450",
     letterSpacing: "-0.01em",
-    border: "1px solid transparent",
-    position: "relative",
-  },
+    border: "1px solid transparent"
+  }
 };
 
 // ==================== ENHANCED AI COMPONENTS WITH REAL IMPLEMENTATIONS ====================
@@ -1057,8 +981,8 @@ function AISmartInsights({ metrics, apiClient }) {
                         onClick={() => handleInsightAction(insight.action, insight.id)}
                         style={{
                           padding: '6px 12px',
-                          background: 'rgba(139,92,246,0.15)',
-                          border: `1px solid rgba(139,92,246,0.15)`,
+                          background: 'rgba(124,58,237,0.18)',
+                          border: `1px solid rgba(124,58,237,0.35)`,
                           borderRadius: '6px',
                           color: DARK_THEME.text,
                           fontSize: '11px',
@@ -1105,8 +1029,8 @@ function AISmartInsights({ metrics, apiClient }) {
                       onClick={() => handleInsightFeedback(insight.id, false)}
                       style={{
                         padding: '4px 8px',
-                        background: 'rgba(139,92,246,0.15)',
-                        border: `1px solid rgba(139,92,246,0.15)`,
+                        background: 'rgba(124,58,237,0.18)',
+                        border: `1px solid rgba(124,58,237,0.35)`,
                         borderRadius: '4px',
                         color: DARK_THEME.text,
                         fontSize: '10px',
@@ -1261,7 +1185,7 @@ function ServerWorldMap({ servers, onServerClick }) {
                 y1={`${((90 - server.lat) / 180) * 100}%`}
                 x2={`${((targetServer.lng + 180) / 360) * 100}%`}
                 y2={`${((90 - targetServer.lat) / 180) * 100}%`}
-                stroke="rgba(139,92,246,0.15)"
+                stroke="rgba(124,58,237,0.18)"
                 strokeWidth="1"
                 strokeDasharray="4 4"
               />
@@ -1348,9 +1272,9 @@ function ServerWorldMap({ servers, onServerClick }) {
       <style>
         {`
           @keyframes pulse {
-            0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(139,92,246,0.15); }
-            70% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 10px rgba(139,92,246,0.15); }
-            100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(139,92,246,0.15); }
+            0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(124,58,237,0.5); }
+            70% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 10px rgba(124,58,237,0); }
+            100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(124,58,237,0); }
           }
         `}
       </style>
@@ -1892,8 +1816,8 @@ const PasswordInput = memo(({
       required
       autoComplete={autoComplete}
       onFocus={(e) => {
-        e.target.style.borderColor = "#8b5cf6";
-        e.target.style.boxShadow = `0 0 0 3px rgba(139,92,246,0.15)`;
+        e.target.style.borderColor = "#7c3aed";
+        e.target.style.boxShadow = `0 0 0 3px rgba(124,58,237,0.18)`;
       }}
       onBlur={(e) => {
         e.target.style.borderColor = DARK_THEME.glassBorder;
@@ -1917,7 +1841,7 @@ const PasswordInput = memo(({
         transition: 'all 0.2s ease'
       }}
       onMouseEnter={(e) => {
-        e.target.style.color = '#8b5cf6';
+        e.target.style.color = '#7c3aed';
         e.target.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
       }}
       onMouseLeave={(e) => {
@@ -2151,257 +2075,532 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
     setTimeout(() => setButtonRipple(false), 600);
   };
 
-  // Field helper
-  const fieldStyle = {
-    width: '100%', padding: '11px 14px', marginBottom: 0,
-    background: 'rgba(139,92,246,0.06)',
-    border: '1px solid rgba(139,92,246,0.15)',
-    borderRadius: '10px', color: '#e8e6ff',
-    fontSize: '14px', boxSizing: 'border-box',
-    fontFamily: "'Inter',sans-serif", transition: 'all 0.2s',
-  };
-
-  const isError = message && (message.includes("failed") || message.includes("error") || message.includes("Incorrect") || message.includes("invalid"));
-
   return (
-    <div style={{ ...darkStyles.loginContainer, display: 'flex', minHeight: '100vh' }}>
-      {/* ── LEFT PANEL ── */}
-      <div className="login-left" style={{
-        flex: '0 0 48%', display: 'flex', flexDirection: 'column',
-        background: 'linear-gradient(145deg,#0a0820 0%,#0d0b2b 60%,#080618 100%)',
-        borderRight: '1px solid rgba(139,92,246,0.12)',
-        position: 'relative', overflow: 'hidden', padding: '52px 52px 40px',
-        justifyContent: 'space-between',
-      }}>
-        {/* Grid pattern */}
-        <div className="login-grid" />
+    <div style={darkStyles.loginContainer}>
+      {/* Enhanced Background Elements */}
+      <FloatingParticles />
+      
+      {/* Login page ambient light */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+        background: 'radial-gradient(ellipse at 50% 50%, rgba(124,58,237,0.06) 0%, transparent 60%)',
+        zIndex: 0
+      }} />
+      {/* Purple orb top-left */}
+      <div style={{
+        position: 'absolute', top: '10%', left: '8%',
+        width: '380px', height: '380px',
+        background: 'radial-gradient(circle, rgba(124,58,237,0.18) 0%, transparent 70%)',
+        borderRadius: '50%',
+        animation: 'float 7s ease-in-out infinite',
+        filter: 'blur(30px)', zIndex: 0
+      }} />
+      {/* Teal orb bottom-right */}
+      <div style={{
+        position: 'absolute', bottom: '12%', right: '8%',
+        width: '450px', height: '450px',
+        background: 'radial-gradient(circle, rgba(45,212,191,0.12) 0%, transparent 70%)',
+        borderRadius: '50%',
+        animation: 'float 9s ease-in-out infinite',
+        animationDelay: '1.5s',
+        filter: 'blur(35px)', zIndex: 0
+      }} />
+      {/* Indigo accent top-right */}
+      <div style={{
+        position: 'absolute', top: '5%', right: '15%',
+        width: '250px', height: '250px',
+        background: 'radial-gradient(circle, rgba(129,140,248,0.10) 0%, transparent 70%)',
+        borderRadius: '50%',
+        animation: 'float 11s ease-in-out infinite',
+        animationDelay: '3s',
+        filter: 'blur(25px)', zIndex: 0
+      }} />
 
-        {/* Purple orb */}
-        <div style={{
-          position: 'absolute', width: '500px', height: '500px',
-          top: '-100px', right: '-100px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(109,40,217,0.22) 0%, transparent 70%)',
-          filter: 'blur(60px)', pointerEvents: 'none',
-        }} />
-        {/* Teal orb */}
-        <div style={{
-          position: 'absolute', width: '350px', height: '350px',
-          bottom: '-60px', left: '-60px', borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(20,184,166,0.15) 0%, transparent 70%)',
-          filter: 'blur(50px)', pointerEvents: 'none',
-        }} />
-
-        {/* Logo */}
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '64px' }}>
-            <div style={{
-              width: '40px', height: '40px', borderRadius: '12px',
-              background: 'linear-gradient(135deg,#8b5cf6,#2dd4bf)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 20px rgba(139,92,246,0.45)',
-            }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-              </svg>
-            </div>
-            <div>
-              <div style={{ fontSize: '15px', fontWeight: '700', color: '#e8e6ff', letterSpacing: '-0.02em' }}>
-                Purple Agent
-              </div>
-              <div style={{ fontSize: '11px', color: 'rgba(180,170,255,0.45)', letterSpacing: '0.04em' }}>
-                Security Platform
-              </div>
-            </div>
-          </div>
-
-          {/* Headline */}
-          <h1 style={{
-            fontSize: '36px', fontWeight: '700', lineHeight: 1.15,
-            letterSpacing: '-0.04em', color: '#e8e6ff', margin: '0 0 16px',
+      {/* Enhanced Login Card */}
+      <div 
+        style={{
+          background: 'rgba(255,255,255,0.04)',
+          backdropFilter: 'blur(40px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+          border: '1px solid rgba(124,58,237,0.2)',
+          borderTop: '1px solid rgba(196,181,253,0.15)',
+          padding: "44px 38px",
+          borderRadius: "28px",
+          width: "100%",
+          maxWidth: "440px",
+          textAlign: "center",
+          boxSizing: "border-box",
+          boxShadow: `
+            0 30px 60px -15px rgba(0,0,0,0.7),
+            0 0 0 1px rgba(45,212,191,0.06),
+            0 1px 0 rgba(196,181,253,0.12),
+            inset 0 1px 0 rgba(255,255,255,0.07)
+          `,
+          zIndex: 1,
+          position: 'relative',
+          transform: isHovered ? 'translateY(-6px) scale(1.008)' : 'translateY(0) scale(1)',
+          transition: 'all 0.45s cubic-bezier(0.175,0.885,0.32,1.275)',
+          margin: '20px'
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Enhanced App Logo/Title with Glow Effect */}
+        <div style={{ marginBottom: "32px", position: 'relative' }}>
+          {/* Logo mark */}
+          <div style={{
+            width: '72px',
+            height: '72px',
+            background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2dd4bf 100%)',
+            borderRadius: '22px',
+            margin: '0 auto 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '13px',
+            fontWeight: '700',
+            color: 'white',
+            letterSpacing: '0.02em',
+            fontFamily: "'JetBrains Mono', monospace",
+            boxShadow: avatarGlow
+              ? '0 0 40px rgba(124,58,237,0.55), 0 0 80px rgba(45,212,191,0.15), inset 0 1px 0 rgba(255,255,255,0.25)'
+              : '0 0 18px rgba(124,58,237,0.25), inset 0 1px 0 rgba(255,255,255,0.15)',
+            transform: avatarGlow ? 'scale(1.04)' : 'scale(1)',
+            transition: 'all 0.7s cubic-bezier(0.34,1.56,0.64,1)',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
-            Real-time threat<br />
-            <span style={{
-              background: 'linear-gradient(135deg,#a78bfa,#2dd4bf)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            }}>visibility at scale</span>
-          </h1>
-          <p style={{ fontSize: '15px', color: 'rgba(180,170,255,0.55)', lineHeight: 1.6, margin: 0, maxWidth: '340px' }}>
-            Monitor agents, detect anomalies, and respond to incidents — all from one unified dashboard.
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%)',
+              transform: 'translateX(-100%)',
+              animation: 'shimmer 3s infinite'
+            }} />
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+            </svg>
+          </div>
+          <h2 style={{
+            color: '#f0eeff',
+            marginBottom: '8px',
+            fontSize: '28px',
+            fontWeight: '700',
+            background: 'linear-gradient(135deg, #c4b5fd 0%, #f0eeff 50%, #2dd4bf 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            letterSpacing: '-0.04em',
+            lineHeight: 1.1
+          }}>
+            {authMode === "login" ? "Welcome back" : "Create account"}
+          </h2>
+          <p style={{
+            color: 'rgba(200,190,255,0.45)',
+            fontSize: '14px',
+            margin: 0,
+            fontWeight: '400',
+            letterSpacing: '0.01em'
+          }}>
+            {authMode === "login" ? "Sign in to your security dashboard" : "Join the purple team"}
           </p>
         </div>
-
-        {/* Live stat grid */}
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '32px' }}>
-            {[
-              { val: '99.9%', label: 'Uptime SLA' },
-              { val: '<2s',   label: 'Alert latency' },
-              { val: 'AES-256', label: 'Encryption' },
-              { val: 'JWT',   label: 'Auth method' },
-            ].map(s => (
-              <div key={s.label} className="login-stat">
-                <div className="login-stat-val">{s.val}</div>
-                <div className="login-stat-label">{s.label}</div>
-              </div>
-            ))}
+        
+        {/* Enhanced Message Display */}
+        {message && (
+          <div style={{
+            padding: "15px 20px",
+            borderRadius: "12px",
+            textAlign: "center",
+            width: "100%",
+            boxSizing: "border-box",
+            backgroundColor: message.includes("failed") || message.includes("error") || message.includes("Incorrect") 
+              ? 'rgba(124,58,237,0.12)' 
+              : 'rgba(34,197,94,0.12)',
+            border: `1px solid ${
+              message.includes("failed") || message.includes("error") || message.includes("Incorrect") 
+                ? 'rgba(124,58,237,0.35)' 
+                : 'rgba(34,197,94,0.3)'
+            }`,
+            color: message.includes("failed") || message.includes("error") || message.includes("Incorrect") 
+              ? '#fca5a5' 
+              : '#86efac',
+            marginBottom: "22px",
+            backdropFilter: 'blur(10px)',
+            animation: 'slideInDown 0.4s ease-out'
+          }}>
+            {message}
           </div>
+        )}
 
-          {/* Feature pills */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {['Log monitoring','File integrity','Network analysis','AI insights','Brute-force detection'].map(f => (
-              <div key={f} style={{
-                padding: '4px 12px', borderRadius: '20px',
-                background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.18)',
-                fontSize: '11px', color: 'rgba(180,170,255,0.65)', fontWeight: '500',
-              }}>{f}</div>
-            ))}
-          </div>
-
-          <div style={{ marginTop: '28px', fontSize: '11px', color: 'rgba(180,170,255,0.3)', letterSpacing: '0.04em' }}>
-            Purple Agent v2.1 • End-to-end encrypted
-          </div>
-        </div>
-      </div>
-
-      {/* ── RIGHT PANEL — Form ── */}
-      <div style={{
-        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '48px 40px', background: '#07071a',
-      }}>
-        <div style={{ width: '100%', maxWidth: '380px' }}>
-          {/* Header */}
-          <div style={{ marginBottom: '32px' }}>
-            <h2 style={{
-              fontSize: '24px', fontWeight: '700', color: '#e8e6ff',
-              letterSpacing: '-0.03em', margin: '0 0 6px',
+        <form onSubmit={handleSubmit}>
+          {/* Hidden username field for accessibility */}
+          <input
+            type="text"
+            name="hidden_username"
+            autoComplete="username"
+            style={{ display: 'none' }}
+          />
+          
+          {/* Username Field */}
+          <div style={{ position: 'relative', marginBottom: '18px' }}>
+            <label htmlFor="username" style={{
+              display: 'block',
+              textAlign: 'left',
+              color: 'rgba(255,255,255,0.4)',
+              fontSize: '13px',
+              fontWeight: '500',
+              marginBottom: '6px',
+              paddingLeft: '4px'
             }}>
-              {authMode === 'login' ? 'Sign in' : 'Create account'}
-            </h2>
-            <p style={{ fontSize: '14px', color: 'rgba(180,170,255,0.45)', margin: 0 }}>
-              {authMode === 'login' ? 'Enter your credentials to continue' : 'Fill in your details to get started'}
-            </p>
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              name="username"
+              placeholder="Enter your username"
+              value={formData.username}
+              onChange={handleInputChange}
+              style={{
+                width: "100%",
+                padding: "15px 20px",
+                marginBottom: 0,
+                background: "rgba(255,255,255,0.05)",
+                backdropFilter: "blur(10px)",
+                color: "#fff",
+                border: `1px solid ${DARK_THEME.glassBorder}`,
+                borderRadius: "12px",
+                fontSize: "14px",
+                boxSizing: "border-box",
+                transition: "all 0.3s ease"
+              }}
+              required
+              autoComplete="username"
+              onFocus={(e) => {
+                e.target.style.borderColor = "#7c3aed";
+                e.target.style.boxShadow = `0 0 0 3px rgba(124,58,237,0.15)`;
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = DARK_THEME.glassBorder;
+                e.target.style.boxShadow = 'none';
+              }}
+            />
           </div>
 
-          {/* Message */}
-          {message && (
-            <div style={{
-              padding: '11px 14px', borderRadius: '10px', marginBottom: '20px',
-              fontSize: '13px', animation: 'slideInDown 0.3s ease',
-              background: isError ? 'rgba(244,63,94,0.1)' : 'rgba(45,212,191,0.1)',
-              border: `1px solid ${isError ? 'rgba(244,63,94,0.25)' : 'rgba(45,212,191,0.22)'}`,
-              color: isError ? '#fb7185' : '#2dd4bf',
-            }}>{message}</div>
+          {authMode === "register" && (
+            <>
+              {/* Email Field */}
+              <div style={{ position: 'relative', marginBottom: '18px' }}>
+                <label htmlFor="email" style={{
+                  display: 'block',
+                  textAlign: 'left',
+                  color: 'rgba(255,255,255,0.4)',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  marginBottom: '6px',
+                  paddingLeft: '4px'
+                }}>
+                  Email Address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  style={{
+                    width: "100%",
+                    padding: "15px 20px",
+                    marginBottom: 0,
+                    background: "rgba(255,255,255,0.05)",
+                    backdropFilter: "blur(10px)",
+                    color: "#fff",
+                    border: `1px solid ${DARK_THEME.glassBorder}`,
+                    borderRadius: "12px",
+                    fontSize: "14px",
+                    boxSizing: "border-box",
+                    transition: "all 0.3s ease"
+                  }}
+                  required
+                  autoComplete="email"
+                  onFocus={(e) => {
+                    e.target.style.borderColor = "#7c3aed";
+                    e.target.style.boxShadow = `0 0 0 3px rgba(124,58,237,0.15)`;
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = DARK_THEME.glassBorder;
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+              
+              {/* Role Selection */}
+              <div style={{ position: 'relative', marginBottom: '18px' }}>
+                <label htmlFor="role" style={{
+                  display: 'block',
+                  textAlign: 'left',
+                  color: 'rgba(255,255,255,0.4)',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  marginBottom: '6px',
+                  paddingLeft: '4px'
+                }}>
+                  Role
+                </label>
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleInputChange}
+                  style={{
+                    width: "100%",
+                    padding: "15px 20px",
+                    marginBottom: 0,
+                    background: "rgba(255,255,255,0.05)",
+                    backdropFilter: "blur(10px)",
+                    color: "#fff",
+                    border: `1px solid ${DARK_THEME.glassBorder}`,
+                    borderRadius: "12px",
+                    fontSize: "14px",
+                    boxSizing: "border-box"
+                  }}
+                >
+                  <option value="guest">Guest</option>
+                  <option value="agent">Agent</option>
+                </select>
+              </div>
+            </>
           )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <input type="text" name="hidden_username" autoComplete="username" style={{ display: 'none' }} />
+          {/* Password Field */}
+          <div style={{ position: 'relative', marginBottom: '18px' }}>
+            <label htmlFor="password" style={{
+              display: 'block',
+              textAlign: 'left',
+              color: 'rgba(255,255,255,0.4)',
+              fontSize: '13px',
+              fontWeight: '500',
+              marginBottom: '6px',
+              paddingLeft: '4px'
+            }}>
+              Password
+            </label>
+            <PasswordInput
+              value={formData.password}
+              onChange={handleInputChange}
+              placeholder="Enter your password"
+              name="password"
+              showPassword={showPassword}
+              onToggleVisibility={() => setShowPassword(!showPassword)}
+              autoComplete={authMode === "login" ? "current-password" : "new-password"}
+            />
+          </div>
 
-            {/* Username */}
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(180,170,255,0.5)', marginBottom: '5px' }}>Username</label>
-              <input id="username" type="text" name="username" placeholder="your username"
-                value={formData.username} onChange={handleInputChange}
-                style={fieldStyle} required autoComplete="username" />
-            </div>
-
-            {authMode === 'register' && (
-              <>
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(180,170,255,0.5)', marginBottom: '5px' }}>Email</label>
-                  <input id="email" type="email" name="email" placeholder="you@example.com"
-                    value={formData.email} onChange={handleInputChange}
-                    style={fieldStyle} required autoComplete="email" />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(180,170,255,0.5)', marginBottom: '5px' }}>Role</label>
-                  <select id="role" name="role" value={formData.role} onChange={handleInputChange} style={fieldStyle}>
-                    <option value="guest">Guest</option>
-                    <option value="agent">Agent</option>
-                  </select>
-                </div>
-              </>
-            )}
-
-            {/* Password */}
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(180,170,255,0.5)', marginBottom: '5px' }}>Password</label>
-              <PasswordInput value={formData.password} onChange={handleInputChange}
-                placeholder="••••••••" name="password"
-                showPassword={showPassword} onToggleVisibility={() => setShowPassword(!showPassword)}
-                autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} />
-            </div>
-
-            {authMode === 'register' && (
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(180,170,255,0.5)', marginBottom: '5px' }}>Confirm Password</label>
-                <PasswordInput value={formData.confirmPassword} onChange={handleInputChange}
-                  placeholder="••••••••" name="confirmPassword"
-                  showPassword={showConfirmPassword} onToggleVisibility={() => setShowConfirmPassword(!showConfirmPassword)}
-                  autoComplete="new-password" />
-              </div>
-            )}
-
-            {/* Submit */}
-            <button type="submit" disabled={authLoading} onClick={handleButtonClick}
-              style={{
-                marginTop: '8px', padding: '13px 20px', border: 'none', borderRadius: '10px',
-                cursor: authLoading ? 'not-allowed' : 'pointer', color: 'white',
-                fontSize: '14px', fontWeight: '600',
-                background: authLoading ? 'rgba(80,70,120,0.5)' : 'linear-gradient(135deg,#7c3aed,#4f46e5 60%,#2dd4bf)',
-                boxShadow: authLoading ? 'none' : '0 4px 20px rgba(124,58,237,0.4)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                position: 'relative', overflow: 'hidden',
-                transition: 'all 0.2s',
+          {authMode === "register" && (
+            <div style={{ position: 'relative', marginBottom: '22px' }}>
+              <label htmlFor="confirmPassword" style={{
+                display: 'block',
+                textAlign: 'left',
+                color: 'rgba(255,255,255,0.4)',
+                fontSize: '13px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                paddingLeft: '4px'
               }}>
+                Confirm Password
+              </label>
+              <PasswordInput
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                placeholder="Confirm your password"
+                name="confirmPassword"
+                showPassword={showConfirmPassword}
+                onToggleVisibility={() => setShowConfirmPassword(!showConfirmPassword)}
+                autoComplete="new-password"
+              />
+            </div>
+          )}
+
+          {/* Enhanced Submit Button with Ripple Effect */}
+          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px' }}>
+            <button 
+              type="submit" 
+              disabled={authLoading}
+              onClick={handleButtonClick}
+              style={{ 
+                padding: "15px 20px",
+                border: "none",
+                borderRadius: "12px",
+                cursor: "pointer",
+                color: "white",
+                fontSize: "16px",
+                fontWeight: "600",
+                margin: "5px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                transition: "all 0.3s ease",
+                backgroundColor: 'transparent',
+                width: "100%",
+                justifyContent: "center",
+                marginBottom: '18px',
+                background: authLoading 
+                  ? 'rgba(68, 68, 68, 0.8)'
+                  : 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2dd4bf 100%)',
+                boxShadow: authLoading
+                  ? 'none'
+                  : '0 8px 28px rgba(124,58,237,0.45), 0 2px 8px rgba(45,212,191,0.15)',
+                transform: authLoading ? 'none' : 'translateY(0)',
+                letterSpacing: '0.5px',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
+            >
+              {/* Ripple Effect */}
               {buttonRipple && (
                 <div style={{
-                  position: 'absolute', top: '50%', left: '50%',
-                  width: 0, height: 0, borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.25)',
-                  transform: 'translate(-50%,-50%)',
-                  animation: 'ripple 0.6s ease-out',
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: '0',
+                  height: '0',
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.3)',
+                  transform: 'translate(-50%, -50%)',
+                  animation: 'ripple 0.6s ease-out'
                 }} />
               )}
+              
               {authLoading ? (
-                <><TailSpin height={18} width={18} color="white" /><span>Signing in…</span></>
+                <>
+                  <TailSpin height={20} width={20} color="white" />
+                  <span>Authenticating...</span>
+                </>
               ) : (
-                authMode === 'login' ? 'Sign in →' : 'Create account →'
+                authMode === "login" ? "Sign In" : "Create Account"
               )}
             </button>
-          </form>
-
-          {/* Toggle */}
-          <div style={{ marginTop: '20px', textAlign: 'center' }}>
-            <button onClick={toggleAuthMode} style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: '13px', color: 'rgba(180,170,255,0.5)',
-            }}>
-              {authMode === 'login' ? "No account? " : "Have an account? "}
-              <span style={{ color: '#a78bfa', fontWeight: '600' }}>
-                {authMode === 'login' ? 'Register' : 'Sign in'}
-              </span>
-            </button>
           </div>
+        </form>
 
-          {/* Demo shortcut */}
-          <div style={{ marginTop: '28px', paddingTop: '20px', borderTop: '1px solid rgba(139,92,246,0.1)' }}>
-            <div style={{ fontSize: '11px', color: 'rgba(180,170,255,0.35)', marginBottom: '10px', textAlign: 'center', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Quick demo</div>
-            <button onClick={() => onLogin('mock-token', { username: 'admin', role: 'admin' })}
-              style={{
-                width: '100%', padding: '11px 20px', border: '1px solid rgba(139,92,246,0.2)',
-                borderRadius: '10px', cursor: 'pointer', color: 'rgba(200,190,255,0.8)',
-                fontSize: '13px', fontWeight: '500', background: 'rgba(139,92,246,0.07)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-              </svg>
-              Continue as Admin (demo)
-            </button>
-          </div>
+        {/* Enhanced Auth Mode Toggle */}
+        <div style={{ marginTop: "22px", textAlign: "center" }}>
+          <button
+            onClick={toggleAuthMode}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#7c3aed",
+              cursor: "pointer",
+              textDecoration: "none",
+              fontSize: "14px",
+              fontWeight: '500',
+              padding: '10px 18px',
+              borderRadius: '8px',
+              transition: 'all 0.3s ease',
+              position: 'relative'
+            }}
+          >
+            {authMode === "login" 
+              ? "Don't have an account? Register" 
+              : "Already have an account? Sign In"}
+          </button>
+        </div>
+
+        {/* Enhanced Demo Access Section */}
+        <div style={{ 
+          marginTop: "28px", 
+          paddingTop: "28px", 
+          borderTop: '1px solid rgba(124,58,237,0.2)' 
+        }}>
+          <p style={{ 
+            color: 'rgba(255,255,255,0.4)', 
+            marginBottom: "18px", 
+            fontSize: "14px",
+            fontWeight: '500'
+          }}>
+            Quick Demo Access:
+          </p>
+          <button 
+            onClick={() => onLogin("mock-token", { username: "admin", role: "admin" })}
+            style={{ 
+              padding: "15px 20px",
+              border: "none",
+              borderRadius: "12px",
+              cursor: "pointer",
+              color: "white",
+              fontSize: "14px",
+              fontWeight: "600",
+              margin: "5px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              transition: "all 0.3s ease",
+              backgroundColor: 'transparent',
+              width: "100%",
+              justifyContent: "center",
+              background: 'linear-gradient(135deg, #9333ea 0%, #7c3aed 50%, #9333ea 100%)',
+              boxShadow: '0 6px 20px rgba(147, 51, 234, 0.25)'
+            }}
+          >
+            Login as Admin (Demo)
+          </button>
         </div>
       </div>
+
+      {/* Enhanced Footer */}
+      <div style={{
+        position: 'absolute',
+        bottom: '20px',
+        left: 0,
+        right: 0,
+        textAlign: 'center',
+        color: 'rgba(255,255,255,0.4)',
+        fontSize: '12px',
+        zIndex: 1,
+        padding: '0 20px'
+      }}>
+        System Monitor v2.1.0 • Secure Authentication
+      </div>
+
+      {/* Enhanced CSS Animations */}
+      <style>
+        {`
+          @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+          }
+          
+          @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+          }
+          
+          @keyframes ripple {
+            0% {
+              width: 0;
+              height: 0;
+              opacity: 0.5;
+            }
+            100% {
+              width: 300px;
+              height: 300px;
+              opacity: 0;
+            }
+          }
+          
+          @keyframes slideInDown {
+            0% {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+            100% {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }
@@ -2441,54 +2640,82 @@ function MetricsChart({ cpu, memory, disk, onMetricClick }) {
     }
   };
   
-  const GaugeCard = ({ label, value, color, thresholdWarn=70, thresholdCrit=90, metricKey }) => {
-    const pct = Math.min(100, Math.max(0, value || 0));
-    const isCrit = pct >= thresholdCrit;
-    const isWarn = pct >= thresholdWarn && !isCrit;
-    const displayColor = isCrit ? '#f43f5e' : isWarn ? '#f59e0b' : color;
-    const statusLabel = isCrit ? 'critical' : isWarn ? 'warning' : 'normal';
-
-    return (
-      <div
-        onClick={() => onMetricClick && onMetricClick({ metric: metricKey, valueRange: '0-100', currentValue: value })}
-        style={{
-          flex: 1, padding: '18px 20px',
-          background: isCrit ? 'rgba(244,63,94,0.05)' : isWarn ? 'rgba(245,158,11,0.05)' : 'rgba(255,255,255,0.03)',
-          border: `1px solid ${isCrit ? 'rgba(244,63,94,0.2)' : isWarn ? 'rgba(245,158,11,0.18)' : 'rgba(139,92,246,0.1)'}`,
-          borderRadius: '14px', cursor: 'pointer',
-          transition: 'all 0.2s', position: 'relative', overflow: 'hidden',
-        }}
-      >
-        {/* Accent top bar */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: displayColor, borderRadius: '14px 14px 0 0', opacity: 0.8 }} />
-        <div style={{ fontSize: '10px', fontWeight: '600', letterSpacing: '0.09em', textTransform: 'uppercase', color: 'rgba(180,170,255,0.45)', marginBottom: '10px' }}>{label}</div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '12px' }}>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '32px', fontWeight: '600', color: displayColor, lineHeight: 1, letterSpacing: '-0.03em' }}>
-            {value != null ? value.toFixed(1) : '—'}
-          </span>
-          <span style={{ fontSize: '14px', color: 'rgba(180,170,255,0.4)' }}>%</span>
-        </div>
-        {/* Progress track */}
-        <div style={{ background: 'rgba(139,92,246,0.08)', borderRadius: '4px', height: '5px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${pct}%`, background: displayColor, borderRadius: '4px', transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)', boxShadow: `0 0 8px ${displayColor}55` }} />
-        </div>
-        <div style={{ marginTop: '8px', fontSize: '11px', color: 'rgba(180,170,255,0.35)', display: 'flex', justifyContent: 'space-between' }}>
-          <span>{statusLabel}</span><span>tap to drill down</span>
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <div style={{ ...darkStyles.gridCard, position: 'relative', zIndex: 2 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-        <h3 style={{ color: DARK_THEME.text, fontSize: '14px', fontWeight: '600', margin: 0, letterSpacing: '-0.01em' }}>System Resources</h3>
-        <span style={{ fontSize: '10px', color: 'rgba(180,170,255,0.35)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Live</span>
+    <div style={{
+      ...darkStyles.gridCard,
+      background: "rgba(255,255,255,0.07)",
+      backdropFilter: "blur(48px) saturate(160%)",
+      WebkitBackdropFilter: "blur(48px) saturate(160%)",
+      position: "relative",
+      zIndex: 2
+    }}>
+      <h3 style={{ color: DARK_THEME.text, marginBottom: "20px", fontSize: '18px' }}>System Metrics</h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            outerRadius={100}
+            label={({ name, value }) => `${name}: ${value?.toFixed(1)}%`}
+            onClick={(data, index) => handleChartClick(data, index)}
+          >
+            {data.map((entry, index) => (
+              <Cell 
+                key={`cell-${index}`} 
+                fill={entry.color}
+                style={{ cursor: 'pointer' }}
+              />
+            ))}
+          </Pie>
+          <Tooltip 
+            formatter={(value) => [`${value?.toFixed(1)}%`, 'Usage']}
+            contentStyle={{ 
+              background: DARK_THEME.cardBackground, 
+              border: `1px solid ${DARK_THEME.glassBorder}`,
+              borderRadius: '12px',
+              backdropFilter: 'blur(10px)'
+            }}
+          />
+          <Legend />
+        </PieChart>
+      </ResponsiveContainer>
+      <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-around" }}>
+        <span 
+          style={{ color: COLORS[0], cursor: 'pointer' }}
+          onClick={() => onMetricClick && onMetricClick({
+            metric: 'cpu_usage',
+            valueRange: '0-100',
+            currentValue: cpu
+          })}
+        >
+          CPU: {cpu?.toFixed(1)}%
+        </span>
+        <span 
+          style={{ color: COLORS[1], cursor: 'pointer' }}
+          onClick={() => onMetricClick && onMetricClick({
+            metric: 'memory_usage',
+            valueRange: '0-100', 
+            currentValue: memory
+          })}
+        >
+          Memory: {memory?.toFixed(1)}%
+        </span>
+        <span 
+          style={{ color: COLORS[2], cursor: 'pointer' }}
+          onClick={() => onMetricClick && onMetricClick({
+            metric: 'disk_usage',
+            valueRange: '0-100',
+            currentValue: disk
+          })}
+        >
+          Disk: {disk?.toFixed(1)}%
+        </span>
       </div>
-      <div style={{ display: 'flex', gap: '12px' }}>
-        <GaugeCard label="CPU" value={cpu} color={COLORS[0]} metricKey="cpu_usage" />
-        <GaugeCard label="Memory" value={memory} color={COLORS[1]} thresholdWarn={75} thresholdCrit={90} metricKey="memory_usage" />
-        <GaugeCard label="Disk" value={disk} color={COLORS[2]} thresholdWarn={80} thresholdCrit={95} metricKey="disk_usage" />
+      <div style={{ marginTop: "10px", fontSize: "12px", color: DARK_THEME.textMuted }}>
+        Click on any metric to view detailed analysis
       </div>
     </div>
   );
@@ -2623,7 +2850,7 @@ function ProcessList({ processes }) {
 
 // AlertBanner Component with Glass Morphism
 function AlertBanner({ message, type = 'info' }) {
-  const bgColor = type === 'error' ? 'rgba(139,92,246,0.15)' : type === 'warning' ? 'rgba(245,158,11,0.1)' : 'rgba(34,197,94,0.1)';
+  const bgColor = type === 'error' ? 'rgba(244,63,94,0.12)' : type === 'warning' ? 'rgba(245,158,11,0.1)' : 'rgba(34,197,94,0.1)';
   const borderColor = type === 'error' ? DARK_THEME.danger : type === 'warning' ? DARK_THEME.warning : DARK_THEME.success;
   const textColor = type === 'error' ? '#f87171' : type === 'warning' ? '#fbbf24' : '#4ade80';
   
@@ -2685,7 +2912,7 @@ function LiveDashboard({ token }) {
         alignItems: 'center',
         marginBottom: '15px',
         padding: '15px',
-        background: readyState === 1 ? 'rgba(34,197,94,0.1)' : 'rgba(139,92,246,0.15)',
+        background: readyState === 1 ? 'rgba(34,197,94,0.1)' : 'rgba(244,63,94,0.12)',
         border: `1px solid ${readyState === 1 ? DARK_THEME.success : DARK_THEME.danger}`,
         borderRadius: '12px',
         backdropFilter: 'blur(10px)'
@@ -2830,8 +3057,8 @@ function DrillDownModal({ isOpen, onClose, metricData, apiClient }) {
             onClick={onClose}
             style={{
               ...darkStyles.button,
-              background: 'rgba(139,92,246,0.15)',
-              border: `1px solid rgba(139,92,246,0.15)`,
+              background: 'rgba(124,58,237,0.18)',
+              border: `1px solid rgba(124,58,237,0.35)`,
               padding: '8px 16px',
               fontSize: '12px'
             }}
@@ -3080,8 +3307,8 @@ function FilterPanel({ onFilterChange, filters, loading }) {
           disabled={loading}
           style={{
             ...darkStyles.button,
-            background: loading ? DARK_THEME.glassBorder : 'rgba(139,92,246,0.15)',
-            border: `1px solid ${loading ? DARK_THEME.glassBorder : 'rgba(139,92,246,0.15)'}`,
+            background: loading ? DARK_THEME.glassBorder : 'rgba(124,58,237,0.18)',
+            border: `1px solid ${loading ? DARK_THEME.glassBorder : 'rgba(124,58,237,0.35)'}`,
             flex: 1
           }}
         >
@@ -3317,7 +3544,7 @@ function DashboardLayouts({ apiClient, currentUser }) {
       {message && (
         <div style={{
           ...darkStyles.message,
-          background: message.includes("Failed") ? 'rgba(139,92,246,0.15)' : 'rgba(34,197,94,0.1)',
+          background: message.includes("Failed") ? 'rgba(244,63,94,0.12)' : 'rgba(34,197,94,0.1)',
           border: `1px solid ${message.includes("Failed") ? DARK_THEME.danger : DARK_THEME.success}`,
           color: message.includes("Failed") ? '#f87171' : '#86efac',
           marginBottom: "15px"
@@ -3367,8 +3594,8 @@ function DashboardLayouts({ apiClient, currentUser }) {
                             onClick={() => setDefaultLayout(layout.id)}
                             style={{
                               ...darkStyles.button,
-                              background: 'rgba(139,92,246,0.15)',
-                              border: `1px solid rgba(139,92,246,0.15)`,
+                              background: 'rgba(124,58,237,0.18)',
+                              border: `1px solid rgba(124,58,237,0.35)`,
                               padding: "8px 16px",
                               fontSize: "12px"
                             }}
@@ -3379,8 +3606,8 @@ function DashboardLayouts({ apiClient, currentUser }) {
                             onClick={() => deleteLayout(layout.id)}
                             style={{
                               ...darkStyles.button,
-                              background: 'rgba(139,92,246,0.15)',
-                              border: `1px solid rgba(139,92,246,0.15)`,
+                              background: 'rgba(124,58,237,0.18)',
+                              border: `1px solid rgba(124,58,237,0.35)`,
                               padding: "8px 16px",
                               fontSize: "12px"
                             }}
@@ -3469,75 +3696,47 @@ function DashboardLayouts({ apiClient, currentUser }) {
   );
 }
 
-// Navigation Menu — redesigned sidebar nav
+// Navigation Menu Component with Glass Morphism
 function NavigationMenu({ activeTab, setActiveTab, currentUser }) {
-  const isAdmin = currentUser?.role === 'admin';
-
-  const sections = [
-    {
-      label: "Main",
-      items: [
-        { id: "dashboard", label: "Dashboard", icon: DashboardIcon },
-        { id: "layouts",   label: "Layouts",   icon: LayoutIcon },
-      ]
-    },
-    {
-      label: "Account",
-      items: [
-        { id: "account", label: "Settings", icon: AccountIcon },
-      ]
-    },
-    ...(isAdmin ? [{
-      label: "Admin",
-      items: [
-        { id: "users",         label: "Users",          icon: UsersIcon },
-        { id: "alerts",        label: "Alerts",         icon: AlertIcon },
-        { id: "user-activity", label: "Activity",       icon: ActivityIcon },
-        { id: "visitor-logs",  label: "Visitor Logs",   icon: SecurityIcon },
-      ]
-    }] : []),
+  const menuItems = [
+    { id: "dashboard", label: "Dashboard", icon: DashboardIcon, available: true },
+    { id: "layouts", label: "Dashboard Layouts", icon: LayoutIcon, available: true },
+    { id: "account", label: "Account Settings", icon: AccountIcon, available: true },
+    { id: "users", label: "User Management", icon: UsersIcon, available: currentUser?.role === 'admin' },
+    { id: "alerts", label: "Alerts & Incidents", icon: AlertIcon, available: currentUser?.role === 'admin' },
+    { id: "user-activity", label: "User Activity", icon: ActivityIcon, available: currentUser?.role === 'admin' },
+    { id: "visitor-logs", label: "Visitor Logs", icon: SecurityIcon, available: currentUser?.role === 'admin' }
   ];
 
   return (
-    <nav style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
-      {sections.map(section => (
-        <div key={section.label} style={{ marginBottom: '4px' }}>
-          <div style={darkStyles.sidebarHeader}>{section.label}</div>
-          <div style={darkStyles.navMenu}>
-            {section.items.map(item => {
-              const isActive = activeTab === item.id;
-              return (
-                <div
-                  key={item.id}
-                  className={`nav-item${isActive ? ' active' : ''}`}
-                  style={{
-                    ...darkStyles.navItem,
-                    background: isActive ? 'rgba(139,92,246,0.14)' : 'transparent',
-                    borderColor: isActive ? 'rgba(139,92,246,0.22)' : 'transparent',
-                    color: isActive ? '#e8e6ff' : 'rgba(180,170,255,0.55)',
-                    fontWeight: isActive ? '550' : '450',
-                  }}
-                  onClick={() => setActiveTab(item.id)}
-                >
-                  {/* Active left bar */}
-                  {isActive && (
-                    <div style={{
-                      position: 'absolute', left: '-12px', top: '50%',
-                      transform: 'translateY(-50%)',
-                      width: '3px', height: '60%',
-                      background: 'linear-gradient(#8b5cf6,#2dd4bf)',
-                      borderRadius: '0 2px 2px 0',
-                    }} />
-                  )}
-                  <item.icon />
-                  <span>{item.label}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-    </nav>
+    <div style={darkStyles.sidebarSection}>
+      <div style={darkStyles.sidebarHeader}>
+        <SettingsIcon />
+        <span>Navigation</span>
+      </div>
+      
+      <div style={darkStyles.navMenu}>
+        {menuItems.map((item) => 
+          item.available && (
+            <div
+              key={item.id}
+              style={{
+                ...darkStyles.navItem,
+                background: activeTab === item.id ? 'rgba(124,58,237,0.14)' : 'transparent',
+                border: activeTab === item.id ? '1px solid rgba(124,58,237,0.28)' : '1px solid transparent',
+                color: activeTab === item.id ? '#fff' : 'rgba(255,255,255,0.58)',
+                fontWeight: activeTab === item.id ? '600' : '450',
+                boxShadow: activeTab === item.id ? '0 2px 12px rgba(124,58,237,0.15)' : 'none'
+              }}
+              onClick={() => setActiveTab(item.id)}
+            >
+              <item.icon />
+              <span>{item.label}</span>
+            </div>
+          )
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -3665,7 +3864,7 @@ function UserManagement({ apiClient, currentUser }) {
       {message && (
         <div style={{
           ...darkStyles.message,
-          background: message.includes("Failed") ? 'rgba(139,92,246,0.15)' : 'rgba(34,197,94,0.1)',
+          background: message.includes("Failed") ? 'rgba(244,63,94,0.12)' : 'rgba(34,197,94,0.1)',
           border: `1px solid ${message.includes("Failed") ? DARK_THEME.danger : DARK_THEME.success}`,
           color: message.includes("Failed") ? '#f87171' : '#86efac',
           marginBottom: "15px"
@@ -3756,8 +3955,8 @@ function UserManagement({ apiClient, currentUser }) {
                             onClick={() => deleteUser(user.id, user.username)}
                             style={{
                               ...darkStyles.button,
-                              background: 'rgba(139,92,246,0.15)',
-                              border: `1px solid rgba(139,92,246,0.15)`,
+                              background: 'rgba(124,58,237,0.18)',
+                              border: `1px solid rgba(124,58,237,0.35)`,
                               padding: "8px 16px",
                               fontSize: "12px",
                               marginLeft: "5px"
@@ -3879,8 +4078,8 @@ function AlertsManagement({ apiClient, currentUser }) {
             onClick={() => setActiveSubTab("rules")}
             style={{
               ...darkStyles.tab,
-              background: activeSubTab === "rules" ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.05)',
-              border: `1px solid ${activeSubTab === "rules" ? 'rgba(139,92,246,0.15)' : DARK_THEME.glassBorder}`,
+              background: activeSubTab === "rules" ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${activeSubTab === "rules" ? 'rgba(124,58,237,0.35)' : DARK_THEME.glassBorder}`,
               color: activeSubTab === "rules" ? "#fff" : DARK_THEME.text
             }}
           >
@@ -3890,8 +4089,8 @@ function AlertsManagement({ apiClient, currentUser }) {
             onClick={() => setActiveSubTab("incidents")}
             style={{
               ...darkStyles.tab,
-              background: activeSubTab === "incidents" ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.05)',
-              border: `1px solid ${activeSubTab === "incidents" ? 'rgba(139,92,246,0.15)' : DARK_THEME.glassBorder}`,
+              background: activeSubTab === "incidents" ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${activeSubTab === "incidents" ? 'rgba(124,58,237,0.35)' : DARK_THEME.glassBorder}`,
               color: activeSubTab === "incidents" ? "#fff" : DARK_THEME.text
             }}
           >
@@ -4114,7 +4313,7 @@ function PasswordChange({ apiClient }) {
       {message && (
         <div style={{
           ...darkStyles.message,
-          background: message.includes("Failed") ? 'rgba(139,92,246,0.15)' : 'rgba(34,197,94,0.1)',
+          background: message.includes("Failed") ? 'rgba(244,63,94,0.12)' : 'rgba(34,197,94,0.1)',
           border: `1px solid ${message.includes("Failed") ? DARK_THEME.danger : DARK_THEME.success}`,
           color: message.includes("Failed") ? '#f87171' : '#86efac',
           marginBottom: "15px"
@@ -4167,8 +4366,8 @@ function PasswordChange({ apiClient }) {
           disabled={loading}
           style={{ 
             ...darkStyles.button, 
-            background: loading ? DARK_THEME.glassBorder : 'rgba(139,92,246,0.15)',
-            border: `1px solid ${loading ? DARK_THEME.glassBorder : 'rgba(139,92,246,0.15)'}`,
+            background: loading ? DARK_THEME.glassBorder : 'rgba(124,58,237,0.18)',
+            border: `1px solid ${loading ? DARK_THEME.glassBorder : 'rgba(124,58,237,0.35)'}`,
             width: "100%"
           }}
         >
@@ -4976,8 +5175,8 @@ function App() {
                 </button>
                 <button onClick={fetchLatestAgentData} disabled={dashboardLoading} style={{
                   ...darkStyles.button,
-                  background: dashboardLoading ? DARK_THEME.glassBorder : 'rgba(139,92,246,0.15)',
-                  border: `1px solid ${dashboardLoading ? DARK_THEME.glassBorder : 'rgba(139,92,246,0.15)'}`
+                  background: dashboardLoading ? DARK_THEME.glassBorder : 'rgba(124,58,237,0.18)',
+                  border: `1px solid ${dashboardLoading ? DARK_THEME.glassBorder : 'rgba(124,58,237,0.35)'}`
                 }}>
                   {dashboardLoading ? <TailSpin height={20} width={20} /> : "Refresh Agent Data"}
                 </button>
@@ -5041,116 +5240,265 @@ function App() {
     <div style={darkStyles.container}>
       <GlobalGlass />
       <BackgroundOrbs />
-      {/* ── Sidebar v2 ── */}
+      {/* Sidebar with Navigation, Filters and Export */}
       <div style={darkStyles.sidebar}>
-        {/* Logo */}
-        <div style={{ padding: '20px 20px 14px', borderBottom: '1px solid rgba(139,92,246,0.08)', display: 'flex', alignItems: 'center', gap: '11px' }}>
+        <div style={{ marginBottom: '24px', textAlign: 'center', position: 'relative' }}>
+          {/* Purple/teal shimmer line at top */}
           <div style={{
-            width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0,
-            background: 'linear-gradient(135deg,#8b5cf6,#2dd4bf)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 16px rgba(139,92,246,0.4)',
+            height: '1px',
+            background: 'linear-gradient(90deg,transparent,rgba(124,58,237,0.7),rgba(45,212,191,0.4),transparent)',
+            marginBottom: '22px',
+            marginLeft: '-16px',
+            marginRight: '-16px'
+          }} />
+          {/* Logo */}
+          <div style={{
+            width: '52px',
+            height: '52px',
+            background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 60%, #2dd4bf 100%)',
+            borderRadius: '16px',
+            margin: '0 auto 14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '13px',
+            fontWeight: '700',
+            color: 'white',
+            letterSpacing: '0.01em',
+            boxShadow: '0 8px 28px rgba(124,58,237,0.5), 0 2px 8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.25)'
           }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
             </svg>
           </div>
-          <div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#e8e6ff', letterSpacing: '-0.02em' }}>Purple Agent</div>
-            <div style={{ fontSize: '10px', color: 'rgba(180,170,255,0.4)', letterSpacing: '0.04em' }}>Security Platform</div>
-          </div>
+          <h2 style={{ color: DARK_THEME.text, margin: '0 0 4px 0', fontSize: '16px', fontWeight: '600', letterSpacing: '-0.03em' }}>
+            AI System Monitor
+          </h2>
+          <p style={{ color: DARK_THEME.textMuted, margin: '0 0 10px 0', fontSize: '12px' }}>
+            {currentUser?.username || 'User'}
+          </p>
+          {currentUser && (
+            <span style={{
+              display: 'inline-block',
+              padding: '3px 10px',
+              background: 'rgba(124,58,237,0.15)',
+              border: '1px solid rgba(124,58,237,0.35)',
+              borderRadius: '20px',
+              color: '#c4b5fd',
+              fontSize: '10px',
+              fontWeight: '700',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase'
+            }}>
+              {currentUser.role}
+            </span>
+          )}
         </div>
 
-        {/* Nav */}
-        <NavigationMenu activeTab={activeTab} setActiveTab={setActiveTab} currentUser={currentUser} />
+        {/* Navigation Menu */}
+        <NavigationMenu 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab}
+          currentUser={currentUser}
+        />
 
-        {/* Dashboard-only panels */}
-        {activeTab === 'dashboard' && (
-          <div style={{ padding: '0 12px', borderTop: '1px solid rgba(139,92,246,0.08)' }}>
-            <ServerSelector servers={servers} selectedServer={selectedServer} onServerChange={setSelectedServer} loading={serversLoading} />
-            <FilterPanel onFilterChange={handleFilterChange} filters={filters} loading={filterLoading} />
-            <ExportPanel filters={filters} apiClient={apiClient} />
-          </div>
+        {/* Server Selector, Filters and Export only show on Dashboard tab */}
+        {activeTab === "dashboard" && (
+          <>
+            <ServerSelector 
+              servers={servers}
+              selectedServer={selectedServer}
+              onServerChange={setSelectedServer}
+              loading={serversLoading}
+            />
+
+            <FilterPanel 
+              onFilterChange={handleFilterChange}
+              filters={filters}
+              loading={filterLoading}
+            />
+
+            <ExportPanel 
+              filters={filters}
+              apiClient={apiClient}
+            />
+          </>
         )}
 
-        {/* User footer */}
-        <div style={{ padding: '14px 16px', borderTop: '1px solid rgba(139,92,246,0.08)', marginTop: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: 'rgba(139,92,246,0.07)', border: '1px solid rgba(139,92,246,0.12)', borderRadius: '10px', marginBottom: '8px' }}>
-            <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'linear-gradient(135deg,#6d28d9,#2dd4bf)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', color: 'white', flexShrink: 0 }}>
-              {(currentUser?.username || 'U')[0].toUpperCase()}
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: '12px', fontWeight: '500', color: '#e8e6ff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentUser?.username || 'User'}</div>
-              <div style={{ fontSize: '10px', color: 'rgba(180,170,255,0.4)', letterSpacing: '0.04em' }}>{currentUser?.role || 'guest'}</div>
-            </div>
+        {/* Quick Actions in Sidebar */}
+        <div style={darkStyles.sidebarSection}>
+          <div style={darkStyles.sidebarHeader}>
+            <SettingsIcon />
+            <span>Quick Actions</span>
           </div>
-          <button onClick={fetchLatestAgentData} disabled={dashboardLoading} style={{ ...darkStyles.button, width: '100%', justifyContent: 'center', marginBottom: '4px', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.18)' }}>
-            {dashboardLoading ? <TailSpin height={14} width={14} /> : '↻ Refresh'}
+          
+          <button 
+            onClick={fetchLatestAgentData} 
+            disabled={dashboardLoading}
+            style={{
+              ...darkStyles.button,
+              width: '100%',
+              background: dashboardLoading ? DARK_THEME.glassBorder : 'rgba(124,58,237,0.18)',
+              border: `1px solid ${dashboardLoading ? DARK_THEME.glassBorder : 'rgba(124,58,237,0.35)'}`,
+              marginBottom: '10px',
+              justifyContent: 'center'
+            }}
+          >
+            {dashboardLoading ? <TailSpin height={16} width={16} /> : 'Refresh Data'}
           </button>
-          <button onClick={logout} style={{ ...darkStyles.button, width: '100%', justifyContent: 'center', background: 'rgba(244,63,94,0.07)', border: '1px solid rgba(244,63,94,0.18)', color: '#fb7185', margin: 0 }}>
-            Sign out
+
+          <button 
+            onClick={logout}
+            style={{
+              ...darkStyles.button,
+              width: '100%',
+              background: 'rgba(124,58,237,0.08)',
+              border: '1px solid rgba(124,58,237,0.28)',
+              color: '#a78bfa',
+              marginTop: '10px',
+              justifyContent: 'center',
+              fontWeight: '600',
+              letterSpacing: '0.01em'
+            }}
+          >
+            🔴 Logout
           </button>
         </div>
       </div>
 
-      {/* ── Main content ── */}
+      {/* Main Content Area */}
       <div style={darkStyles.mainContent}>
-        {/* Page header */}
-        <div style={{ padding: '22px 28px 0', borderBottom: '1px solid rgba(139,92,246,0.07)', marginBottom: '0', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', paddingBottom: '16px' }}>
-            <div>
-              <h1 style={{ color: '#e8e6ff', margin: '0 0 4px', fontSize: '20px', fontWeight: '700', letterSpacing: '-0.04em', background: 'linear-gradient(135deg,#e0d7ff 0%,#2dd4bf 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                {activeTab === 'dashboard'     && 'Dashboard Overview'}
-                {activeTab === 'layouts'       && 'Dashboard Layouts'}
-                {activeTab === 'account'       && 'Account Settings'}
-                {activeTab === 'users'         && 'User Management'}
-                {activeTab === 'alerts'        && 'Alerts & Incidents'}
-                {activeTab === 'user-activity' && 'User Activity'}
-                {activeTab === 'visitor-logs'  && 'Visitor Logs'}
-              </h1>
-              <p style={{ color: 'rgba(180,170,255,0.45)', margin: 0, fontSize: '13px' }}>
-                {activeTab === 'dashboard'     && 'Real-time monitoring with AI-powered insights'}
-                {activeTab === 'layouts'       && 'Manage and customize your dashboard layouts'}
-                {activeTab === 'account'       && 'Manage account settings and security'}
-                {activeTab === 'users'         && 'User management and access control'}
-                {activeTab === 'alerts'        && 'Alert rules and incident management'}
-                {activeTab === 'user-activity' && 'User activity monitoring and security'}
-                {activeTab === 'visitor-logs'  && 'Visitor logs and security monitoring'}
-              </p>
-            </div>
-          </div>
-
-          {/* Top tab rail */}
-          <div style={{ display: 'flex', gap: '0', overflowX: 'auto' }}>
-            {[
-              { id: 'dashboard', label: 'Overview', icon: DashboardIcon },
-              { id: 'layouts',   label: 'Layouts',  icon: LayoutIcon },
-              { id: 'account',   label: 'Account',  icon: AccountIcon },
-              ...(currentUser?.role === 'admin' ? [
-                { id: 'users',         label: 'Users',    icon: UsersIcon },
-                { id: 'alerts',        label: 'Alerts',   icon: AlertIcon },
-                { id: 'user-activity', label: 'Activity', icon: ActivityIcon },
-                { id: 'visitor-logs',  label: 'Visitors', icon: SecurityIcon },
-              ] : [])
-            ].map(t => (
-              <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
-                ...darkStyles.tab,
-                color: activeTab === t.id ? '#c4b5fd' : 'rgba(180,170,255,0.45)',
-                borderBottomColor: activeTab === t.id ? '#8b5cf6' : 'transparent',
-                fontWeight: activeTab === t.id ? '600' : '450',
-              }}>
-                <t.icon />{t.label}
-              </button>
-            ))}
-          </div>
+        <div style={{ marginBottom: '30px' }}>
+          <h1 style={{ 
+            color: DARK_THEME.text, 
+            margin: '0 0 6px 0',
+            fontSize: '26px',
+            fontWeight: '700',
+            background: 'linear-gradient(135deg,#e0d7ff 0%,#2dd4bf 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            letterSpacing: '-0.04em'
+          }}>
+            {activeTab === "dashboard" && "AI Dashboard Overview"}
+            {activeTab === "layouts" && "Dashboard Layouts"}
+            {activeTab === "account" && "Account Settings"}
+            {activeTab === "users" && "User Management"}
+            {activeTab === "alerts" && "Alerts & Incidents"}
+            {activeTab === "user-activity" && "User Activity Monitor"}
+            {activeTab === "visitor-logs" && "Visitor Logs & Security"}
+          </h1>
+          <p style={{ color: DARK_THEME.textMuted, margin: 0, fontSize: '16px' }}>
+            {activeTab === "dashboard" && "Real-time system monitoring with AI-powered insights"}
+            {activeTab === "layouts" && "Manage and customize your dashboard layouts"}
+            {activeTab === "account" && "Manage your account settings and security"}
+            {activeTab === "users" && "User management and access control"}
+            {activeTab === "alerts" && "Alert rules and incident management"}
+            {activeTab === "user-activity" && "User activity monitoring and security"}
+            {activeTab === "visitor-logs" && "Visitor logs and security monitoring"}
+          </p>
         </div>
 
-        {/* Scrollable content area */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px 48px' }}>
+        {/* Tab Navigation */}
+        <div style={darkStyles.tabContainer}>
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            style={{
+              ...darkStyles.tab,
+              background: activeTab === "dashboard" ? 'rgba(124,58,237,0.16)' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${activeTab === "dashboard" ? 'rgba(124,58,237,0.35)' : 'rgba(255,255,255,0.07)'}`,
+              color: activeTab === "dashboard" ? '#fff' : 'rgba(255,255,255,0.5)',
+              fontWeight: activeTab === "dashboard" ? '600' : '450',
+            }}
+          >
+            <DashboardIcon />
+            Dashboard
+          </button>
+
+          <button
+            onClick={() => setActiveTab("layouts")}
+            style={{
+              ...darkStyles.tab,
+              background: activeTab === "layouts" ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${activeTab === "layouts" ? 'rgba(124,58,237,0.35)' : DARK_THEME.glassBorder}`,
+              color: activeTab === "layouts" ? "#fff" : DARK_THEME.text
+            }}
+          >
+            <LayoutIcon />
+            Layouts
+          </button>
+
+          <button
+            onClick={() => setActiveTab("account")}
+            style={{
+              ...darkStyles.tab,
+              background: activeTab === "account" ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${activeTab === "account" ? 'rgba(124,58,237,0.35)' : DARK_THEME.glassBorder}`,
+              color: activeTab === "account" ? "#fff" : DARK_THEME.text
+            }}
+          >
+            <AccountIcon />
+            Account
+          </button>
+
+          {currentUser?.role === 'admin' && (
+            <>
+              <button
+                onClick={() => setActiveTab("users")}
+                style={{
+                  ...darkStyles.tab,
+                  background: activeTab === "users" ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${activeTab === "users" ? 'rgba(124,58,237,0.35)' : DARK_THEME.glassBorder}`,
+                  color: activeTab === "users" ? "#fff" : DARK_THEME.text
+                }}
+              >
+                <UsersIcon />
+                Users
+              </button>
+
+              <button
+                onClick={() => setActiveTab("alerts")}
+                style={{
+                  ...darkStyles.tab,
+                  background: activeTab === "alerts" ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${activeTab === "alerts" ? 'rgba(124,58,237,0.35)' : DARK_THEME.glassBorder}`,
+                  color: activeTab === "alerts" ? "#fff" : DARK_THEME.text
+                }}
+              >
+                <AlertIcon />
+                Alerts
+              </button>
+
+              <button
+                onClick={() => setActiveTab("user-activity")}
+                style={{
+                  ...darkStyles.tab,
+                  background: activeTab === "user-activity" ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${activeTab === "user-activity" ? 'rgba(124,58,237,0.35)' : DARK_THEME.glassBorder}`,
+                  color: activeTab === "user-activity" ? "#fff" : DARK_THEME.text
+                }}
+              >
+                <ActivityIcon />
+                User Activity
+              </button>
+
+              <button
+                onClick={() => setActiveTab("visitor-logs")}
+                style={{
+                  ...darkStyles.tab,
+                  background: activeTab === "visitor-logs" ? 'rgba(124,58,237,0.18)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${activeTab === "visitor-logs" ? 'rgba(124,58,237,0.35)' : DARK_THEME.glassBorder}`,
+                  color: activeTab === "visitor-logs" ? "#fff" : DARK_THEME.text
+                }}
+              >
+                <SecurityIcon />
+                Visitor Logs
+              </button>
+            </>
+          )}
+        </div>
+
         {/* Tab Content */}
         {renderTabContent()}
-
-        </div>{/* end scrollable content */}
 
         {/* Drill Down Modal */}
         <DrillDownModal
@@ -5160,6 +5508,8 @@ function App() {
           apiClient={apiClient}
         />
       </div>
+
+      {/* GlobalGlass handles all CSS */}
     </div>
   );
 }

@@ -66,17 +66,17 @@ from crud import (
 
 # Define allowed origins
 ALLOWED_ORIGINS = [
+    "http://192.168.1.8:5173",  
     "http://192.168.1.24:5173",
     "http://localhost:5173",
     "http://192.168.1.11:5173",
     "http://192.168.1.24:5173",
     "http://192.168.1.11:8000",
-    "http://127.0.0.1:5173", 
+    "http://127.0.0.1:5173",
     "http://localhost:3000",
     "http://localhost:5174",
     "http://localhost:8000",
 ]
-
 app = FastAPI(title="PurpleTeam Dashboard Backend with AI Insights")
 
 # ✅ PRIMARY CORS CONFIGURATION - PLACED FIRST
