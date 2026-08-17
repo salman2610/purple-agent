@@ -89,7 +89,7 @@ docker-compose up -d
 
 Frontend: http://localhost:5173  
 Backend API: http://localhost:8000  
-Default login: `admin` / `admin` *(change immediately)*
+Default login: `admin` / `admin` 
 
 ---
 
