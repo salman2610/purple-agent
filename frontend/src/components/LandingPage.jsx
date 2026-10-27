@@ -672,7 +672,16 @@ export default function LandingPage({ onLaunchDemo, onOpenAuth }) {
               </a>
             </div>
             <p className="mono muted fu" style={{ fontSize: '13.5px', marginTop: '28px' }}>
-              Open source · MIT license · Docker ready · Designed and built by Salman
+              Open source · MIT license · Docker ready · Designed and built by{' '}
+              <a
+                href="https://salman2610.github.io"
+                target="_blank"
+                rel="noreferrer"
+                className="acc"
+                style={{ textDecoration: 'underline', color: 'var(--accent)' }}
+              >
+                P Salmanul Faris
+              </a>
             </p>
           </div>
 
@@ -1432,7 +1441,7 @@ git push origin feature/your-feature
               className="acc"
               style={{ textDecoration: 'underline' }}
             >
-              Salman
+              P Salmanul Faris
             </a>
           </span>
         </div>
