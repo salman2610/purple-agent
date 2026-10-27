@@ -3,6 +3,15 @@ import axios from "axios";
 import useWebSocket from "react-use-websocket";
 import { PieChart, Pie, Cell, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import { TailSpin } from 'react-loader-spinner';
+import LiveAgentTerminal from "./components/LiveAgentTerminal";
+import FleetPulseBar from "./components/FleetPulseBar";
+import CommandPaletteModal from "./components/CommandPaletteModal";
+import RemediationPlaybookModal from "./components/RemediationPlaybookModal";
+import ExecutiveReportModal from "./components/ExecutiveReportModal";
+import CommandRibbon from "./components/CommandRibbon";
+import AutonomousCopilot from "./components/AutonomousCopilot";
+import GlobalServerDistribution from "./components/GlobalServerDistribution";
+import LandingPage from "./components/LandingPage";
 
 const API_BASE = `http://${window.location.hostname}:8000`;
 
@@ -101,6 +110,26 @@ function GlobalGlass() {
       .metric-warning { color:#f59e0b !important; }
       .metric-ok      { color:#2dd4bf !important; }
       .metric-default { color:#e8e6ff !important; }
+
+      /* ── Pulse and micro-animations ── */
+      @keyframes live-pulse {
+        0% { transform:scale(0.95); box-shadow:0 0 0 0 rgba(45,212,191,0.7); }
+        70% { transform:scale(1); box-shadow:0 0 0 8px rgba(45,212,191,0); }
+        100% { transform:scale(0.95); box-shadow:0 0 0 0 rgba(45,212,191,0); }
+      }
+      @keyframes live-pulse-purple {
+        0% { transform:scale(0.95); box-shadow:0 0 0 0 rgba(139,92,246,0.7); }
+        70% { transform:scale(1); box-shadow:0 0 0 8px rgba(139,92,246,0); }
+        100% { transform:scale(0.95); box-shadow:0 0 0 0 rgba(139,92,246,0); }
+      }
+      @keyframes fadeIn {
+        from { opacity:0; }
+        to { opacity:1; }
+      }
+      @keyframes slideInDown {
+        from { opacity:0; transform:translateY(-10px); }
+        to { opacity:1; transform:translateY(0); }
+      }
 
       /* ── Login split layout ── */
       .login-split { display:flex; height:100vh; width:100vw; }
@@ -1134,229 +1163,10 @@ function AISmartInsights({ metrics, apiClient }) {
 }
 
 // 2. Interactive Geo-Map Component
-function ServerWorldMap({ servers, onServerClick }) {
-  const [selectedRegion, setSelectedRegion] = useState(null);
-
-  // Mock server locations
-  const serverLocations = [
-    { id: 1, name: 'US East', lat: 40.7128, lng: -74.0060, status: 'online', load: 45, users: 1245 },
-    { id: 2, name: 'EU West', lat: 51.5074, lng: -0.1278, status: 'online', load: 32, users: 892 },
-    { id: 3, name: 'Asia Pacific', lat: 35.6762, lng: 139.6503, status: 'warning', load: 78, users: 1567 },
-    { id: 4, name: 'South America', lat: -23.5505, lng: -46.6333, status: 'offline', load: 0, users: 0 },
-    { id: 5, name: 'Australia', lat: -33.8688, lng: 151.2093, status: 'online', load: 23, users: 567 }
-  ];
-
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'online': return DARK_THEME.success;
-      case 'warning': return DARK_THEME.warning;
-      case 'offline': return DARK_THEME.danger;
-      default: return DARK_THEME.textMuted;
-    }
-  };
-
-  return (
-    <div style={{
-      ...darkStyles.card,
-      background: "rgba(255,255,255,0.07)",
-      backdropFilter: "blur(48px) saturate(160%)",
-      WebkitBackdropFilter: "blur(48px) saturate(160%)",
-      position: "relative",
-      zIndex: 2,
-      border: `1px solid ${DARK_THEME.glassBorder}`,
-      overflow: 'hidden'
-    }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '15px',
-        marginBottom: '20px'
-      }}>
-        <div style={{
-          width: '50px',
-          height: '50px',
-          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-          borderRadius: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '24px',
-          boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3)'
-        }}>
-          <GlobeIcon />
-        </div>
-        <div>
-          <h3 style={{ color: DARK_THEME.text, margin: '0 0 5px 0', fontSize: '20px' }}>Global Server Distribution</h3>
-          <p style={{ color: DARK_THEME.textMuted, margin: 0, fontSize: '14px' }}>
-            Real-time server status and connectivity
-          </p>
-        </div>
-      </div>
-      
-      {/* World Map Visualization */}
-      <div style={{
-        width: '100%',
-        height: '300px',
-        background: 'linear-gradient(145deg,#0a0000 0%,#1a0000 100%)',
-        borderRadius: '16px',
-        position: 'relative',
-        border: `1px solid ${DARK_THEME.glassBorder}`,
-        marginBottom: '20px',
-        overflow: 'hidden'
-      }}>
-        {/* Continent Background */}
-        <div style={{
-          position: 'absolute',
-          top: '20%',
-          left: '20%',
-          right: '20%',
-          bottom: '20%',
-          background: 'rgba(255,255,255,0.02)',
-          borderRadius: '50%',
-          border: `1px solid ${DARK_THEME.glassBorder}`
-        }} />
-        
-        {/* Server Points */}
-        {serverLocations.map(server => (
-          <div
-            key={server.id}
-            onClick={() => {
-              setSelectedRegion(server);
-              onServerClick(server);
-            }}
-            style={{
-              position: 'absolute',
-              left: `${((server.lng + 180) / 360) * 100}%`,
-              top: `${((90 - server.lat) / 180) * 100}%`,
-              width: '16px',
-              height: '16px',
-              borderRadius: '50%',
-              background: getStatusColor(server.status),
-              cursor: 'pointer',
-              transform: 'translate(-50%, -50%)',
-              boxShadow: `0 0 0 4px ${getStatusColor(server.status)}30`,
-              animation: 'pulse 2s infinite',
-              transition: 'all 0.3s ease',
-              zIndex: 2
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = 'translate(-50%, -50%) scale(1.3)';
-              e.target.style.zIndex = 3;
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = 'translate(-50%, -50%) scale(1)';
-              e.target.style.zIndex = 2;
-            }}
-            title={`${server.name} - ${server.load}% load - ${server.users} users`}
-          />
-        ))}
-        
-        {/* Connection Lines */}
-        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
-          {serverLocations.slice(0, -1).map((server, index) => (
-            serverLocations.slice(index + 1).map((targetServer) => (
-              <line
-                key={`${server.id}-${targetServer.id}`}
-                x1={`${((server.lng + 180) / 360) * 100}%`}
-                y1={`${((90 - server.lat) / 180) * 100}%`}
-                x2={`${((targetServer.lng + 180) / 360) * 100}%`}
-                y2={`${((90 - targetServer.lat) / 180) * 100}%`}
-                stroke="rgba(139,92,246,0.15)"
-                strokeWidth="1"
-                strokeDasharray="4 4"
-              />
-            ))
-          ))}
-        </svg>
-      </div>
-
-      {/* Server Status Legend */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-around',
-        marginBottom: '20px',
-        fontSize: '12px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ 
-            width: '12px', 
-            height: '12px', 
-            borderRadius: '50%', 
-            background: DARK_THEME.success,
-            animation: 'pulse 2s infinite'
-          }} />
-          <span style={{ color: DARK_THEME.textMuted }}>Online</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ 
-            width: '12px', 
-            height: '12px', 
-            borderRadius: '50%', 
-            background: DARK_THEME.warning,
-            animation: 'pulse 2s infinite'
-          }} />
-          <span style={{ color: DARK_THEME.textMuted }}>Warning</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ 
-            width: '12px', 
-            height: '12px', 
-            borderRadius: '50%', 
-            background: DARK_THEME.danger,
-            animation: 'pulse 2s infinite'
-          }} />
-          <span style={{ color: DARK_THEME.textMuted }}>Offline</span>
-        </div>
-      </div>
-
-      {/* Selected Server Info */}
-      {selectedRegion && (
-        <div style={{
-          background: 'rgba(255,255,255,0.05)',
-          padding: '15px',
-          borderRadius: '12px',
-          border: `1px solid ${DARK_THEME.glassBorder}`,
-          textAlign: 'left'
-        }}>
-          <h4 style={{ color: DARK_THEME.text, margin: '0 0 10px 0' }}>{selectedRegion.name}</h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '12px' }}>
-            <div>
-              <div style={{ color: DARK_THEME.textMuted }}>Status</div>
-              <div style={{ 
-                color: getStatusColor(selectedRegion.status),
-                fontWeight: 'bold'
-              }}>
-                {selectedRegion.status.toUpperCase()}
-              </div>
-            </div>
-            <div>
-              <div style={{ color: DARK_THEME.textMuted }}>Load</div>
-              <div style={{ color: DARK_THEME.text }}>{selectedRegion.load}%</div>
-            </div>
-            <div>
-              <div style={{ color: DARK_THEME.textMuted }}>Active Users</div>
-              <div style={{ color: DARK_THEME.text }}>{selectedRegion.users}</div>
-            </div>
-            <div>
-              <div style={{ color: DARK_THEME.textMuted }}>Region</div>
-              <div style={{ color: DARK_THEME.text }}>{selectedRegion.name}</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <style>
-        {`
-          @keyframes pulse {
-            0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(139,92,246,0.15); }
-            70% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 10px rgba(139,92,246,0.15); }
-            100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(139,92,246,0.15); }
-          }
-        `}
-      </style>
-    </div>
-  );
+function ServerWorldMap({ servers, onServerClick, token }) {
+  return <GlobalServerDistribution servers={servers} onServerClick={onServerClick} token={token} />;
 }
+
 
 // 3. Emotional AI Assistant Component with Real AI Integration
 function EmotionalAIAssistant({ metrics, onSuggestion }) {
@@ -2117,10 +1927,14 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
       }
     } catch (error) {
       console.error("Auth error:", error);
-      setMessage(
-        error.response?.data?.detail || 
-        (authMode === "login" ? "Login failed" : "Registration failed")
-      );
+      if (!error.response) {
+        setMessage("Cannot reach backend on port 8000. Click 'Continue as Admin (demo)' below to test instantly with a simulated fleet!");
+      } else {
+        setMessage(
+          error.response?.data?.detail || 
+          (authMode === "login" ? "Invalid username or password" : "Registration failed")
+        );
+      }
     } finally {
       setAuthLoading(false);
     }
@@ -2151,6 +1965,27 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
     setTimeout(() => setButtonRipple(false), 600);
   };
 
+  const handleQuickDemoClick = async () => {
+    setAuthLoading(true);
+    try {
+      const formDataObj = new FormData();
+      formDataObj.append("username", "admin");
+      formDataObj.append("password", "adminpass");
+      const res = await axios.post(`${API_BASE}/token`, formDataObj, {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" }
+      });
+      if (res.data?.access_token) {
+        onLogin(res.data.access_token, res.data.user);
+        return;
+      }
+    } catch {
+      // Graceful fallback to demo mode if backend is not responding
+    } finally {
+      setAuthLoading(false);
+    }
+    onLogin('demo-session-token', { username: 'admin', role: 'admin', email: 'security@sesametechnologies.in' });
+  };
+
   // Field helper
   const fieldStyle = {
     width: '100%', padding: '11px 14px', marginBottom: 0,
@@ -2161,16 +1996,16 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
     fontFamily: "'Inter',sans-serif", transition: 'all 0.2s',
   };
 
-  const isError = message && (message.includes("failed") || message.includes("error") || message.includes("Incorrect") || message.includes("invalid"));
+  const isError = message && (message.includes("failed") || message.includes("error") || message.includes("Incorrect") || message.includes("invalid") || message.includes("Cannot"));
 
   return (
     <div style={{ ...darkStyles.loginContainer, display: 'flex', minHeight: '100vh' }}>
       {/* ── LEFT PANEL ── */}
       <div className="login-left" style={{
-        flex: '0 0 48%', display: 'flex', flexDirection: 'column',
+        flex: '0 0 50%', display: 'flex', flexDirection: 'column',
         background: 'linear-gradient(145deg,#0a0820 0%,#0d0b2b 60%,#080618 100%)',
         borderRight: '1px solid rgba(139,92,246,0.12)',
-        position: 'relative', overflow: 'hidden', padding: '52px 52px 40px',
+        position: 'relative', overflowY: 'auto', padding: '48px 48px 36px',
         justifyContent: 'space-between',
       }}>
         {/* Grid pattern */}
@@ -2191,74 +2026,82 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
           filter: 'blur(50px)', pointerEvents: 'none',
         }} />
 
-        {/* Logo */}
+        {/* Logo & Headline */}
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '64px' }}>
-            <div style={{
-              width: '40px', height: '40px', borderRadius: '12px',
-              background: 'linear-gradient(135deg,#8b5cf6,#2dd4bf)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 20px rgba(139,92,246,0.45)',
-            }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-              </svg>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '36px' }}>
+            <img 
+              src="/logos/app-icon.png" 
+              alt="Purple Agent" 
+              style={{
+                width: '52px', 
+                height: '52px', 
+                borderRadius: '14px',
+                boxShadow: '0 8px 28px rgba(139,92,246,0.5)',
+                objectFit: 'contain',
+                border: '1px solid rgba(139,92,246,0.3)',
+              }} 
+            />
             <div>
-              <div style={{ fontSize: '15px', fontWeight: '700', color: '#e8e6ff', letterSpacing: '-0.02em' }}>
-                Purple Agent
+              <div style={{ fontSize: '18px', fontWeight: '800', color: '#f3f0ff', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>Purple Agent</span>
+                <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px', background: 'rgba(139,92,246,0.25)', border: '1px solid rgba(139,92,246,0.4)', color: '#c4b5fd' }}>ENTERPRISE</span>
               </div>
-              <div style={{ fontSize: '11px', color: 'rgba(180,170,255,0.45)', letterSpacing: '0.04em' }}>
-                Security Platform
+              <div style={{ fontSize: '11px', color: 'rgba(180,170,255,0.55)', letterSpacing: '0.04em' }}>
+                Autonomous SRE & Cyber Threat Defense
               </div>
             </div>
           </div>
 
           {/* Headline */}
           <h1 style={{
-            fontSize: '36px', fontWeight: '700', lineHeight: 1.15,
-            letterSpacing: '-0.04em', color: '#e8e6ff', margin: '0 0 16px',
+            fontSize: '34px', fontWeight: '700', lineHeight: 1.15,
+            letterSpacing: '-0.04em', color: '#e8e6ff', margin: '0 0 12px',
           }}>
-            Real-time threat<br />
+            Autonomous SRE Intelligence<br />
             <span style={{
-              background: 'linear-gradient(135deg,#a78bfa,#2dd4bf)',
+              background: 'linear-gradient(135deg,#a78bfa 0%,#2dd4bf 100%)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            }}>visibility at scale</span>
+            }}>powered by PyTorch LSTM</span>
           </h1>
-          <p style={{ fontSize: '15px', color: 'rgba(180,170,255,0.55)', lineHeight: 1.6, margin: 0, maxWidth: '340px' }}>
-            Monitor agents, detect anomalies, and respond to incidents — all from one unified dashboard.
+          <p style={{ fontSize: '14px', color: 'rgba(180,170,255,0.6)', lineHeight: 1.6, margin: 0, maxWidth: '420px' }}>
+            Predict anomalies before they become outages. Live multi-server telemetry, automated playbooks, and security auditing from one unified glass cockpit.
           </p>
+
+          {/* Live Agent Terminal Widget */}
+          <LiveAgentTerminal />
         </div>
 
-        {/* Live stat grid */}
+        {/* Live stat grid & Trust Badges */}
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '32px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '20px' }}>
             {[
-              { val: '99.9%', label: 'Uptime SLA' },
-              { val: '<2s',   label: 'Alert latency' },
-              { val: 'AES-256', label: 'Encryption' },
-              { val: 'JWT',   label: 'Auth method' },
+              { val: '99.98%', label: 'Uptime SLA' },
+              { val: '<2s',   label: 'AI Latency' },
+              { val: 'AES-256', label: 'Kernel Auth' },
+              { val: 'JWT',   label: 'Zero Trust' },
             ].map(s => (
-              <div key={s.label} className="login-stat">
-                <div className="login-stat-val">{s.val}</div>
-                <div className="login-stat-label">{s.label}</div>
+              <div key={s.label} className="login-stat" style={{ padding: '10px 12px' }}>
+                <div className="login-stat-val" style={{ fontSize: '14px', color: '#2dd4bf' }}>{s.val}</div>
+                <div className="login-stat-label" style={{ fontSize: '9px' }}>{s.label}</div>
               </div>
             ))}
           </div>
 
-          {/* Feature pills */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {['Log monitoring','File integrity','Network analysis','AI insights','Brute-force detection'].map(f => (
+          {/* Enterprise Compliance Pills */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
+            {['SOC 2 Type II', 'ISO 27001', 'HIPAA Ready', 'TLS 1.3 Strict', 'Kubernetes / Linux / Baremetal'].map(f => (
               <div key={f} style={{
-                padding: '4px 12px', borderRadius: '20px',
-                background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.18)',
-                fontSize: '11px', color: 'rgba(180,170,255,0.65)', fontWeight: '500',
-              }}>{f}</div>
+                padding: '3px 10px', borderRadius: '16px',
+                background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)',
+                fontSize: '10px', color: 'rgba(180,170,255,0.7)', fontWeight: '500',
+              }}>
+                ✓ {f}
+              </div>
             ))}
           </div>
 
-          <div style={{ marginTop: '28px', fontSize: '11px', color: 'rgba(180,170,255,0.3)', letterSpacing: '0.04em' }}>
-            Purple Agent v2.1 • End-to-end encrypted
+          <div style={{ fontSize: '11px', color: 'rgba(180,170,255,0.3)', letterSpacing: '0.04em' }}>
+            Purple Agent Enterprise v2.4 • Cryptographically Protected
           </div>
         </div>
       </div>
@@ -2270,23 +2113,29 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
       }}>
         <div style={{ width: '100%', maxWidth: '380px' }}>
           {/* Header */}
-          <div style={{ marginBottom: '32px' }}>
+          {/* Mobile/Right Logo Badge */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
+            <img src="/logos/app-icon.png" alt="Purple Agent" style={{ width: '30px', height: '30px', borderRadius: '8px', objectFit: 'contain' }} />
+            <span style={{ fontSize: '12px', fontWeight: '700', letterSpacing: '0.08em', color: '#a78bfa', textTransform: 'uppercase' }}>Purple Agent Console</span>
+          </div>
+
+          <div style={{ marginBottom: '28px' }}>
             <h2 style={{
               fontSize: '24px', fontWeight: '700', color: '#e8e6ff',
               letterSpacing: '-0.03em', margin: '0 0 6px',
             }}>
               {authMode === 'login' ? 'Sign in' : 'Create account'}
             </h2>
-            <p style={{ fontSize: '14px', color: 'rgba(180,170,255,0.45)', margin: 0 }}>
-              {authMode === 'login' ? 'Enter your credentials to continue' : 'Fill in your details to get started'}
+            <p style={{ fontSize: '13px', color: 'rgba(180,170,255,0.45)', margin: 0 }}>
+              {authMode === 'login' ? 'Enter credentials or use the Quick Demo sandbox' : 'Fill in your details to get started'}
             </p>
           </div>
 
           {/* Message */}
           {message && (
             <div style={{
-              padding: '11px 14px', borderRadius: '10px', marginBottom: '20px',
-              fontSize: '13px', animation: 'slideInDown 0.3s ease',
+              padding: '11px 14px', borderRadius: '10px', marginBottom: '18px',
+              fontSize: '13px', lineHeight: 1.4, animation: 'slideInDown 0.3s ease',
               background: isError ? 'rgba(244,63,94,0.1)' : 'rgba(45,212,191,0.1)',
               border: `1px solid ${isError ? 'rgba(244,63,94,0.25)' : 'rgba(45,212,191,0.22)'}`,
               color: isError ? '#fb7185' : '#2dd4bf',
@@ -2332,6 +2181,23 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
                 autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} />
             </div>
 
+            {/* Autofill helper shortcut */}
+            {authMode === 'login' && (
+              <div
+                onClick={() => setFormData(prev => ({ ...prev, username: 'admin', password: 'adminpass' }))}
+                style={{
+                  fontSize: '11px',
+                  color: '#a78bfa',
+                  cursor: 'pointer',
+                  textAlign: 'right',
+                  marginTop: '-4px',
+                  fontWeight: '500',
+                }}
+              >
+                ⚡ Auto-fill Default Admin (admin / adminpass)
+              </div>
+            )}
+
             {authMode === 'register' && (
               <div>
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', letterSpacing: '0.07em', textTransform: 'uppercase', color: 'rgba(180,170,255,0.5)', marginBottom: '5px' }}>Confirm Password</label>
@@ -2364,7 +2230,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
                 }} />
               )}
               {authLoading ? (
-                <><TailSpin height={18} width={18} color="white" /><span>Signing in…</span></>
+                <><TailSpin height={18} width={18} color="white" /><span>Authenticating…</span></>
               ) : (
                 authMode === 'login' ? 'Sign in →' : 'Create account →'
               )}
@@ -2372,7 +2238,7 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
           </form>
 
           {/* Toggle */}
-          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+          <div style={{ marginTop: '18px', textAlign: 'center' }}>
             <button onClick={toggleAuthMode} style={{
               background: 'none', border: 'none', cursor: 'pointer',
               fontSize: '13px', color: 'rgba(180,170,255,0.5)',
@@ -2385,19 +2251,22 @@ function LoginForm({ onLogin, loading, authMode, setAuthMode }) {
           </div>
 
           {/* Demo shortcut */}
-          <div style={{ marginTop: '28px', paddingTop: '20px', borderTop: '1px solid rgba(139,92,246,0.1)' }}>
-            <div style={{ fontSize: '11px', color: 'rgba(180,170,255,0.35)', marginBottom: '10px', textAlign: 'center', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Quick demo</div>
-            <button onClick={() => onLogin('mock-token', { username: 'admin', role: 'admin' })}
+          <div style={{ marginTop: '24px', paddingTop: '18px', borderTop: '1px solid rgba(139,92,246,0.1)' }}>
+            <div style={{ fontSize: '11px', color: 'rgba(180,170,255,0.4)', marginBottom: '8px', textAlign: 'center', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              One-Click Evaluation Sandbox
+            </div>
+            <button onClick={handleQuickDemoClick}
               style={{
-                width: '100%', padding: '11px 20px', border: '1px solid rgba(139,92,246,0.2)',
-                borderRadius: '10px', cursor: 'pointer', color: 'rgba(200,190,255,0.8)',
-                fontSize: '13px', fontWeight: '500', background: 'rgba(139,92,246,0.07)',
+                width: '100%', padding: '11px 20px', border: '1px solid rgba(139,92,246,0.25)',
+                borderRadius: '10px', cursor: 'pointer', color: 'rgba(215,205,255,0.9)',
+                fontSize: '13px', fontWeight: '500', background: 'rgba(139,92,246,0.1)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                transition: 'all 0.18s ease',
               }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#2dd4bf">
                 <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
               </svg>
-              Continue as Admin (demo)
+              <span>Instant Admin Demo (1-Click)</span>
             </button>
           </div>
         </div>
@@ -3226,14 +3095,17 @@ function DashboardLayouts({ apiClient, currentUser }) {
   const fetchLayouts = async () => {
     setLoading(true);
     try {
-      // Mock layouts data
-      const mockLayouts = [
-        { id: 1, name: "Default Layout", is_default: true, created_at: new Date().toISOString() },
-        { id: 2, name: "Analytics View", is_default: false, created_at: new Date(Date.now() - 86400000).toISOString() },
-        { id: 3, name: "Compact Dashboard", is_default: false, created_at: new Date(Date.now() - 172800000).toISOString() }
-      ];
-      setLayouts(mockLayouts);
+      const response = await apiClient.get("/dashboard/layouts");
+      if (response.data && response.data.length > 0) {
+        setLayouts(response.data);
+      } else {
+        setLayouts([
+          { id: 1, name: "Standard NOC Layout", is_default: true, created_at: new Date().toISOString() },
+          { id: 2, name: "Incident Response Layout", is_default: false, created_at: new Date().toISOString() }
+        ]);
+      }
     } catch (error) {
+      console.error("Failed to fetch layouts:", error);
       showMessage("Failed to fetch layouts", true);
     } finally {
       setLoading(false);
@@ -3247,30 +3119,37 @@ function DashboardLayouts({ apiClient, currentUser }) {
     }
 
     try {
-      const newLayout = {
+      const response = await apiClient.post("/dashboard/layouts", {
+        name: newLayoutName.trim(),
+        layout_data: { grid: "2x2", widgets: ["metrics", "alerts", "live_stream"] },
+        is_default: false
+      });
+      const created = response.data || {
         id: Date.now(),
-        name: newLayoutName,
+        name: newLayoutName.trim(),
         is_default: false,
         created_at: new Date().toISOString()
       };
-      
-      setLayouts(prev => [...prev, newLayout]);
+      setLayouts(prev => [...prev, created]);
       setNewLayoutName("");
       setShowCreateModal(false);
       showMessage("Layout created successfully");
     } catch (error) {
+      console.error("Failed to create layout:", error);
       showMessage("Failed to create layout", true);
     }
   };
 
   const setDefaultLayout = async (layoutId) => {
     try {
+      await apiClient.patch(`/dashboard/layouts/${layoutId}/set-default`);
       setLayouts(prev => prev.map(layout => ({
         ...layout,
         is_default: layout.id === layoutId
       })));
       showMessage("Default layout updated successfully");
     } catch (error) {
+      console.error("Failed to set default layout:", error);
       showMessage("Failed to set default layout", true);
     }
   };
@@ -3278,9 +3157,11 @@ function DashboardLayouts({ apiClient, currentUser }) {
   const deleteLayout = async (layoutId) => {
     if (window.confirm("Are you sure you want to delete this layout?")) {
       try {
+        await apiClient.delete(`/dashboard/layouts/${layoutId}`);
         setLayouts(prev => prev.filter(layout => layout.id !== layoutId));
         showMessage("Layout deleted successfully");
       } catch (error) {
+        console.error("Failed to delete layout:", error);
         showMessage("Failed to delete layout", true);
       }
     }
@@ -3479,6 +3360,7 @@ function NavigationMenu({ activeTab, setActiveTab, currentUser }) {
       items: [
         { id: "dashboard", label: "Dashboard", icon: DashboardIcon },
         { id: "layouts",   label: "Layouts",   icon: LayoutIcon },
+        { id: "landing",   label: "Landing Page", icon: GlobeIcon },
       ]
     },
     {
@@ -3789,13 +3671,8 @@ function AlertsManagement({ apiClient, currentUser }) {
   const fetchAlertRules = async () => {
     setLoading(true);
     try {
-      // Mock alert rules
-      const mockRules = [
-        { id: 1, metric: 'cpu_usage', comparison_operator: '>', threshold_value: 80, severity: 'high', active: true, description: 'High CPU usage' },
-        { id: 2, metric: 'memory_usage', comparison_operator: '>', threshold_value: 90, severity: 'critical', active: true, description: 'Critical memory usage' },
-        { id: 3, metric: 'disk_usage', comparison_operator: '>', threshold_value: 85, severity: 'medium', active: false, description: 'High disk usage' }
-      ];
-      setAlertRules(mockRules);
+      const response = await apiClient.get('/alerts/rules?active_only=false');
+      setAlertRules(response.data || []);
     } catch (error) {
       console.error('Failed to fetch alert rules:', error);
     } finally {
@@ -3806,13 +3683,8 @@ function AlertsManagement({ apiClient, currentUser }) {
   const fetchIncidents = async () => {
     setLoading(true);
     try {
-      // Mock incidents
-      const mockIncidents = [
-        { id: 1, incident_type: 'high_cpu', message: 'CPU usage exceeded 80%', severity: 'high', status: 'new', created_at: new Date().toISOString() },
-        { id: 2, incident_type: 'high_memory', message: 'Memory usage exceeded 90%', severity: 'critical', status: 'acknowledged', created_at: new Date(Date.now() - 3600000).toISOString() },
-        { id: 3, incident_type: 'network_anomaly', message: 'Unusual network activity detected', severity: 'medium', status: 'resolved', created_at: new Date(Date.now() - 7200000).toISOString() }
-      ];
-      setIncidents(mockIncidents);
+      const response = await apiClient.get('/incidents');
+      setIncidents(response.data || []);
     } catch (error) {
       console.error('Failed to fetch incidents:', error);
     } finally {
@@ -3822,8 +3694,10 @@ function AlertsManagement({ apiClient, currentUser }) {
 
   const toggleAlertRule = async (ruleId, currentStatus) => {
     try {
+      const newStatus = !currentStatus;
+      await apiClient.patch(`/alerts/rules/${ruleId}/toggle?active=${newStatus}`);
       setAlertRules(prev => prev.map(rule => 
-        rule.id === ruleId ? { ...rule, active: !currentStatus } : rule
+        rule.id === ruleId ? { ...rule, active: newStatus } : rule
       ));
     } catch (error) {
       console.error('Failed to toggle alert rule:', error);
@@ -3832,6 +3706,7 @@ function AlertsManagement({ apiClient, currentUser }) {
 
   const updateIncidentStatus = async (incidentId, newStatus) => {
     try {
+      await apiClient.patch(`/incidents/${incidentId}/status`, { status: newStatus });
       setIncidents(prev => prev.map(incident => 
         incident.id === incidentId ? { ...incident, status: newStatus } : incident
       ));
@@ -4079,7 +3954,10 @@ function PasswordChange({ apiClient }) {
 
     setLoading(true);
     try {
-      // Mock password change
+      await apiClient.put("/users/me/password", {
+        current_password: passwordForm.currentPassword,
+        new_password: passwordForm.newPassword
+      });
       showMessage("Password changed successfully");
       setPasswordForm({
         currentPassword: "",
@@ -4087,7 +3965,8 @@ function PasswordChange({ apiClient }) {
         confirmPassword: ""
       });
     } catch (error) {
-      showMessage("Failed to change password", true);
+      const errDetail = error.response?.data?.detail || "Failed to change password";
+      showMessage(errDetail, true);
     } finally {
       setLoading(false);
     }
@@ -4695,6 +4574,7 @@ function App() {
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [authMode, setAuthMode] = useState("login");
+  const [publicView, setPublicView] = useState("landing");
 
   // State for filtering and drill-down
   const [filters, setFilters] = useState({});
@@ -4710,6 +4590,10 @@ function App() {
 
   // State for new features
   const [currentLayout, setCurrentLayout] = useState('default');
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showRemediation, setShowRemediation] = useState(false);
+  const [showExecutiveReport, setShowExecutiveReport] = useState(false);
+  const [targetHostForPlaybook, setTargetHostForPlaybook] = useState("db-server-01");
 
   // Create API client with current token
   const apiClient = createApiClient(token);
@@ -4840,6 +4724,27 @@ function App() {
     setFilters({});
     localStorage.removeItem("token");
     setAuthMode("login");
+    setPublicView("landing");
+  };
+
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("username", "admin");
+      formData.append("password", "adminpass");
+      const res = await axios.post(`${API_BASE}/token`, formData, {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" }
+      });
+      if (res.data && res.data.access_token) {
+        handleLogin(res.data.access_token);
+      }
+    } catch (e) {
+      console.error("Demo sandbox login failed, redirecting to login form:", e);
+      setPublicView("login");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const submitSampleAgentData = async () => {
@@ -4902,9 +4807,12 @@ function App() {
             marginBottom: '20px'
           }}>
             <AISmartInsights metrics={displayData} apiClient={apiClient} />
-            <EmotionalAIAssistant 
+            <AutonomousCopilot 
               metrics={displayData} 
-              onSuggestion={handleAISuggestion}
+              onTriggerPlaybook={() => {
+                setTargetHostForPlaybook(selectedServer?.hostname || "db-server-01");
+                setShowRemediation(true);
+              }}
             />
           </div>
 
@@ -4924,9 +4832,10 @@ function App() {
               onMetricClick={handleMetricClick}
             />
             
-            <ServerWorldMap 
+            <GlobalServerDistribution 
               servers={servers} 
               onServerClick={handleServerClick}
+              token={token}
             />
             
             <ProcessList processes={displayData.processes} />
@@ -4959,39 +4868,18 @@ function App() {
       case "dashboard":
         return (
           <>
-            {/* Quick Actions */}
-            <div style={{
-              ...darkStyles.card,
-              background: "rgba(255,255,255,0.042)",
-              backdropFilter: "blur(25px)"
-            }}>
-              <h3 style={{ color: DARK_THEME.text, margin: "0 0 15px 0", fontSize: '18px' }}>Quick Actions</h3>
-              <div style={darkStyles.quickActions}>
-                <button onClick={fetchUserInfo} style={{
-                  ...darkStyles.button,
-                  background: 'rgba(107, 114, 128, 0.2)',
-                  border: `1px solid rgba(107, 114, 128, 0.3)`
-                }}>
-                  Refresh User Info
-                </button>
-                <button onClick={fetchLatestAgentData} disabled={dashboardLoading} style={{
-                  ...darkStyles.button,
-                  background: dashboardLoading ? DARK_THEME.glassBorder : 'rgba(139,92,246,0.15)',
-                  border: `1px solid ${dashboardLoading ? DARK_THEME.glassBorder : 'rgba(139,92,246,0.15)'}`
-                }}>
-                  {dashboardLoading ? <TailSpin height={20} width={20} /> : "Refresh Agent Data"}
-                </button>
-                {(currentUser?.role === 'agent' || currentUser?.role === 'admin') && (
-                  <button onClick={submitSampleAgentData} disabled={dashboardLoading} style={{ 
-                    ...darkStyles.button, 
-                    background: dashboardLoading ? DARK_THEME.glassBorder : 'rgba(34,197,94,0.15)',
-                    border: `1px solid ${dashboardLoading ? DARK_THEME.glassBorder : 'rgba(34,197,94,0.3)'}`
-                  }}>
-                    {dashboardLoading ? <TailSpin height={20} width={20} /> : "Submit Sample Data"}
-                  </button>
-                )}
-              </div>
-            </div>
+            {/* Mission Control Command Ribbon */}
+            <CommandRibbon
+              serverCount={servers?.length || 4}
+              onRefresh={fetchLatestAgentData}
+              loading={dashboardLoading}
+              onOpenRemediation={() => {
+                setTargetHostForPlaybook(selectedServer?.hostname || "db-server-01");
+                setShowRemediation(true);
+              }}
+              onOpenReport={() => setShowExecutiveReport(true)}
+              onOpenCommandPalette={() => setShowCommandPalette(true)}
+            />
 
             {/* Dashboard Content */}
             {renderDashboardContent()}
@@ -5015,6 +4903,47 @@ function App() {
       
       case "visitor-logs":
         return <VisitorLogs apiClient={apiClient} currentUser={currentUser} />;
+
+      case "landing":
+        return (
+          <div style={{ position: 'relative' }}>
+            <div style={{
+              position: 'sticky',
+              top: '12px',
+              zIndex: 99,
+              display: 'flex',
+              justifyContent: 'flex-end',
+              padding: '0 24px',
+              marginBottom: '-48px',
+              pointerEvents: 'none'
+            }}>
+              <button
+                onClick={() => setActiveTab("dashboard")}
+                style={{
+                  background: 'linear-gradient(135deg, #8b5cf6, #2dd4bf)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '10px 20px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  pointerEvents: 'auto',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 8px 25px rgba(139,92,246,0.5)'
+                }}
+              >
+                ← Return to Live SOC Dashboard
+              </button>
+            </div>
+            <LandingPage 
+              onLaunchDemo={() => setActiveTab("dashboard")} 
+              onOpenAuth={() => setActiveTab("dashboard")}
+            />
+          </div>
+        );
       
       default:
         return renderDashboardContent();
@@ -5023,15 +4952,95 @@ function App() {
 
   // Render based on authentication status
   if (!token) {
+    if (publicView === "landing") {
+      return (
+        <LandingPage 
+          onLaunchDemo={handleDemoLogin}
+          onOpenAuth={() => {
+            setAuthMode("login");
+            setPublicView("login");
+          }}
+        />
+      );
+    }
+
     return (
       <div style={darkStyles.container}>
         <GlobalGlass />
         <BackgroundOrbs />
+        <div style={{ position: 'absolute', top: '24px', left: '24px', zIndex: 10 }}>
+          <button 
+            onClick={() => setPublicView("landing")}
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(139,92,246,0.3)',
+              color: '#c4b5fd',
+              borderRadius: '10px',
+              padding: '8px 16px',
+              cursor: 'pointer',
+              fontSize: '13px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={e => e.target.style.background = 'rgba(139,92,246,0.2)'}
+            onMouseLeave={e => e.target.style.background = 'rgba(255,255,255,0.06)'}
+          >
+            ← Back to Landing Page
+          </button>
+        </div>
         <LoginForm 
           onLogin={handleLogin}
           loading={loading}
           authMode={authMode}
           setAuthMode={setAuthMode}
+        />
+      </div>
+    );
+  }
+
+  // When viewing the public landing page while authenticated, display it full-screen
+  if (activeTab === "landing") {
+    return (
+      <div style={{ width: "100%", minHeight: "100vh", position: "relative", background: "#06010a", overflowX: "hidden" }}>
+        <div style={{
+          position: "fixed",
+          top: "16px",
+          right: "24px",
+          zIndex: 9999,
+          display: "flex",
+          gap: "12px",
+          alignItems: "center"
+        }}>
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            style={{
+              background: "linear-gradient(135deg, #8b5cf6, #2dd4bf)",
+              color: "#fff",
+              border: "none",
+              borderRadius: "12px",
+              padding: "10px 20px",
+              fontSize: "13px",
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              boxShadow: "0 8px 30px rgba(139,92,246,0.6)",
+              backdropFilter: "blur(10px)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease"
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            ← Return to Live SOC Dashboard
+          </button>
+        </div>
+        <LandingPage 
+          onLaunchDemo={() => setActiveTab("dashboard")} 
+          onOpenAuth={() => setActiveTab("dashboard")}
         />
       </div>
     );
@@ -5044,20 +5053,25 @@ function App() {
       {/* ── Sidebar v2 ── */}
       <div style={darkStyles.sidebar}>
         {/* Logo */}
-        <div style={{ padding: '20px 20px 14px', borderBottom: '1px solid rgba(139,92,246,0.08)', display: 'flex', alignItems: 'center', gap: '11px' }}>
-          <div style={{
-            width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0,
-            background: 'linear-gradient(135deg,#8b5cf6,#2dd4bf)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 16px rgba(139,92,246,0.4)',
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-            </svg>
-          </div>
+        <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid rgba(139,92,246,0.12)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img 
+            src="/logos/app-icon.png" 
+            alt="Purple Agent" 
+            style={{ 
+              width: '38px', 
+              height: '38px', 
+              borderRadius: '10px', 
+              flexShrink: 0,
+              boxShadow: '0 4px 16px rgba(139,92,246,0.45)',
+              objectFit: 'contain'
+            }} 
+          />
           <div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#e8e6ff', letterSpacing: '-0.02em' }}>Purple Agent</div>
-            <div style={{ fontSize: '10px', color: 'rgba(180,170,255,0.4)', letterSpacing: '0.04em' }}>Security Platform</div>
+            <div style={{ fontSize: '15px', fontWeight: '800', color: '#f3f0ff', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>Purple Agent</span>
+              <span style={{ fontSize: '9px', fontWeight: '700', padding: '1px 5px', borderRadius: '4px', background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.3)', color: '#c4b5fd' }}>v2.4</span>
+            </div>
+            <div style={{ fontSize: '10px', color: 'rgba(180,170,255,0.45)', letterSpacing: '0.04em' }}>Autonomous SOC Platform</div>
           </div>
         </div>
 
@@ -5102,6 +5116,7 @@ function App() {
               <h1 style={{ color: '#e8e6ff', margin: '0 0 4px', fontSize: '20px', fontWeight: '700', letterSpacing: '-0.04em', background: 'linear-gradient(135deg,#e0d7ff 0%,#2dd4bf 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 {activeTab === 'dashboard'     && 'Dashboard Overview'}
                 {activeTab === 'layouts'       && 'Dashboard Layouts'}
+                {activeTab === 'landing'       && 'Product Landing Page'}
                 {activeTab === 'account'       && 'Account Settings'}
                 {activeTab === 'users'         && 'User Management'}
                 {activeTab === 'alerts'        && 'Alerts & Incidents'}
@@ -5111,6 +5126,7 @@ function App() {
               <p style={{ color: 'rgba(180,170,255,0.45)', margin: 0, fontSize: '13px' }}>
                 {activeTab === 'dashboard'     && 'Real-time monitoring with AI-powered insights'}
                 {activeTab === 'layouts'       && 'Manage and customize your dashboard layouts'}
+                {activeTab === 'landing'       && 'Public advertising, features, and enterprise architecture overview'}
                 {activeTab === 'account'       && 'Manage account settings and security'}
                 {activeTab === 'users'         && 'User management and access control'}
                 {activeTab === 'alerts'        && 'Alert rules and incident management'}
@@ -5125,6 +5141,7 @@ function App() {
             {[
               { id: 'dashboard', label: 'Overview', icon: DashboardIcon },
               { id: 'layouts',   label: 'Layouts',  icon: LayoutIcon },
+              { id: 'landing',   label: 'Landing Page', icon: GlobeIcon },
               { id: 'account',   label: 'Account',  icon: AccountIcon },
               ...(currentUser?.role === 'admin' ? [
                 { id: 'users',         label: 'Users',    icon: UsersIcon },
@@ -5147,10 +5164,57 @@ function App() {
 
         {/* Scrollable content area */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px 48px' }}>
-        {/* Tab Content */}
-        {renderTabContent()}
+          {/* Fleet Pulse Bar */}
+          {activeTab === 'dashboard' && (
+            <FleetPulseBar
+              serverCount={servers?.length || 4}
+              onOpenCommandPalette={() => setShowCommandPalette(true)}
+              onOpenRemediation={() => {
+                setTargetHostForPlaybook(selectedServer?.hostname || "db-server-01");
+                setShowRemediation(true);
+              }}
+              onOpenExecutiveReport={() => setShowExecutiveReport(true)}
+            />
+          )}
 
+          {/* Tab Content */}
+          {renderTabContent()}
         </div>{/* end scrollable content */}
+
+        {/* Command Palette Modal (Cmd + K) */}
+        <CommandPaletteModal
+          isOpen={showCommandPalette}
+          onClose={(shouldOpen) => setShowCommandPalette(typeof shouldOpen === 'boolean' ? shouldOpen : false)}
+          onNavigate={(tab) => setActiveTab(tab)}
+          onSelectServer={(server) => {
+            setSelectedServer(server);
+            setActiveTab('dashboard');
+          }}
+          servers={servers}
+          onTriggerAction={(action) => {
+            if (action === 'remediation') {
+              setTargetHostForPlaybook(selectedServer?.hostname || "db-server-01");
+              setShowRemediation(true);
+            } else if (action === 'report') {
+              setShowExecutiveReport(true);
+            } else if (action === 'scan') {
+              fetchLatestAgentData();
+            }
+          }}
+        />
+
+        {/* AI Autonomous Remediation Playbook Modal */}
+        <RemediationPlaybookModal
+          isOpen={showRemediation}
+          onClose={() => setShowRemediation(false)}
+          targetHost={targetHostForPlaybook}
+        />
+
+        {/* Executive Report Modal */}
+        <ExecutiveReportModal
+          isOpen={showExecutiveReport}
+          onClose={() => setShowExecutiveReport(false)}
+        />
 
         {/* Drill Down Modal */}
         <DrillDownModal

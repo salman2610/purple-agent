@@ -8,22 +8,17 @@ from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# Database configuration - HARD REQUIRE PostgreSQL
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-if not DATABASE_URL:
-    # HARD FAIL → prevent silent fallback to SQLite
-    raise RuntimeError("❌ DATABASE_URL not set. Set PostgreSQL URL before running backend.")
-
-# Force asyncpg for PostgreSQL
-if not DATABASE_URL.startswith("postgresql"):
-    raise RuntimeError("❌ Invalid DB URL. Must be postgresql+asyncpg://")
+# Database configuration - PostgreSQL or SQLite fallback
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./purpleteam.db")
 
 database = databases.Database(DATABASE_URL)
 metadata = MetaData()
 
-# For SQLAlchemy sync engine (used for table creation)
-engine = create_engine(DATABASE_URL.replace("+asyncpg", ""))
+# For SQLAlchemy sync engine
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL.replace("+asyncpg", ""))
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

@@ -1520,37 +1520,72 @@ async def get_user_activities(
     return parsed_results
 
 async def get_user_activity_stats(days: int = 30) -> List[Dict]:
-    """Get user activity statistics - FIXED VERSION"""
-    query = """
-    SELECT activity_type, COUNT(*) AS count
-    FROM user_activity
-    WHERE created_at >= NOW() - (:days * INTERVAL '1 day')
-    GROUP BY activity_type
-    ORDER BY count DESC
-    """
-    return await database.fetch_all(query, {"days": days})
+    """Get user activity statistics - Compatible with SQLite and PostgreSQL"""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    is_sqlite = database.url.scheme.startswith("sqlite")
+    if is_sqlite:
+        query = """
+        SELECT activity_type, COUNT(*) AS count
+        FROM user_activity
+        WHERE created_at >= :cutoff OR created_at IS NULL
+        GROUP BY activity_type
+        ORDER BY count DESC
+        """
+        return await database.fetch_all(query, {"cutoff": cutoff.strftime("%Y-%m-%d %H:%M:%S")})
+    else:
+        query = """
+        SELECT activity_type, COUNT(*) AS count
+        FROM user_activity
+        WHERE created_at >= :cutoff
+        GROUP BY activity_type
+        ORDER BY count DESC
+        """
+        return await database.fetch_all(query, {"cutoff": cutoff})
 
 async def get_suspicious_activities(threshold_minutes: int = 5, failed_attempts: int = 3) -> List[Dict]:
     """Detect suspicious activities (multiple failed logins from same IP)"""
-    query = """
-    SELECT 
-        ip_address,
-        COUNT(*) as failed_attempts,
-        MIN(created_at) as first_attempt,
-        MAX(created_at) as last_attempt,
-        STRING_AGG(DISTINCT username, ', ') as usernames
-    FROM user_activity 
-    WHERE activity_type = 'login' 
-      AND success = false
-      AND created_at >= (NOW() - (:threshold_minutes * INTERVAL '1 minute'))
-    GROUP BY ip_address
-    HAVING COUNT(*) >= :failed_attempts
-    ORDER BY failed_attempts DESC
-    """
-    return await database.fetch_all(query, {
-        "threshold_minutes": threshold_minutes,
-        "failed_attempts": failed_attempts
-    })
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=threshold_minutes)
+    is_sqlite = database.url.scheme.startswith("sqlite")
+    if is_sqlite:
+        query = """
+        SELECT 
+            ip_address,
+            COUNT(*) as failed_attempts,
+            MIN(created_at) as first_attempt,
+            MAX(created_at) as last_attempt,
+            GROUP_CONCAT(DISTINCT username) as usernames
+        FROM user_activity 
+        WHERE activity_type = 'login' 
+          AND (success = 0 OR success = 0)
+          AND (created_at >= :cutoff OR created_at IS NULL)
+        GROUP BY ip_address
+        HAVING COUNT(*) >= :failed_attempts
+        ORDER BY failed_attempts DESC
+        """
+        return await database.fetch_all(query, {
+            "cutoff": cutoff.strftime("%Y-%m-%d %H:%M:%S"),
+            "failed_attempts": failed_attempts
+        })
+    else:
+        query = """
+        SELECT 
+            ip_address,
+            COUNT(*) as failed_attempts,
+            MIN(created_at) as first_attempt,
+            MAX(created_at) as last_attempt,
+            STRING_AGG(DISTINCT username, ', ') as usernames
+        FROM user_activity 
+        WHERE activity_type = 'login' 
+          AND success = false
+          AND created_at >= :cutoff
+        GROUP BY ip_address
+        HAVING COUNT(*) >= :failed_attempts
+        ORDER BY failed_attempts DESC
+        """
+        return await database.fetch_all(query, {
+            "cutoff": cutoff,
+            "failed_attempts": failed_attempts
+        })
 
 # ==================== VISITOR LOGS CRUD OPERATIONS ====================
 
@@ -1760,57 +1795,109 @@ async def get_visitor_logs(
 
 async def get_visitor_stats(days: int = 7) -> Dict:
     """Get comprehensive visitor statistics"""
-    stats_queries = {
-        "total_requests": """
-        SELECT COUNT(*) as count FROM visitor_logs 
-        WHERE created_at >= (NOW() - (:days * INTERVAL '1 day'))
-        """,
-        "suspicious_requests": """
-        SELECT COUNT(*) as count FROM visitor_logs 
-        WHERE suspicious = true AND created_at >= (NOW() - (:days * INTERVAL '1 day'))
-        """,
-        "unique_visitors": """
-        SELECT COUNT(DISTINCT ip_address) as count FROM visitor_logs 
-        WHERE created_at >= (NOW() - (:days * INTERVAL '1 day'))
-        """,
-        "top_ips": """
-        SELECT ip_address, COUNT(*) as request_count, MAX(created_at) as last_seen
-        FROM visitor_logs 
-        WHERE created_at >= (NOW() - (:days * INTERVAL '1 day'))
-        GROUP BY ip_address 
-        ORDER BY request_count DESC 
-        LIMIT 10
-        """,
-        "requests_by_method": """
-        SELECT request_method, COUNT(*) as count
-        FROM visitor_logs 
-        WHERE created_at >= (NOW() - (:days * INTERVAL '1 day'))
-        GROUP BY request_method
-        ORDER BY count DESC
-        """,
-        "requests_by_status": """
-        SELECT response_status, COUNT(*) as count
-        FROM visitor_logs 
-        WHERE created_at >= (NOW() - (:days * INTERVAL '1 day'))
-        GROUP BY response_status
-        ORDER BY count DESC
-        """,
-        "suspicious_ips": """
-        SELECT ip_address, COUNT(*) as suspicious_count
-        FROM visitor_logs 
-        WHERE suspicious = true AND created_at >= (NOW() - (:days * INTERVAL '1 day'))
-        GROUP BY ip_address
-        ORDER BY suspicious_count DESC
-        LIMIT 10
-        """
-    }
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    is_sqlite = database.url.scheme.startswith("sqlite")
+    
+    if is_sqlite:
+        cutoff_str = cutoff.strftime("%Y-%m-%d %H:%M:%S")
+        stats_queries = {
+            "total_requests": """
+            SELECT COUNT(*) as count FROM visitor_logs 
+            WHERE created_at >= :cutoff OR created_at IS NULL
+            """,
+            "suspicious_requests": """
+            SELECT COUNT(*) as count FROM visitor_logs 
+            WHERE (suspicious = 1 OR suspicious = true) AND (created_at >= :cutoff OR created_at IS NULL)
+            """,
+            "unique_visitors": """
+            SELECT COUNT(DISTINCT ip_address) as count FROM visitor_logs 
+            WHERE created_at >= :cutoff OR created_at IS NULL
+            """,
+            "top_ips": """
+            SELECT ip_address, COUNT(*) as request_count, MAX(created_at) as last_seen
+            FROM visitor_logs 
+            WHERE created_at >= :cutoff OR created_at IS NULL
+            GROUP BY ip_address 
+            ORDER BY request_count DESC 
+            LIMIT 10
+            """,
+            "requests_by_method": """
+            SELECT request_method, COUNT(*) as count
+            FROM visitor_logs 
+            WHERE created_at >= :cutoff OR created_at IS NULL
+            GROUP BY request_method
+            ORDER BY count DESC
+            """,
+            "requests_by_status": """
+            SELECT response_status, COUNT(*) as count
+            FROM visitor_logs 
+            WHERE created_at >= :cutoff OR created_at IS NULL
+            GROUP BY response_status
+            ORDER BY count DESC
+            """,
+            "suspicious_ips": """
+            SELECT ip_address, COUNT(*) as suspicious_count
+            FROM visitor_logs 
+            WHERE (suspicious = 1 OR suspicious = true) AND (created_at >= :cutoff OR created_at IS NULL)
+            GROUP BY ip_address
+            ORDER BY suspicious_count DESC
+            LIMIT 10
+            """
+        }
+        params = {"cutoff": cutoff_str}
+    else:
+        stats_queries = {
+            "total_requests": """
+            SELECT COUNT(*) as count FROM visitor_logs 
+            WHERE created_at >= :cutoff
+            """,
+            "suspicious_requests": """
+            SELECT COUNT(*) as count FROM visitor_logs 
+            WHERE suspicious = true AND created_at >= :cutoff
+            """,
+            "unique_visitors": """
+            SELECT COUNT(DISTINCT ip_address) as count FROM visitor_logs 
+            WHERE created_at >= :cutoff
+            """,
+            "top_ips": """
+            SELECT ip_address, COUNT(*) as request_count, MAX(created_at) as last_seen
+            FROM visitor_logs 
+            WHERE created_at >= :cutoff
+            GROUP BY ip_address 
+            ORDER BY request_count DESC 
+            LIMIT 10
+            """,
+            "requests_by_method": """
+            SELECT request_method, COUNT(*) as count
+            FROM visitor_logs 
+            WHERE created_at >= :cutoff
+            GROUP BY request_method
+            ORDER BY count DESC
+            """,
+            "requests_by_status": """
+            SELECT response_status, COUNT(*) as count
+            FROM visitor_logs 
+            WHERE created_at >= :cutoff
+            GROUP BY response_status
+            ORDER BY count DESC
+            """,
+            "suspicious_ips": """
+            SELECT ip_address, COUNT(*) as suspicious_count
+            FROM visitor_logs 
+            WHERE suspicious = true AND created_at >= :cutoff
+            GROUP BY ip_address
+            ORDER BY suspicious_count DESC
+            LIMIT 10
+            """
+        }
+        params = {"cutoff": cutoff}
     
     stats = {}
     for key, query in stats_queries.items():
         if key in ["top_ips", "requests_by_method", "requests_by_status", "suspicious_ips"]:
-            stats[key] = await database.fetch_all(query, {"days": days})
+            stats[key] = await database.fetch_all(query, params)
         else:
-            result = await database.fetch_one(query, {"days": days})
+            result = await database.fetch_one(query, params)
             stats[key] = result["count"] if result else 0
     
     return stats
